@@ -49,6 +49,7 @@ ui <- panelsPage(
         color = "chardonnay",
         can_collapse = FALSE,
         body = div(
+          verbatimTextOutput("debug")
         )
   ),
   panel(title = ui_("data_dtail"),
@@ -81,6 +82,13 @@ server <-  function(input, output, session) {
   observeEvent(lang(),{
     shinyjs::delay(500, uiLangUpdate(input$shi18ny_ui_classes, lang()))
   })
+
+
+
+  output$debug <- renderPrint({
+    oxfam_one
+  })
+
 
 
 }
