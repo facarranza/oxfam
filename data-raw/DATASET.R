@@ -1,5 +1,6 @@
 ## code to prepare `DATASET` dataset goes here
 library(DBI)
+library(dplyr)
 library(purrr)
 library(tidyr)
 library(googlesheets4)
@@ -74,12 +75,34 @@ slug_portuges <- map(available_slug, function(slug_i) {
 names(slug_portuges) <- available_slug
 slug_portuges
 
+
+# all data
 oxfam_data <- list(
   es = slug_spanish,
   en = slug_english,
   pt = slug_portuges
 )
 
-
 usethis::use_data(oxfam_data, overwrite = TRUE)
+
+# data to dash one
+oxfam_one <- list(
+  es = list(new_vaccinations = slug_spanish$new_vaccinations,
+            people_fully_vaccinated = slug_spanish$people_fully_vaccinated,
+            people_vaccinated = slug_spanish$people_vaccinated,
+            total_boosters_per_hundred = slug_spanish$total_boosters_per_hundred,
+            people_vaccinated_per_hundred = slug_spanish$people_vaccinated_per_hundred),
+  en = list(new_vaccinations = slug_english$new_vaccinations,
+            people_fully_vaccinated = slug_english$people_fully_vaccinated,
+            people_vaccinated = slug_english$people_vaccinated,
+            total_boosters_per_hundred = slug_english$total_boosters_per_hundred,
+            people_vaccinated_per_hundred = slug_spanish$people_vaccinated_per_hundred),
+  pt = list(new_vaccinations = slug_portuges$new_vaccinations,
+            people_fully_vaccinated = slug_portuges$people_fully_vaccinated,
+            people_vaccinated = slug_portuges$people_vaccinated,
+            total_boosters_per_hundred = slug_portuges$total_boosters_per_hundred,
+            people_vaccinated_per_hundred = slug_portuges$people_vaccinated_per_hundred)
+)
+
+usethis::use_data(oxfam_one, overwrite = TRUE)
 #https://jsfiddle.net/gh/get/library/pure/highcharts/highcharts/tree/master/samples/highcharts/demo/combo-multi-axes
