@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@200;300;500&display=swap');
+
+html, body {
+ font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.layout-panels {
+  background: #FFF;
+}
+
+.panel {
+  border: 1px solid #252525;
+  font-family: 'IBM Plex Sans';
+}
+
+.panel-body {
+  flex-grow: 1;
+  margin-top: -2rem;
+  padding: 0 1rem;
+}
+
+#viz-style_body {
+  margin-top: 0rem !important;
+}
+
+
+
+.panel-header-title {
+ font-family: 'IBM Plex Sans';
+ font-weight: 500;
+ letter-spacing: 0.09em;
+ color: #252525;
+ text-align: left;
+ text-transform: capitalize;
+ font-size: 16px;
+ line-height: 21px;
+}
+
+.panel-header {
+  align-items: start;
+  border-top: 1px solid #252525;
+  padding: 1rem 1rem 1rem 1rem;
+}
+
+
+.top-malibu {
+  border-top: 0px;
+}
+
+
+.top-chardonnay {
+  border-top: 0px;
+}
+
+
+.btn {
+ color: #252525;
+ cursor: pointer;
+ font-family: 'IBM Plex Sans';
+ font-style: normal;
+ font-weight: 400;
+ font-size: 15px;
+ display: flex;
+ align-items: center;
+ text-align: center;
+ letter-spacing: -0.02em;
+ text-decoration: none;
+ background: #FFFFFF;
+ text-transform: none;
+ border: 1px solid #252525;
+ border-radius: 10px;
+}
+
+.buttons-group {
+  background-color:transparent;
+  display:flex !important;
+  gap: 7px !important;
+  padding:0 !important
+}
+
+.buttons-group .button-container{
+  height:40px !important;
+  width: 40px !important
+}
+
+.button-container{
+  box-shadow:0px !important;
+  border-radius: 7px !important;
+}
+
+.button-container:hover{
+  background-color: #252525 !important;
+}
+
+.buttons-group .button-style:hover {
+  background-color:#ffffff !important;
+}
+
+
+.buttons-group .button-style {
+  width: 30px !important;
+  background-color: #252525 !important;
+}
+
+.buttons-group .button-style.active-btn {
+ background-color: #DDDDDD !important;
+}
+
+
+.button-checkmark{
+  display:none
+}
+
+
+.control-label {
+  color: #252525;
+}
+
+
+.flatpickr-input[readonly] {
+  cursor: pointer;
+  border: 1px solid #252525;
+  border-radius: 5px;
+  max-width: 125px;
+  padding: 3px 0px;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.shinyinvoer-date-range-select {
+ color: #252525;
+ font-weight: 500;
+}
+
+
+.load-container {
+  z-index: -10 !important;
+}
+
+.loader-img {
+ margin-top: -10% !important;
+}
+
+.click {
+  text-align: center;
+  font-family: inherit;
+}
+
+.click-img {
+  margin-top: 20%;
+  margin-bottom: 5%;
+}
