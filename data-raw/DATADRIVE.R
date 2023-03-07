@@ -27,6 +27,15 @@ slug_agg$agg <- as.character(slug_agg$agg)
 usethis::use_data(slug_agg, overwrite = TRUE)
 
 
+
+slug_viz_one <- read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "dashboard_1")
+slug_agg_one <- slug_viz_one |>
+  select(slug, agg = mapa) |>
+  filter(agg %in% c("mean", "sum,mean", "sum"))
+slug_agg_one$agg <- as.character(slug_agg_one$agg)
+usethis::use_data(slug_agg_one, overwrite = TRUE)
+
+
 slug_viz <- slug_viz |>
   select(slug, map = mapa,
          bar = barras,
