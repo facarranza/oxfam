@@ -5,6 +5,7 @@ library(tidyr)
 library(googlesheets4)
 library(oxfam)
 
+gs4_deauth()
 readRenviron(".Renviron")
 
 con <- DBI::dbConnect(
