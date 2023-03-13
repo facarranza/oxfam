@@ -85,24 +85,37 @@ oxfam_data <- list(
 
 usethis::use_data(oxfam_data, overwrite = TRUE)
 
-# data to dash one
-oxfam_one <- list(
-  es = list(new_vaccinations = slug_spanish$new_vaccinations,
-            people_fully_vaccinated = slug_spanish$people_fully_vaccinated,
-            people_vaccinated = slug_spanish$people_vaccinated,
-            total_boosters_per_hundred = slug_spanish$total_boosters_per_hundred,
-            people_vaccinated_per_hundred = slug_spanish$people_vaccinated_per_hundred),
-  en = list(new_vaccinations = slug_english$new_vaccinations,
-            people_fully_vaccinated = slug_english$people_fully_vaccinated,
-            people_vaccinated = slug_english$people_vaccinated,
-            total_boosters_per_hundred = slug_english$total_boosters_per_hundred,
-            people_vaccinated_per_hundred = slug_spanish$people_vaccinated_per_hundred),
-  pt = list(new_vaccinations = slug_portuges$new_vaccinations,
-            people_fully_vaccinated = slug_portuges$people_fully_vaccinated,
-            people_vaccinated = slug_portuges$people_vaccinated,
-            total_boosters_per_hundred = slug_portuges$total_boosters_per_hundred,
-            people_vaccinated_per_hundred = slug_portuges$people_vaccinated_per_hundred)
+dash_6 <- read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "dashboard_6")
+dash_6$visualizacion <- gsub("\\s*(\\([^()]*(?:(?1)[^()]*)*\\))", "", dash_6$visualizacion, perl=TRUE)
+dash_6 <- dash_6 |> separate_rows(indicador, sep = ",")
+ind_6 <- unique(dash_6$indicador)
+slug_spanish_6 <- map(ind_6, function (i) {
+  slug_spanish[[i]]
+})
+names(slug_spanish_6) <- ind_6
+
+slug_english_6 <- map(ind_6, function (i) {
+  slug_english[[i]]
+})
+names(slug_english_6) <- ind_6
+
+slug_portuges_6 <- map(ind_6, function (i) {
+  slug_portuges[[i]]
+})
+names(slug_portuges_6) <- ind_6
+
+oxfam_6 <- list(
+  es = slug_spanish_6,
+  en = slug_english_6,
+  pt = slug_portuges_6
 )
 
-usethis::use_data(oxfam_one, overwrite = TRUE)
+usethis::use_data(oxfam_6, overwrite = TRUE)
+
+questions_dash_6 <- dash_6 |> select(pregunta_es = pregunta, subpergunta_es = subpregunta,
+                                     pregunta_en = question, subpregunta_en = subquestion,
+                                     pregunta_pt = pergunta, subpregunta_pt = subpergunta,
+                                     indicador, viz = visualizacion)
+
+usethis::use_data(questions_dash_6, overwrite = TRUE)
 #https://jsfiddle.net/gh/get/library/pure/highcharts/highcharts/tree/master/samples/highcharts/demo/combo-multi-axes
