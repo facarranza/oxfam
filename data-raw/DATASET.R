@@ -49,7 +49,9 @@ translate_func <- function(df, slug_i) {
 
 slug_spanish <- map(available_slug, function(slug_i) {
   df <- translate_func(indicadores, slug_i)
-  df_es <- df |> select(id, slug, slug_es, fecha, pais, valor, unidad = unidad_es)
+  df_es <- df |> select(id, slug, slug_es, fecha,
+                        pais_es = pais, pais_en, pais_pt,
+                        valor, unidad = unidad_es)
   df_es <- Filter(function(x) !all(is.na(x)), df_es)
   df_es
 })
@@ -58,7 +60,9 @@ slug_spanish
 
 slug_english <- map(available_slug, function(slug_i) {
   df <- translate_func(indicadores, slug_i)
-  df_en <- df |> select(id, slug, slug_en, fecha, pais = pais_en, valor, unidad = unidad_en)
+  df_en <- df |> select(id, slug, slug_en, fecha,
+                        pais_es = pais, pais_en, pais_pt,
+                        valor, unidad = unidad_en)
   df_en <- Filter(function(x) !all(is.na(x)), df_en)
   df_en
 })
@@ -68,7 +72,9 @@ slug_english
 
 slug_portuges <- map(available_slug, function(slug_i) {
   df <- translate_func(indicadores, slug_i)
-  df_pt <- df |> select(id, slug, slug_pt, fecha, pais = pais_pt, valor, unidad = unidade_pt)
+  df_pt <- df |> select(id, slug, slug_pt, fecha,
+                        pais_es = pais, pais_en, pais_pt,
+                        valor, unidad = unidade_pt)
   df_pt <- Filter(function(x) !all(is.na(x)), df_pt)
   df_pt
 })
