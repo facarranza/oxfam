@@ -1,0 +1,27 @@
+data_filter: Filtros
+data_viz: Visualização
+data_dtail: Detalhe
+slug_title: Seleccione um indicador
+slug_comparisons: Seleccionar um indicador para comparação
+map: Mapa
+line: Linha
+bar: Bar
+treemap: Treemap
+scatter: Dispersão
+sankey: Sankey
+table: Quadro
+placeholder: Clique aqui
+slug_countries: País
+all: Tudo
+date_start: Em
+date_end: Para
+slug_agg: Variável numérica
+sum: Total
+mean: Média
+click: Clique na visualização para ver mais informações.
+date_format_label: Formato da data
+anio: Ano
+anio_mes: Ano - Mês
+anio_mes_dia: Ano - Mês - Dia
+
+

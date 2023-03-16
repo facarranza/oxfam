@@ -1,0 +1,70 @@
+---
+id_slug:
+  show: true
+  input_type: selectizeInput
+  input_params:
+    label: slug_title
+    choices: slug_opts()
+id_slug_comparisons:
+  show: true
+  show_if:
+    viz_select():
+      is_any_of: [line, scatter]
+  input_type: selectizeInput
+  input_params:
+    label: slug_comparisons
+    choices: slug_comparisons_opts()
+    selected: null
+    multiple: true
+    options:
+      maxItems: 1
+      plugins:
+      - - remove_button
+      - - drag_drop
+id_slug_agg:
+  show: true
+  show_if:
+    slug_agg_show():
+      equals: true
+  input_type: radioButtons
+  input_params:
+    label: slug_agg
+    choices: slug_agg_opts()
+id_slug_countries:
+  show: true
+  input_type: selectizeInput
+  input_params:
+    label: slug_countries
+    choices: slug_countries_opts()
+    selected: all
+    multiple: true
+    options:
+      plugins:
+      - - remove_button
+      - - drag_drop
+id_slug_dates:
+  show: true
+  show_if:
+    have_date():
+      equals: true
+  input_type: dateRangeInput
+  input_params:
+    min: min_date()
+    max: max_date()
+    start: min_date()
+    end: max_date()
+    startLabel: date_start()
+    endLabel: date_end()
+    locale: lang()
+id_date_format:
+  show: true
+  show_if:
+    have_date():
+      equals: true
+  input_type: radioButtons
+  input_params:
+    label: date_format_label
+    choices: date_format_opts()
+
+
+

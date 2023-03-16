@@ -4,8 +4,4 @@
 .Ruserdata
 .Renviron
 .DS_STORE
-inst/apps/01_app_oxfam/rsconnect
-inst/apps/02_app_oxfam/rsconnect
-inst/apps/03_app_oxfam/rsconnect
-inst/apps/04_app_oxfam/rsconnect
 inst/apps/05_app_oxfam/rsconnect
