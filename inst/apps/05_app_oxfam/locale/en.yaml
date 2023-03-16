@@ -23,5 +23,5 @@ date_format_label: Date formats
 anio: Year
 anio_mes: Year - Month
 anio_mes_dia: Year - Month - Day
-
+slug_unidad: Unit
 

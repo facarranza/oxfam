@@ -195,32 +195,75 @@ server <-  function(input, output, session) {
     setNames(agg_opts, i_(agg_opts, lang()))
   })
 
+
+  # var_select <- reactive({
+  #   req(viz_select())
+  #   req(slug_selected())
+  #   viz <- viz_select()
+  #   var_cat <- c("id", paste0("pais_", lang()), paste0("slug_", lang()))
+  #
+  #   var_num <- "value"
+  #   if (length(slug_selected()) > 1) var_num <- slug_selected()
+  #
+  # })
+
+
   # special cases
   # vaccination_approvals_trials
   # school_closures
   # stringency_index
   # product_pipeline
 
-  data_slug <- reactive({
+  data_filter_slug <- reactive({
     req(lang())
     req(slug_selected())
+    d <- oxfam_data[[lang()]][[input$id_slug]]
+    d
+  })
+
+  slug_unidad_opts <- reactive({
+    req(data_filter_slug())
+    if (!"unidad" %in% names(data_filter_slug())) return()
+    unique(data_filter_slug()$unidad)
+  })
+
+  show_unidad <- reactive({
+    req(slug_selected())
+    show <- FALSE
+
+    if (!is.null(slug_unidad_opts())) {
+      if (length(slug_selected()) == 1) show <- TRUE
+      if (length(slug_unidad_opts()) == 1) show <- FALSE
+    }
+    show
+  })
+
+
+  data_slug <- reactive({
+    req(data_filter_slug())
+    req(slug_selected())
     if (length(slug_selected()) == 1) {
-      d <- oxfam_data[[lang()]][[input$id_slug]]
+      d <- data_filter_slug()
+      if (show_unidad()) {
+        req(input$id_unidad)
+        d <- d |> filter(unidad %in% input$id_unidad)
+      }
     } else {
       ls <- oxfam_data[[lang()]][slug_selected()]
       if (all(slug_selected() %in% c("vaccination_approvals_trials",
-                                 "school_closures", "stringency_index",
-                                 "product_pipeline"))) {
+                                     "school_closures", "stringency_index",
+                                     "product_pipeline"))) {
         d <- ls |> bind_rows()
       } else {
         id_valor <- grep("valor", names(ls[[1]]))
         names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
         id_valor <- grep("valor", names(ls[[2]]))
         names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
-        d <- ls |> purrr::reduce(left_join, by = c("fecha", "pais_en", "pais_es", "pais_pt"))
+        #d <- ls
+        d <- ls |> purrr::reduce(inner_join, by = c("fecha", "pais_en", "pais_es", "pais_pt"))
       }
     }
-    d
+
   })
 
   slug_countries_opts <- reactive({
@@ -345,18 +388,7 @@ server <-  function(input, output, session) {
   })
 
 
-  # var_select <- reactive({
-  #   req(viz_select())
-  #   req(data_load())
-  #   viz <- viz_select()
-  #   df <- data_load()
-  #   var <- c("valor", "unidad")
-  #   if (viz %in% c("map", "bar", "treemap")) {
-  #     var <- c(paste0("pais_", lang()), var,  paste0("slug_", lang()))
-  #   } else {
-  #     var <- c(paste0("pais_", lang()), "fecha", var,  paste0("slug_", lang()))
-  #   }
-  # })
+
 
 
 

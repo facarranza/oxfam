@@ -21,6 +21,15 @@ id_slug_comparisons:
       plugins:
       - - remove_button
       - - drag_drop
+id_unidad:
+  show: true
+  show_if:
+    show_unidad():
+      equals: true
+  input_type: selectizeInput
+  input_params:
+    label: slug_unidad
+    choices: slug_unidad_opts()
 id_slug_agg:
   show: true
   show_if:

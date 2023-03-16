@@ -3,6 +3,7 @@ filtros:
   inputs:
     - id_slug
     - id_slug_comparisons
+    - id_unidad
     - id_slug_agg
     - id_slug_countries
     - id_slug_dates
