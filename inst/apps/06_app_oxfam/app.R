@@ -128,7 +128,18 @@ server <-  function(input, output, session) {
       Indicador$value <- indicador
       temp <- plyr::ldply( 1:length(indicador$indicador), function(i){
         t  <- as.data.frame(oxfam_6$en[as.vector(indicador$indicador[i])])
-        colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+        print("ncol(t)")
+        print(ncol(t))
+        if(ncol(t) == 9) {
+          print(colnames(t) )
+         colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+          }
+        else  {
+         colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor")
+        }
+        #
+        # colnames(t) <- gsub(".*\\.", "", t)
+
         temp <- rbind(temp,t)
       })
 
@@ -141,7 +152,11 @@ server <-  function(input, output, session) {
         # temp <- indicador
         temp <- lapply( 1:length(indicador$indicador), function(i){
           t  <- as.data.frame(oxfam_6$es[as.vector(indicador$indicador[i])])
-          colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+          if(ncol(t)==9)
+            colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+          else {
+            colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor")
+          }
           temp <- rbind(temp,t)
         })
       }
@@ -153,7 +168,10 @@ server <-  function(input, output, session) {
           var <- slug_translate |> filter(slug_pt %in% input$Indicator)  |> select(slug)
           temp <- lapply( 1:length(indicador$indicador), function(i){
             t  <- as.data.frame(oxfam_one$pt[as.vector(indicador$indicador[i])])
-            colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+            if(ncol(t)==9)
+              colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+            else
+              colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor")
             temp <- rbind(temp,t)
           })
         }
@@ -646,12 +664,16 @@ server <-  function(input, output, session) {
 
     # dta$Year <-  format(as.Date(dta$fecha, format="%d/%m/%Y"),"%Y")
     group_var ="pais"
-    dta
+    print("#################################")
+    print(Indicador$value)
+    print(class(Indicador$value))
+    print(as.vector((Indicador$value$indicador)))
+
     if(actual_but$active %in% c("linea","scatter"))  group_var = c("pais","fecha")
     if(actual_but$active %in% c("mapa","barras","treemap"))  group_var = "pais"
-    if(actual_but$active %in% c("sankey") & Indicador$value  == "covid_vaccine_agreements")  group_var = c("pais","fabrica")
-    if(actual_but$active %in% c("sankey") & Indicador$value  == "doses_delivered_vaccine_donations")  group_var = c("pais","donante")
-    if(actual_but$active %in% c("sankey") & Indicador$value  == "geopolitics_vaccine_donations")  group_var = c("pais","unidad")
+    if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
+    if(actual_but$active %in% c("sankey")  & Indicador$value  == "doses_delivered_vaccine_donations")   names(data_result) = i_(c("pais","pais_donante", trad),lang=lang())
+    if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
 
 
 
@@ -683,7 +705,7 @@ server <-  function(input, output, session) {
     # if(input$Operation_rb %in% c("Total")) trad = "sum"
     # if(input$Operation_rb %in% c("Mean","Promedio","Média")) trad = "mean"
     trad= "sum"
-    dta <- dta |> select(!unidad) |> distinct()
+    if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
     data_result <- var_aggregation(data = dta,
                                    # dic = dic,
                                    agg =trad,
@@ -984,10 +1006,10 @@ server <-  function(input, output, session) {
 
         # if(all(is.na(data_viz()$mean))) return("No information available")
 
-        #shinycustomloader::withLoader(
-        highcharter::highchartOutput("hgch_viz", height = 600)#,
-        #   type = "html", loader = "loader4"
-        # )
+        shinycustomloader::withLoader(
+        highcharter::highchartOutput("hgch_viz", height = 600),
+         type = "html", loader = "loader4"
+        )
       }
     },
     error = function(cond) {
@@ -1026,9 +1048,9 @@ server <-  function(input, output, session) {
     #oxfam_one
     # input$last_click
     # quest_choose()
-    #data_prep() |> head(1)
-    #data_viz()
-    #get_basic_lang_data()
+ #  data_prep() |> head(1)
+  data_viz()
+   # get_basic_lang_data()
 
   })
 
