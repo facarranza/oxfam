@@ -1,0 +1,15 @@
+---
+question:
+  show: true
+  input_type: selectizeInput
+  input_params:
+    label: ""
+    choices: sel_question()
+    selected: sel_question_url()
+    multiple: true
+    options:
+      placeholder: All
+      plugins:
+      - - remove_button
+      - - drag_drop
+
