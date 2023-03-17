@@ -72,7 +72,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-          # verbatimTextOutput("debug"),
+           verbatimTextOutput("debug"),
 
           uiOutput("viz_view")
         )
@@ -114,12 +114,17 @@ server <-  function(input, output, session) {
 
 
   get_basic_lang_data <- reactive({
-    if(is.null(input$question)) return()
-    if(is.null(input$subquestion)) return()
+    req(quest_choose())
+    req(quest_choose_sub())
+
+    # if(is.null(quest_choose())) return()
+    # if(is.null(quest_choose_sub())) return()
     temp <-  NULL
+    question <- quest_choose()
+    subquestion <- quest_choose_sub()
     if(lang()=="en"){
 
-      indicador <- questions_dash_6 |> filter(pregunta_en %in% input$question & subpregunta_en %in% input$subquestion ) |>  select(indicador)
+      indicador <- questions_dash_6 |> filter(pregunta_en %in% question & subpregunta_en %in% subquestion ) |>  select(indicador)
       Indicador$value <- indicador
       temp <- plyr::ldply( 1:length(indicador$indicador), function(i){
         t  <- as.data.frame(oxfam_6$en[as.vector(indicador$indicador[i])])
@@ -131,7 +136,7 @@ server <-  function(input, output, session) {
     }
     else{
       if(lang()=="es"){
-        indicador <- questions_dash_6 |> filter(pregunta_es %in% input$question & subpergunta_es %in% input$subquestion ) |>  select(indicador)
+        indicador <- questions_dash_6 |> filter(pregunta_es %in% question & subpergunta_es %in% subquestion ) |>  select(indicador)
         Indicador$value <- indicador
         # temp <- indicador
         temp <- lapply( 1:length(indicador$indicador), function(i){
@@ -143,7 +148,7 @@ server <-  function(input, output, session) {
       else{
 
         if(lang()=="pt"){
-          indicador <- questions_dash_6 |> filter(pregunta_pt %in% input$question & subpregunta_pt %in% input$subquestion ) |>  select(indicador)
+          indicador <- questions_dash_6 |> filter(pregunta_pt %in% question & subpregunta_pt %in% subquestion ) |>  select(indicador)
           Indicador$value <- indicador
           var <- slug_translate |> filter(slug_pt %in% input$Indicator)  |> select(slug)
           temp <- lapply( 1:length(indicador$indicador), function(i){
@@ -175,13 +180,15 @@ server <-  function(input, output, session) {
   })
 
   output$generalFilters <- renderUI({
-    dsapptools:::make_buttons( sel_question(), labels = sel_question())
+    #req(quest_choose())
+    dsapptools:::make_buttons( sel_question(), labels = sel_question(), default_active =   sel_question()[1])
   })
 
   output$generalsubFilters <- renderUI({
     req(sel_question())
-    print(sel_subquestion())
-    dsapptools:::make_buttons( sel_subquestion(), labels = sel_subquestion(), class="needed_sub", class_active = "basic_active_sub")
+  #  req(quest_choose_sub())
+
+    dsapptools:::make_buttons( sel_subquestion(), labels = sel_subquestion(), class="needed_sub", class_active = "basic_active_sub", default_active =   sel_subquestion()[1])
   })
 
 
@@ -202,8 +209,15 @@ server <-  function(input, output, session) {
 
   click_viz <- reactiveValues(id = NULL)
 
+  click_sub <- reactiveValues( value = NULL)
+
+  observe({
+    click_sub$value <-  input$last_click_sub
+  })
+
   quest_choose <- reactive({
     last_btn <- input$last_click
+    click_sub$value <- NULL
     #click_viz$id <- NULL
     if (is.null(last_btn)){
       if(lang() == "es") {
@@ -219,6 +233,8 @@ server <-  function(input, output, session) {
       }
 
     }
+    print("choose")
+    print(last_btn)
 
     last_btn
 
@@ -226,19 +242,45 @@ server <-  function(input, output, session) {
 
   click_viz_sub <- reactiveValues(id = NULL)
 
+
+
   quest_choose_sub <- reactive({
+    req(quest_choose())
     print(input$last_click_sub)
-    last_btn <- input$last_click_sub
+
+    last_btn <- click_sub$value
    # click_viz_sub$id <- NULL
-    if (is.null(last_btn)) last_btn <-  "¿Cuántas personas han recibido una dosis de vacuna contra el COVID-19 en los países de la región?"
-   print( last_btn)
+    if (is.null(last_btn)){
+      if (is.null(last_btn)){
+        if(lang() == "es") {
+          temp_q <-  questions_dash_6 |> filter(pregunta_es == quest_choose()) |> select(subpergunta_es)
+          last_btn <- unique(temp_q$subpergunta_es)[1]
+
+        } else {
+          if(lang() == "en") {
+            temp_q <-  questions_dash_6 |> filter(pregunta_en == quest_choose()) |> select(subpregunta_en)
+            print("in")
+            print(temp_q)
+            last_btn <- unique(temp_q$subpregunta_en)[1]
+          }
+          else { if(lang() == "pt")
+            temp_q <-  questions_dash_6 |> filter(pregunta_pt == quest_choose()) |> select(subpregunta_pt)
+            last_btn <- unique(temp_q$subpregunta_pt)[1]
+          }
+        }
+
+      }
+
+    }
+    print("subchoose")
+    print( last_btn)
     last_btn
 
   })
 
-  observe({
-    quest_choose_sub
-  })
+  # observe({
+  #   quest_choose_sub
+  # })
 
   sel_subquestion <-reactive({
     req(quest_choose())
@@ -440,73 +482,12 @@ server <-  function(input, output, session) {
 
 
 
-  observeEvent(input$hcClicked, {
-    if (is.null(data_viz())) return()
 
-
-    if(actual_but$active %in% c("treemap")) {
-
-      click_viz$id <- input$hcClicked$cat$parent
-      click_viz$cat <- input$hcClicked$cat$name
-
-
-      if(length(unique(input$Country)) > 1){
-        if (!"All" %in% input$Country){
-
-          if (!is.null(input$hcClicked$cat$parent)) {
-            click_viz$id <-  input$hcClicked$cat$parent
-            click_viz$cat <- input$hcClicked$cat$name
-          }
-          else{
-            click_viz$id <- input$hcClicked$id }
-        }
-        else{
-
-          click_viz$id <- input$hcClicked$id }
-      }
-      if(length(unique(input$Country)) == 1){
-        if (!"All" %in% input$Country){
-
-          if (!is.null(input$hcClicked$cat$parent)) {
-            click_viz$id <-   input$hcClicked$cat$parent
-            click_viz$cat <-   input$hcClicked$cat$name
-          }
-          else{   click_viz$id <- input$hcClicked$id }
-        }
-        else{   click_viz$id <- input$hcClicked$id }
-      }
-
-    }
-    else{
-      if(!actual_but$active %in% c("linea","barras")){
-        if (!is.null(input$hcClicked$id)) {
-          click_viz$id <- input$hcClicked$id
-
-        }
-        else {   click_viz$id <- NULL
-
-        }
-
-      }
-      else{
-        if (!is.null(input$hcClicked$id)) {
-          click_viz$id <- input$hcClicked$id
-          click_viz$cat <- input$hcClicked$cat
-
-        }
-        else {   click_viz$id <- NULL
-        click_viz$cat <- NULL
-        }
-      }
-    }
-
-
-  })
 
 
   data_prep <- reactive({
-    if(is.null(input$question)) return()
-    if(is.null(input$subquestion)) return()
+    req(quest_choose())
+    req(quest_choose_sub())
 
 
     data  <- get_basic_lang_data() #todo; epserar nuevos filtros
@@ -533,23 +514,28 @@ server <-  function(input, output, session) {
 
 
   possible_viz <- reactive({
-    req(input$question)
-    req(input$subquestion)
-
+    req(quest_choose())
+    req(quest_choose_sub())
+    question <- quest_choose()
+    subquestion <- quest_choose_sub()
     v <- c("mapa", "linea", "barras", "treemap", "scatter", "sankey", "table")
 
     if(lang()=="en")
-      viz <- questions_dash_6 |> filter(pregunta_en %in% input$question & subpregunta_en %in% input$subquestion ) |>  select(viz) |> as.vector()
+      viz <- questions_dash_6 |> filter(pregunta_en %in% question & subpregunta_en %in% subquestion ) |>  select(viz) |> as.vector()
     if(lang()=="es")
-      viz <- questions_dash_6 |> filter(pregunta_es %in% input$question & subpergunta_es %in% input$subquestion ) |>  select(viz) |> as.vector()
+      viz <- questions_dash_6 |> filter(pregunta_es %in% question & subpergunta_es %in% subquestion ) |>  select(viz) |> as.vector()
     if(lang()=="pt")
-      viz <- questions_dash_6 |> filter(pregunta_pt %in% input$question & subpregunta_pt %in% input$subquestion ) |>  select(viz) |> as.vector()
+      viz <- questions_dash_6 |> filter(pregunta_pt %in% question & subpregunta_pt %in% subquestion ) |>  select(viz) |> as.vector()
 
     viz  <- unlist(strsplit(viz$viz,","))
 
 
     v <- intersect(v,viz)
+    print("v")
+    print(v)
     v <- c(v,"table")
+    print(v)
+    v
   })
 
   actual_but <- reactiveValues(active = NULL)
@@ -561,13 +547,16 @@ server <-  function(input, output, session) {
   output$viz_icons <- renderUI({
 
     req(possible_viz())
-    possible_viz <- possible_viz()
+    possible_vizt <- possible_viz()
+    print( possible_vizt)
+    if(is.null(actual_but$active)) actual <- possible_viz()[1]
+    else actual <- actual_but$active
     #
     shinyinvoer::buttonImageInput('viz_selection',
                                   " ",#div(class="title-data-select", "Selecciona tipo de visualización"),
-                                  images = possible_viz,
+                                  images = possible_vizt,
                                   path = "www/img/",
-                                  active = actual_but$active,
+                                  active = possible_vizt[1],
                                   imageStyle = list(shadow = TRUE,
                                                     borderColor = "#ffffff",
                                                     padding = "3px"))
@@ -604,14 +593,25 @@ server <-  function(input, output, session) {
   })
 
   observe({
-    if (is.null(input$viz_selection)) return()
-    req(possible_viz())
-    viz_rec <- possible_viz()
-    if (input$viz_selection %in% viz_rec) {
-      actual_but$active <- input$viz_selection
-    } else {
-      actual_but$active <- viz_rec[1]
-    }
+
+   if (!is.null(input$viz_selection)){
+        req(possible_viz())
+     print("entro2")
+       print(input$viz_selection)
+        viz_rec <- possible_viz()
+        if (input$viz_selection %in% viz_rec) {
+          actual_but$active <- input$viz_selection
+        } else {
+          actual_but$active <- viz_rec[1]
+        }
+   }
+    else{
+     req(possible_viz())
+     viz_rec <- possible_viz()
+     print("entro")
+     print(viz_rec[1])
+     actual_but$active <- viz_rec[1]
+   }
 
   })
   #####################################
@@ -621,6 +621,7 @@ server <-  function(input, output, session) {
     req(data_prep())
     req(actual_but$active)
     dta <- data_prep()
+
     # req(operations())
     # req(input$Operation_rb)
 
@@ -1026,7 +1027,7 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
     #data_prep() |> head(1)
-    data_viz()
+    #data_viz()
     #get_basic_lang_data()
 
   })
