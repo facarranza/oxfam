@@ -70,7 +70,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-        # verbatimTextOutput("debug"),
+       # verbatimTextOutput("debug"),
 
           uiOutput("viz_view")
         )
@@ -134,7 +134,7 @@ server <-  function(input, output, session) {
         # temp <- indicador
           temp <- lapply( 1:length(indicador$indicador), function(i){
             t  <- as.data.frame(oxfam_6$es[as.vector(indicador$indicador[i])])
-            colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+            colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
           temp <- rbind(temp,t)
         })
        }
@@ -146,7 +146,7 @@ server <-  function(input, output, session) {
           var <- slug_translate |> filter(slug_pt %in% input$Indicator)  |> select(slug)
           temp <- lapply( 1:length(indicador$indicador), function(i){
             t  <- as.data.frame(oxfam_one$pt[as.vector(indicador$indicador[i])])
-            colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+            colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
             temp <- rbind(temp,t)
           })
         }
@@ -555,9 +555,13 @@ server <-  function(input, output, session) {
     dta <- data_prep()
     # req(operations())
     # req(input$Operation_rb)
+
+
+    if(lang()=="es")  dta <- as.data.frame(dta)
+
     if(lang() == "es"){
 
-      dta <-  dta |> select(!c(pais_en,pais_pt)) |> rename(pais = pais_es)
+      dta <-  dta |> select(!c(pais_en,pais_pt)) |> rename(pais = pais_es,slug_en = slug_es)
     }
     if(lang() == "en"){
 
@@ -565,7 +569,7 @@ server <-  function(input, output, session) {
     }
     if(lang( )== "pt"){
 
-      dta <-   dta |> select(!c(pais_es,pais_en)) |> rename(pais = pais_pt)
+      dta <-   dta |> select(!c(pais_es,pais_en)) |> rename(pais = pais_pt,slug_en = slug_pt)
     }
     # var <- slug_translate |> filter(slug_en %in% input$Indicator)  |> select(slug)
     # var <- "new_vaccinations"
@@ -582,7 +586,7 @@ server <-  function(input, output, session) {
 
 
 
-    if(lang()=="es")  dta <- as.data.frame(dta)
+
     if( Indicador$value  == "covid_vaccine_agreements" ) {
 
      # a |> tidyr::pivot_wider(names_from=unidad)
@@ -946,9 +950,10 @@ server <-  function(input, output, session) {
   output$debug <- renderPrint({
 
     #oxfam_one
- data_viz()
+    #data_prep() |> head(1)
+ #data_viz()
     #get_basic_lang_data()
-   # data_prep()
+
   })
 
 
