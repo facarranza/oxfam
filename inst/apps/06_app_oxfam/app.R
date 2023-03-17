@@ -21,7 +21,8 @@ ui <- panelsPage(
   tags$head(
     tags$link(rel="stylesheet", type="text/css", href="custom.css"),
     tags$script(src="handler.js"),
-    tags$script(src="handler2.js")
+    tags$script(src="handler2.js"),
+    tags$script(src="handler3.js")
   ),
   useShi18ny(),
   busy_start_up(
@@ -56,7 +57,7 @@ ui <- panelsPage(
         width = 300,
         body = div(
 
-          uiOutput("subquestion")
+          uiOutput("generalsubFilters")
         )
   ),
   panel(title = ui_("data_viz"),
@@ -177,23 +178,71 @@ server <-  function(input, output, session) {
     dsapptools:::make_buttons( sel_question(), labels = sel_question())
   })
 
+  output$generalsubFilters <- renderUI({
+    req(sel_question())
+    print(sel_subquestion())
+    dsapptools:::make_buttons( sel_subquestion(), labels = sel_subquestion(), class="needed_sub", class_active = "basic_active_sub")
+  })
+
+
+  seek_dataset_lang_prhase <- function(pharse){
+    if(lang() == "es") {
+      unique(questions_dash_6$pregunta_es)
+
+    } else {
+      if(lang() == "en") {
+        unique(questions_dash_6$pregunta_en)
+      }
+      else { if(lang() == "pt")
+        unique(questions_dash_6$pregunta_pt)
+      }
+    }
+  }
 
 
   click_viz <- reactiveValues(id = NULL)
 
   quest_choose <- reactive({
     last_btn <- input$last_click
-    click_viz$id <- NULL
-    if (is.null(last_btn)) last_btn <- "¿Cómo ha sido el proceso de vacunación en América Latina y el Caribe?"
+    #click_viz$id <- NULL
+    if (is.null(last_btn)){
+      if(lang() == "es") {
+        last_btn <- unique(questions_dash_6$pregunta_es)[1]
+
+      } else {
+        if(lang() == "en") {
+          last_btn <- unique(questions_dash_6$pregunta_en)[1]
+        }
+        else { if(lang() == "pt")
+          last_btn <- unique(questions_dash_6$pregunta_pt)[1]
+        }
+      }
+
+    }
 
     last_btn
 
   })
 
+  click_viz_sub <- reactiveValues(id = NULL)
 
+  quest_choose_sub <- reactive({
+    print(input$last_click_sub)
+    last_btn <- input$last_click_sub
+   # click_viz_sub$id <- NULL
+    if (is.null(last_btn)) last_btn <-  "¿Cuántas personas han recibido una dosis de vacuna contra el COVID-19 en los países de la región?"
+   print( last_btn)
+    last_btn
+
+  })
+
+  observe({
+    quest_choose_sub
+  })
 
   sel_subquestion <-reactive({
     req(quest_choose())
+    print(quest_choose())
 
     if(lang() == "es") {
       t <- questions_dash_6 |> dplyr::filter(pregunta_es %in% quest_choose()) |> select(subpergunta_es)

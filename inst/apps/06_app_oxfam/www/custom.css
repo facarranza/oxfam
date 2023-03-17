@@ -19,6 +19,11 @@ html, body {
   padding: 0 1rem;
 }
 
+.panel-content {
+ margin-top: 15px !important;
+}
+
+
 #viz-style_body {
   margin-top: 0rem !important;
 }
@@ -71,11 +76,16 @@ html, body {
  border-radius: 10px;
 }
 
+#generalFilters{
+  margin-top: 10px !important;
+
+}
 .buttons-group {
   background-color:transparent;
   display:flex !important;
   gap: 7px !important;
-  padding:0 !important
+  padding:0 !important;
+  margin-top: 10px !important;
 }
 
 .buttons-group .button-container{
