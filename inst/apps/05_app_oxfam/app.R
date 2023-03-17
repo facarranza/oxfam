@@ -196,24 +196,6 @@ server <-  function(input, output, session) {
   })
 
 
-  # var_select <- reactive({
-  #   req(viz_select())
-  #   req(slug_selected())
-  #   viz <- viz_select()
-  #   var_cat <- c("id", paste0("pais_", lang()), paste0("slug_", lang()))
-  #
-  #   var_num <- "value"
-  #   if (length(slug_selected()) > 1) var_num <- slug_selected()
-  #
-  # })
-
-
-  # special cases
-  # vaccination_approvals_trials
-  # school_closures
-  # stringency_index
-  # product_pipeline
-
   data_filter_slug <- reactive({
     req(lang())
     req(slug_selected())
@@ -224,18 +206,44 @@ server <-  function(input, output, session) {
   slug_unidad_opts <- reactive({
     req(data_filter_slug())
     if (!"unidad" %in% names(data_filter_slug())) return()
-    unique(data_filter_slug()$unidad)
+    setNames(c("all", unique(data_filter_slug()$unidad)),
+             c(i_("all", lang()), unique(data_filter_slug()$unidad))
+    )
   })
 
   show_unidad <- reactive({
-    req(slug_selected())
+    req(data_filter_slug())
     show <- FALSE
-
-    if (!is.null(slug_unidad_opts())) {
-      if (length(slug_selected()) == 1) show <- TRUE
-      if (length(slug_unidad_opts()) == 1) show <- FALSE
+    if ("unidad" %in% names(data_filter_slug())) {
+      show <- length(unique(data_filter_slug()$unidad)) > 1
     }
     show
+  })
+
+
+  observe({
+    if (is.null(show_unidad())) return()
+    if (is.null(input$id_unidad)) return()
+
+    id_u <- which(input$id_unidad %in% "all")
+    if (identical(id_u, integer())) {
+      return()
+    } else {
+      if (length(input$id_unidad) == 1) return()
+      if (length(input$id_unidad) > 1) {
+        if (id_u == 1) {
+          sc <- setdiff(input$id_unidad, "all")
+          updateSelectizeInput(session,
+                               inputId = "id_unidad",
+                               selected = sc)
+        } else {
+          updateSelectizeInput(session,
+                               inputId = "id_unidad",
+                               selected = "all")
+        }
+      }
+    }
+
   })
 
 
@@ -243,10 +251,13 @@ server <-  function(input, output, session) {
     req(data_filter_slug())
     req(slug_selected())
     if (length(slug_selected()) == 1) {
+      if (is.null(show_unidad())) return()
       d <- data_filter_slug()
       if (show_unidad()) {
         req(input$id_unidad)
+        if (!"all" %in% input$id_unidad) {
         d <- d |> filter(unidad %in% input$id_unidad)
+        }
       }
     } else {
       ls <- oxfam_data[[lang()]][slug_selected()]
@@ -259,11 +270,12 @@ server <-  function(input, output, session) {
         names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
         id_valor <- grep("valor", names(ls[[2]]))
         names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
-        #d <- ls
-        d <- ls |> purrr::reduce(inner_join, by = c("fecha", "pais_en", "pais_es", "pais_pt"))
+        d <- ls |> purrr::reduce(left_join,
+                                 by = c("fecha", "pais_en", "pais_es", "pais_pt"),
+                                 multiple = "any")
       }
     }
-
+    d
   })
 
   slug_countries_opts <- reactive({
@@ -316,11 +328,12 @@ server <-  function(input, output, session) {
 
   have_date <- reactive({
     req(data_countries())
-    show <- "fecha" %in% names(data_countries())
-    if (show) {
-      show <- min(data_countries()$fecha, na.rm = TRUE) != max(data_countries()$fecha, na.rm = TRUE)
+    have_date <- FALSE
+
+    if ("fecha" %in% names(data_countries())) {
+      have_date  <- length(unique(data_countries()$fecha)) > 1
     }
-    show
+    have_date
   })
 
   date_start <- reactive({

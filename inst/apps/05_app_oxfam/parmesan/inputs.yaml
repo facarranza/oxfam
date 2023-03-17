@@ -30,6 +30,12 @@ id_unidad:
   input_params:
     label: slug_unidad
     choices: slug_unidad_opts()
+    selected: all
+    multiple: true
+    options:
+      plugins:
+      - - remove_button
+      - - drag_drop
 id_slug_agg:
   show: true
   show_if:
