@@ -1,0 +1,13 @@
+name: oxfam_questions
+title: oxfam_questions
+username:
+account: datasketch
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8592940
+bundleId: 6969246
+url: https://datasketch.shinyapps.io/oxfam_questions/
+when: 1679019882.70322
+lastSyncTime: 1679019882.70323
+asMultiple: FALSE
+asStatic: FALSE

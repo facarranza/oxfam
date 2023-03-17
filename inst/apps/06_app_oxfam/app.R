@@ -70,7 +70,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-         # verbatimTextOutput("debug"),
+         verbatimTextOutput("debug"),
 
           uiOutput("viz_view")
         )
@@ -593,7 +593,7 @@ server <-  function(input, output, session) {
     }
 
 
-    hgch_sankey_CatCatNum(data_result)
+    # hgch_sankey_CatCatNum(data_result)
     # if(input$Operation_rb %in% c("Total")) trad = "sum"
     # if(input$Operation_rb %in% c("Mean","Promedio","Média")) trad = "mean"
     trad= "sum"
