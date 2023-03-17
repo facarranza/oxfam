@@ -20,8 +20,7 @@ webshot::install_phantomjs()
 ui <- panelsPage(
   tags$head(
     tags$link(rel="stylesheet", type="text/css", href="custom.css"),
-    tags$script(src="handler.js"),
-    tags$script(src="handler2.js")
+    tags$script(src="handler.js")
   ),
   useShi18ny(),
   busy_start_up(
@@ -44,7 +43,7 @@ ui <- panelsPage(
           uiOutput("generalFilters")
         ),
 
-        footer = tags$a(
+    footer = tags$a(
           href="https://www.datasketch.co", target="blank",
           img(src= 'logos_es.svg', style = "border-top: 1px solid #252525;",
               align = "left", width = 300, height = 80))
@@ -71,7 +70,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-          # verbatimTextOutput("debug"),
+       # verbatimTextOutput("debug"),
 
           uiOutput("viz_view")
         )
@@ -115,7 +114,7 @@ server <-  function(input, output, session) {
   get_basic_lang_data <- reactive({
     if(is.null(input$question)) return()
     if(is.null(input$subquestion)) return()
-    temp <-  NULL
+     temp <-  NULL
     if(lang()=="en"){
 
       indicador <- questions_dash_6 |> filter(pregunta_en %in% input$question & subpregunta_en %in% input$subquestion ) |>  select(indicador)
@@ -133,12 +132,12 @@ server <-  function(input, output, session) {
         indicador <- questions_dash_6 |> filter(pregunta_es %in% input$question & subpergunta_es %in% input$subquestion ) |>  select(indicador)
         Indicador$value <- indicador
         # temp <- indicador
-        temp <- lapply( 1:length(indicador$indicador), function(i){
-          t  <- as.data.frame(oxfam_6$es[as.vector(indicador$indicador[i])])
-          colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+          temp <- lapply( 1:length(indicador$indicador), function(i){
+            t  <- as.data.frame(oxfam_6$es[as.vector(indicador$indicador[i])])
+            colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
           temp <- rbind(temp,t)
         })
-      }
+       }
       else{
 
         if(lang()=="pt"){
@@ -178,14 +177,11 @@ server <-  function(input, output, session) {
   })
 
 
-
-  click_viz <- reactiveValues(id = NULL)
-
   quest_choose <- reactive({
     last_btn <- input$last_click
     click_viz$id <- NULL
-    if (is.null(last_btn)) last_btn <- "¿Cómo ha sido el proceso de vacunación en América Latina y el Caribe?"
-
+    caption_tx$active <- ""
+    if (is.null(last_btn)) last_btn <- "Inspecciones"
     last_btn
 
   })
@@ -193,20 +189,20 @@ server <-  function(input, output, session) {
 
 
   sel_subquestion <-reactive({
-    req(quest_choose())
+    req(input$question)
 
     if(lang() == "es") {
-      t <- questions_dash_6 |> dplyr::filter(pregunta_es %in% quest_choose()) |> select(subpergunta_es)
-      unique(t$subpergunta_es)
+      t <- questions_dash_6 |> dplyr::filter(pregunta_es %in% input$question) |> select(subpergunta_es)
+       unique(t$subpergunta_es)
 
     } else {
       if(lang() == "en") {
-        t <- questions_dash_6 |> dplyr::filter(pregunta_en %in% quest_choose()) |> select(subpregunta_en)
+        t <- questions_dash_6 |> dplyr::filter(pregunta_en %in% input$question) |> select(subpregunta_en)
         unique(t$subpregunta_en)
       }
       else { if(lang() == "pt")
-        t <- questions_dash_6 |> dplyr::filter(pregunta_pt %in% quest_choose()) |> select(subpregunta_pt)
-      unique(t$subpregunta_pt)
+        t <- questions_dash_6 |> dplyr::filter(pregunta_pt %in% input$question) |> select(subpregunta_pt)
+        unique(t$subpregunta_pt)
       }
     }
     # ui_(unique(oxfam_one$es$new_vaccinations$pais), lang = lang())
@@ -234,48 +230,48 @@ server <-  function(input, output, session) {
     temp2 <- NULL
 
     if(!is.null(temp) & !identical(temp, character(0))) {
-      # questions_dash_6$q1 <-  as.numeric(as.factor(questions_dash_6$pregunta_en))
+        # questions_dash_6$q1 <-  as.numeric(as.factor(questions_dash_6$pregunta_en))
 
-      questions_dash_6 <-   questions_dash_6 |> mutate(q1 = case_when(
-        pregunta_es == "¿Cómo ha sido el proceso de vacunación en América Latina y el Caribe?"   ~ 1,
-        pregunta_es == "¿Cómo ha evolucionado el COVID-19 en los países de la región?"       ~ 2,
-        pregunta_es == "¿Cuál ha sido el comportamiento de los fallecimientos por COVID-19 en los países entre 2020 y 2022?"  ~ 3,
-        pregunta_es == "¿Qué efectos ha tenido el COVID-19 en cada país?"     ~ 4,
-        pregunta_es ==  "¿Cuáles compras, desarrollos y aprobaciones de vacunas han hecho los países?"    ~ 5,
-        pregunta_es ==  "¿Qué donaciones y apoyos financieros han obtenido los países para responder a la pandemia?"   ~ 6
-      ))
-      if(lang()=="en" | is.null(lang())) {
-        temp2 <- questions_dash_6 |> filter(q1 %in% temp)  |> select(pregunta_en) |> rename(pregunta =  pregunta_en)
-      }
-      if(lang()=="es") {
-        temp2 <- questions_dash_6 |> filter(q1 %in% temp)  |> select(pregunta_es) |> rename(pregunta =  pregunta_es)
-      }
-      if(lang()=="pt") {
-        temp2 <- questions_dash_6 |> filter(q1 %in% temp) |>   select(pregunta_pt)  |> rename(pregunta =  pregunta_pt)
-      }
-      i_(temp2$pregunta, lang=lang())
+        questions_dash_6 <-   questions_dash_6 |> mutate(q1 = case_when(
+          pregunta_es == "¿Cómo ha sido el proceso de vacunación en América Latina y el Caribe?"   ~ 1,
+          pregunta_es == "¿Cómo ha evolucionado el COVID-19 en los países de la región?"       ~ 2,
+          pregunta_es == "¿Cuál ha sido el comportamiento de los fallecimientos por COVID-19 en los países entre 2020 y 2022?"  ~ 3,
+          pregunta_es == "¿Qué efectos ha tenido el COVID-19 en cada país?"     ~ 4,
+          pregunta_es ==  "¿Cuáles compras, desarrollos y aprobaciones de vacunas han hecho los países?"    ~ 5,
+          pregunta_es ==  "¿Qué donaciones y apoyos financieros han obtenido los países para responder a la pandemia?"   ~ 6
+          ))
+        if(lang()=="en" | is.null(lang())) {
+          temp2 <- questions_dash_6 |> filter(q1 %in% temp)  |> select(pregunta_en) |> rename(pregunta =  pregunta_en)
+        }
+        if(lang()=="es") {
+          temp2 <- questions_dash_6 |> filter(q1 %in% temp)  |> select(pregunta_es) |> rename(pregunta =  pregunta_es)
+        }
+        if(lang()=="pt") {
+          temp2 <- questions_dash_6 |> filter(q1 %in% temp) |>   select(pregunta_pt)  |> rename(pregunta =  pregunta_pt)
+        }
+        i_(temp2$pregunta, lang=lang())
     }
 
     else{
 
-      if(lang() == "es") {
-        unique(questions_dash_6$pregunta_es)[1]
+    if(lang() == "es") {
+      unique(questions_dash_6$pregunta_es)[1]
 
-      } else {
-        if(lang() == "en") {
-          unique(questions_dash_6$pregunta_en)[1]
-        }
-        else { if(lang() == "pt")
-          unique(questions_dash_6$pregunta_pt)[1]
-        }
-      }}
+    } else {
+      if(lang() == "en") {
+        unique(questions_dash_6$pregunta_en)[1]
+      }
+      else { if(lang() == "pt")
+        unique(questions_dash_6$pregunta_pt)[1]
+      }
+    }}
 
 
   })
 
 
   sel_subquestion_url<- reactive({
-    req(quest_choose)
+    req(input$question)
     query <- parseQueryString(session$clientData$url_search)
     temp <- stringr::str_to_title(query[["subquestion"]])
     temp0 <- stringr::str_to_title(query[["question"]])
@@ -284,43 +280,43 @@ server <-  function(input, output, session) {
       # questions_dash_6$q2 <-  as.numeric(as.factor(questions_dash_6$subpregunta_en))
 
       questions_dash_6 <-  questions_dash_6 |> mutate( q2 = case_when(
-        subpergunta_es == "¿Cuántas personas han recibido una dosis de vacuna contra el COVID-19 en los países de la región?" ~ 1,
-        subpergunta_es == "¿Cuántas personas han recibido todas las dosis prescritas por el protocolo de vacunación inicial contra el COVID-19 en los países de la región?" ~ 2,
-        subpergunta_es == "¿Cuántas personas han recibido al menos una dosis de vacuna contra el COVID-19 en los países de la región?"   ~ 3,
-        subpergunta_es == "¿Cuántas dosis de refuerzo de la vacuna fueron administradas por cada cien personas?"                             ~ 4,
-        subpergunta_es == "¿Cuántas personas recibieron al menos una dosis de vacuna entre 100 personas?"                                    ~ 5,
-        subpergunta_es == "¿Cuántas personas completamente vacunadas hay en comparación con las personas que recibieron mínimo una dosis?"   ~ 6,
-        subpergunta_es =="¿Cuántos casos de COVID-19 por millón de habitantes se confirmaron por día?"                                       ~ 7,
-        subpergunta_es =="¿Cuántas personas han sido internadas en Unidades de Cuidado Intensivo?"                                               ~ 8,
-        subpergunta_es =="¿Cuál es la diferencia entre el número de pacientes en Unidades de Cuidado Intensivo y en hospitales por millón?"        ~ 9,
-        subpergunta_es =="¿Cuál es la admisión semanal en hospitales por millón en comparación con la admisión en Unidades de Cuidado Intensivo?"    ~ 10,
-        subpergunta_es =="¿Cuántas nuevas infecciones en promedio ha causado un solo individuo infectado de COVID-19 en cada país?"                       ~ 11,
-        subpergunta_es =="¿Cuántas pruebas de COVID-19 en promedio se han hecho entre mil habitantes de cada país?"                                      ~ 12,
-        subpergunta_es == "¿Cuál es la tasa de pruebas positivas de COVID-19 por país?"                                                                      ~ 13,
-        subpergunta_es =="¿Cuánto ha sido el total de pruebas dividido entre el número de casos confirmados por país?"                                       ~ 14,
-        subpergunta_es =="¿Cuántas muertes a causa de COVID-19 por millón de habitantes se reportaron en cada país, incluyendo presuntas muertes?"          ~ 15,
-        subpergunta_es =="¿Cuál es la diferencia de porcentaje entre el número reportado de muertes semanales o mensuales entre 2020 y 2022 y el número proyectado de muertes para el mismo período con base en años anteriores de los países de América Latina y el Caribe?" ~ 16,
-        subpergunta_es =="¿Cuál es la diferencia acumulada entre el número informado de muertes desde el 1 de enero de 2020 y el número proyectado de muertes para el mismo período con base en años anteriores de los países de América Latina y el Caribe?" ~ 17,
-        subpergunta_es =="¿Cuántas muertes en exceso hubo en total en los países respecto a las proyectadas en años anteriores?" ~ 18,
-        subpergunta_es =="¿Cuál es la correlación entre las nuevas muertes por millón y el acumulado en el exceso de mortalidad?"   ~ 19,
-        subpergunta_es =="¿Cuál es la diferencia entre las nuevas muerte y los nuevos casos  por millón en cada país entre 2020 y 2022?" ~ 20,
-        subpergunta_es =="¿Cuál fue el Índice de Rigurosidad de los países a lo largo de la pandemia por establecer cierres de escuelas, cierres de lugares de trabajo y prohibiciones de viaje, entre otras medidas?" ~ 21,
-        subpergunta_es =="¿Cuántas personas con necesidad de asistencia y protección humanitarias fueron asistidas por el Plan de Respuesta Interagencial de Naciones Unidas en los países?"  ~ 22,
-        subpergunta_es =="¿Cuántas personas no fueron vacunadas de otras enfermedades debido al COVID-19?"                                                                                    ~ 23,
-        subpergunta_es =="¿Cuál ha sido el estado de operación de las instituciones educativas debido a las medidas de los gobiernos para mitigar la pandemia?"                               ~ 24,
-        subpergunta_es =="¿Cuál es el Índice de Seguridad de Salud Global de los países, de acuerdo con su seguridad sanitaria y otras capacidades relacionadas para responder a epidemias y pandemias?" ~ 25,
-        subpergunta_es =="¿Cuál es la correlación entre el promedio del Índice de Rigurosidad y el Índice de Seguridad de Salud Global de los países?"                                                    ~ 26,
-        subpergunta_es =="¿Cuántas dosis recibieron los países de la región a partir de acuerdos con los fabricantes?"                                                                                        ~ 27,
-        subpergunta_es =="¿Cuáles fueron los fabricantes con los que los países establecieron acuerdos para obtener vacunas?"                                                                               ~ 28,
-        subpergunta_es =="¿Cuáles son los precios por dosis en los países según las investigaciones periodísticas?"                                                                                         ~ 29,
-        subpergunta_es =="¿En qué fase de ensayo clínico están las vacunas en los países de la región?"                                                                                                     ~ 30,
-        subpergunta_es =="¿Cuántos proyectos de vacunas contra el COVID-19 desarrollaron algunas instituciones en países de América Latina y el Caribe?"                                                    ~ 31,
-        subpergunta_es =="¿Cuánto apoyo financiero en dólares recibieron los países por parte de la Alianza para las Vacunas Gavi y el Banco Mundial?"                                                      ~ 32,
-        subpergunta_es =="¿Cuánta asignación de financiación de proyectos en dólares han recibido los países por parte del Fondo Central para la Acción en Casos de Emergencia (CERF) de OCHA?"             ~ 33,
-        subpergunta_es =="¿Qué países donaron vacunas a América Latina y el Caribe?"                                                                                                                        ~ 34,
-        subpergunta_es =="¿Cuántas dosis donadas recibieron los países de América Latina y el Caribe?"                                                                                                      ~ 35,
-        subpergunta_es =="¿Cuántas dosis donaron China y Estados Unidos a los países de la región y cómo están distribuidas?"                                                                               ~ 36,
-        subpergunta_es =="¿Cuál es la diferencia entre las dosis obtenidas por acuerdos con fabricantes y por donaciones?"  ~ 37
+      subpergunta_es == "¿Cuántas personas han recibido una dosis de vacuna contra el COVID-19 en los países de la región?" ~ 1,
+      subpergunta_es == "¿Cuántas personas han recibido todas las dosis prescritas por el protocolo de vacunación inicial contra el COVID-19 en los países de la región?" ~ 2,
+      subpergunta_es == "¿Cuántas personas han recibido al menos una dosis de vacuna contra el COVID-19 en los países de la región?"   ~ 3,
+      subpergunta_es == "¿Cuántas dosis de refuerzo de la vacuna fueron administradas por cada cien personas?"                             ~ 4,
+      subpergunta_es == "¿Cuántas personas recibieron al menos una dosis de vacuna entre 100 personas?"                                    ~ 5,
+      subpergunta_es == "¿Cuántas personas completamente vacunadas hay en comparación con las personas que recibieron mínimo una dosis?"   ~ 6,
+      subpergunta_es =="¿Cuántos casos de COVID-19 por millón de habitantes se confirmaron por día?"                                       ~ 7,
+      subpergunta_es =="¿Cuántas personas han sido internadas en Unidades de Cuidado Intensivo?"                                               ~ 8,
+      subpergunta_es =="¿Cuál es la diferencia entre el número de pacientes en Unidades de Cuidado Intensivo y en hospitales por millón?"        ~ 9,
+      subpergunta_es =="¿Cuál es la admisión semanal en hospitales por millón en comparación con la admisión en Unidades de Cuidado Intensivo?"    ~ 10,
+      subpergunta_es =="¿Cuántas nuevas infecciones en promedio ha causado un solo individuo infectado de COVID-19 en cada país?"                       ~ 11,
+      subpergunta_es =="¿Cuántas pruebas de COVID-19 en promedio se han hecho entre mil habitantes de cada país?"                                      ~ 12,
+      subpergunta_es == "¿Cuál es la tasa de pruebas positivas de COVID-19 por país?"                                                                      ~ 13,
+      subpergunta_es =="¿Cuánto ha sido el total de pruebas dividido entre el número de casos confirmados por país?"                                       ~ 14,
+      subpergunta_es =="¿Cuántas muertes a causa de COVID-19 por millón de habitantes se reportaron en cada país, incluyendo presuntas muertes?"          ~ 15,
+      subpergunta_es =="¿Cuál es la diferencia de porcentaje entre el número reportado de muertes semanales o mensuales entre 2020 y 2022 y el número proyectado de muertes para el mismo período con base en años anteriores de los países de América Latina y el Caribe?" ~ 16,
+      subpergunta_es =="¿Cuál es la diferencia acumulada entre el número informado de muertes desde el 1 de enero de 2020 y el número proyectado de muertes para el mismo período con base en años anteriores de los países de América Latina y el Caribe?" ~ 17,
+      subpergunta_es =="¿Cuántas muertes en exceso hubo en total en los países respecto a las proyectadas en años anteriores?" ~ 18,
+      subpergunta_es =="¿Cuál es la correlación entre las nuevas muertes por millón y el acumulado en el exceso de mortalidad?"   ~ 19,
+      subpergunta_es =="¿Cuál es la diferencia entre las nuevas muerte y los nuevos casos  por millón en cada país entre 2020 y 2022?" ~ 20,
+      subpergunta_es =="¿Cuál fue el Índice de Rigurosidad de los países a lo largo de la pandemia por establecer cierres de escuelas, cierres de lugares de trabajo y prohibiciones de viaje, entre otras medidas?" ~ 21,
+      subpergunta_es =="¿Cuántas personas con necesidad de asistencia y protección humanitarias fueron asistidas por el Plan de Respuesta Interagencial de Naciones Unidas en los países?"  ~ 22,
+      subpergunta_es =="¿Cuántas personas no fueron vacunadas de otras enfermedades debido al COVID-19?"                                                                                    ~ 23,
+      subpergunta_es =="¿Cuál ha sido el estado de operación de las instituciones educativas debido a las medidas de los gobiernos para mitigar la pandemia?"                               ~ 24,
+      subpergunta_es =="¿Cuál es el Índice de Seguridad de Salud Global de los países, de acuerdo con su seguridad sanitaria y otras capacidades relacionadas para responder a epidemias y pandemias?" ~ 25,
+      subpergunta_es =="¿Cuál es la correlación entre el promedio del Índice de Rigurosidad y el Índice de Seguridad de Salud Global de los países?"                                                    ~ 26,
+      subpergunta_es =="¿Cuántas dosis recibieron los países de la región a partir de acuerdos con los fabricantes?"                                                                                        ~ 27,
+      subpergunta_es =="¿Cuáles fueron los fabricantes con los que los países establecieron acuerdos para obtener vacunas?"                                                                               ~ 28,
+      subpergunta_es =="¿Cuáles son los precios por dosis en los países según las investigaciones periodísticas?"                                                                                         ~ 29,
+      subpergunta_es =="¿En qué fase de ensayo clínico están las vacunas en los países de la región?"                                                                                                     ~ 30,
+      subpergunta_es =="¿Cuántos proyectos de vacunas contra el COVID-19 desarrollaron algunas instituciones en países de América Latina y el Caribe?"                                                    ~ 31,
+      subpergunta_es =="¿Cuánto apoyo financiero en dólares recibieron los países por parte de la Alianza para las Vacunas Gavi y el Banco Mundial?"                                                      ~ 32,
+      subpergunta_es =="¿Cuánta asignación de financiación de proyectos en dólares han recibido los países por parte del Fondo Central para la Acción en Casos de Emergencia (CERF) de OCHA?"             ~ 33,
+      subpergunta_es =="¿Qué países donaron vacunas a América Latina y el Caribe?"                                                                                                                        ~ 34,
+      subpergunta_es =="¿Cuántas dosis donadas recibieron los países de América Latina y el Caribe?"                                                                                                      ~ 35,
+      subpergunta_es =="¿Cuántas dosis donaron China y Estados Unidos a los países de la región y cómo están distribuidas?"                                                                               ~ 36,
+      subpergunta_es =="¿Cuál es la diferencia entre las dosis obtenidas por acuerdos con fabricantes y por donaciones?"  ~ 37
       ))
 
 
@@ -342,29 +338,29 @@ server <-  function(input, output, session) {
         temp2 <- data_t |> filter(q2 %in% temp)  |> select(subpregunta_pt) |> rename(subpregunta =  subpregunta_pt)
       }
 
-      temp <- temp2$subpregunta
+       temp <- temp2$subpregunta
     }
     else{
-      if(lang() == "es") {
-        data_t <-questions_dash_6 |> filter(pregunta_es  %in%   unique(questions_dash_6$pregunta_es)[1])
-        temp2 <- data_t  |> select(subpergunta_es) |> rename(subpregunta = subpergunta_es)
-        temp <- unique(temp2$subpregunta)[1]
-
-
-      } else {
-        if(lang() == "en") {
-          data_t <-questions_dash_6 |> filter(pregunta_en  %in%   unique(questions_dash_6$pregunta_en)[1])
-          temp2 <- data_t  |> select(subpregunta_en) |> rename(subpregunta =  subpregunta_en)
+         if(lang() == "es") {
+          data_t <-questions_dash_6 |> filter(pregunta_es  %in%   unique(questions_dash_6$pregunta_es)[1])
+          temp2 <- data_t  |> select(subpergunta_es) |> rename(subpregunta = subpergunta_es)
           temp <- unique(temp2$subpregunta)[1]
-        }
-        else {
-          if(lang() == "pt")
+
+
+        } else {
+          if(lang() == "en") {
+            data_t <-questions_dash_6 |> filter(pregunta_en  %in%   unique(questions_dash_6$pregunta_en)[1])
+            temp2 <- data_t  |> select(subpregunta_en) |> rename(subpregunta =  subpregunta_en)
+            temp <- unique(temp2$subpregunta)[1]
+          }
+          else {
+            if(lang() == "pt")
             unique(questions_dash_6$pregunta_pt)[1]
-          data_t <-questions_dash_6 |> filter(pregunta_pt  %in%   unique(questions_dash_6$pregunta_pt)[1])
-          temp2 <- data_t  |> select(subpregunta_pt) |> rename(subpregunta =  subpregunta_pt)
-          temp <- unique(temp2$subpregunta)[1]
-        }
-      }}
+            data_t <-questions_dash_6 |> filter(pregunta_pt  %in%   unique(questions_dash_6$pregunta_pt)[1])
+            temp2 <- data_t  |> select(subpregunta_pt) |> rename(subpregunta =  subpregunta_pt)
+            temp <- unique(temp2$subpregunta)[1]
+          }
+    }}
 
 
   })
@@ -490,17 +486,17 @@ server <-  function(input, output, session) {
     v <- c("mapa", "linea", "barras", "treemap", "scatter", "sankey", "table")
 
     if(lang()=="en")
-      viz <- questions_dash_6 |> filter(pregunta_en %in% input$question & subpregunta_en %in% input$subquestion ) |>  select(viz) |> as.vector()
+    viz <- questions_dash_6 |> filter(pregunta_en %in% input$question & subpregunta_en %in% input$subquestion ) |>  select(viz) |> as.vector()
     if(lang()=="es")
       viz <- questions_dash_6 |> filter(pregunta_es %in% input$question & subpergunta_es %in% input$subquestion ) |>  select(viz) |> as.vector()
     if(lang()=="pt")
       viz <- questions_dash_6 |> filter(pregunta_pt %in% input$question & subpregunta_pt %in% input$subquestion ) |>  select(viz) |> as.vector()
 
-    viz  <- unlist(strsplit(viz$viz,","))
+     viz  <- unlist(strsplit(viz$viz,","))
 
 
-    v <- intersect(v,viz)
-    v <- c(v,"table")
+     v <- intersect(v,viz)
+     v <- c(v,"table")
   })
 
   actual_but <- reactiveValues(active = NULL)
@@ -529,10 +525,10 @@ server <-  function(input, output, session) {
     if (is.null(actual_but$active)) return()
     if (actual_but$active != "table") {
       dsmodules::downloadImageUI( "download_viz",
-                                  dropdownLabel =i_("download",lang=lang()),
-                                  formats = c("jpeg", "pdf", "png", "html"),
-                                  display = "dropdown",
-                                  text = i_("download",lang=lang()))
+                                 dropdownLabel =i_("download",lang=lang()),
+                                 formats = c("jpeg", "pdf", "png", "html"),
+                                 display = "dropdown",
+                                 text = i_("download",lang=lang()))
     } else {
       dsmodules::downloadTableUI("dropdown_table",
                                  dropdownLabel = "download", #i_("download",lang=lang()),
@@ -608,15 +604,15 @@ server <-  function(input, output, session) {
 
     if( Indicador$value  == "covid_vaccine_agreements" ) {
 
-      # a |> tidyr::pivot_wider(names_from=unidad)
-      dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "-")) |> tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna"))
+     # a |> tidyr::pivot_wider(names_from=unidad)
+     dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "-")) |> tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna"))
 
 
     }
 
     if( Indicador$value  == "doses_delivered_vaccine_donations" ) {
 
-      dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("donante","vacuna"))
+         dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("donante","vacuna"))
 
 
     }
@@ -649,7 +645,7 @@ server <-  function(input, output, session) {
     if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
 
 
-    data_result
+     data_result
   })
   ###############calendar pending
 
@@ -966,18 +962,11 @@ server <-  function(input, output, session) {
     # dtable
   })
 
-  # observe({
-  #   print( input$last_click)
-  #   print(quest_choose())
-  # })
-
   output$debug <- renderPrint({
 
     #oxfam_one
-    # input$last_click
-    # quest_choose()
     #data_prep() |> head(1)
-    data_viz()
+ #data_viz()
     #get_basic_lang_data()
 
   })
