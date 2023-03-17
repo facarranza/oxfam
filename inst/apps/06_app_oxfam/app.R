@@ -57,7 +57,11 @@ ui <- panelsPage(
         width = 300,
         body = div(
 
-          uiOutput("generalsubFilters")
+          shinycustomloader::withLoader(
+            uiOutput("generalsubFilters"),
+            type = "html", loader = "loader4"
+          )
+
         )
   ),
   panel(title = ui_("data_viz"),
@@ -72,9 +76,13 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-           verbatimTextOutput("debug"),
+          # verbatimTextOutput("debug"),
 
-          uiOutput("viz_view")
+         #  shinycustomloader::withLoader(
+             uiOutput("viz_view")
+          #   type = "html", loader = "loader4"
+        #   )
+
         )
   )
 
@@ -99,26 +107,12 @@ server <-  function(input, output, session) {
     shinyjs::delay(500, uiLangUpdate(input$shi18ny_ui_classes, lang()))
   })
 
-  parmesan <- parmesan_load()
-  parmesan_input <- parmesan_watch(input, parmesan)
-
-  parmesan_lang <- reactive({
-    i_(parmesan, lang())
-  })
-
-
-  output_parmesan("controls", parmesan = parmesan_lang,
-                  input = input, output = output, session = session,
-                  env = environment())
-
 
 
   get_basic_lang_data <- reactive({
     req(quest_choose())
     req(quest_choose_sub())
 
-    # if(is.null(quest_choose())) return()
-    # if(is.null(quest_choose_sub())) return()
     temp <-  NULL
     question <- quest_choose()
     subquestion <- quest_choose_sub()
@@ -128,10 +122,8 @@ server <-  function(input, output, session) {
       Indicador$value <- indicador
       temp <- plyr::ldply( 1:length(indicador$indicador), function(i){
         t  <- as.data.frame(oxfam_6$en[as.vector(indicador$indicador[i])])
-        print("ncol(t)")
-        print(ncol(t))
         if(ncol(t) == 9) {
-          print(colnames(t) )
+
          colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
           }
         else  {
@@ -165,15 +157,18 @@ server <-  function(input, output, session) {
         if(lang()=="pt"){
           indicador <- questions_dash_6 |> filter(pregunta_pt %in% question & subpregunta_pt %in% subquestion ) |>  select(indicador)
           Indicador$value <- indicador
-          var <- slug_translate |> filter(slug_pt %in% input$Indicator)  |> select(slug)
           temp <- lapply( 1:length(indicador$indicador), function(i){
-            t  <- as.data.frame(oxfam_one$pt[as.vector(indicador$indicador[i])])
+            t  <- as.data.frame(oxfam_6$pt[as.vector(indicador$indicador[i])])
             if(ncol(t)==9)
               colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
-            else
+            else{
+
               colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor")
+            }
             temp <- rbind(temp,t)
+
           })
+
         }
 
       }
@@ -199,39 +194,24 @@ server <-  function(input, output, session) {
 
   output$generalFilters <- renderUI({
     #req(quest_choose())
-    dsapptools:::make_buttons( sel_question(), labels = sel_question(), default_active =   sel_question()[1])
+    dsapptools:::make_buttons( sel_question(), labels = sel_question(), default_active =  sel_question_url())
   })
 
   output$generalsubFilters <- renderUI({
-    req(sel_question())
-  #  req(quest_choose_sub())
-
-    dsapptools:::make_buttons( sel_subquestion(), labels = sel_subquestion(), class="needed_sub", class_active = "basic_active_sub", default_active =   sel_subquestion()[1])
+    req(sel_question_url())
+    dsapptools:::make_buttons( sel_subquestion(), labels = sel_subquestion(), class="needed_sub", class_active = "basic_active_sub", default_active =   sel_subquestion_url()[1])
   })
 
-
-  seek_dataset_lang_prhase <- function(pharse){
-    if(lang() == "es") {
-      unique(questions_dash_6$pregunta_es)
-
-    } else {
-      if(lang() == "en") {
-        unique(questions_dash_6$pregunta_en)
-      }
-      else { if(lang() == "pt")
-        unique(questions_dash_6$pregunta_pt)
-      }
-    }
-  }
 
 
   click_viz <- reactiveValues(id = NULL)
 
-  click_sub <- reactiveValues( value = NULL)
+  click_sub <- reactiveValues(value = NULL)
 
   observe({
     click_sub$value <-  input$last_click_sub
   })
+
 
   quest_choose <- reactive({
     last_btn <- input$last_click
@@ -239,20 +219,18 @@ server <-  function(input, output, session) {
     #click_viz$id <- NULL
     if (is.null(last_btn)){
       if(lang() == "es") {
-        last_btn <- unique(questions_dash_6$pregunta_es)[1]
+        last_btn <- sel_question_url()  #unique(questions_dash_6$pregunta_es)[1]
 
       } else {
         if(lang() == "en") {
-          last_btn <- unique(questions_dash_6$pregunta_en)[1]
+          last_btn <- sel_question_url() #unique(questions_dash_6$pregunta_en)[1]
         }
         else { if(lang() == "pt")
-          last_btn <- unique(questions_dash_6$pregunta_pt)[1]
+          last_btn <- sel_question_url() #unique(questions_dash_6$pregunta_pt)[1]
         }
       }
 
     }
-    print("choose")
-    print(last_btn)
 
     last_btn
 
@@ -264,45 +242,37 @@ server <-  function(input, output, session) {
 
   quest_choose_sub <- reactive({
     req(quest_choose())
-    print(input$last_click_sub)
-
     last_btn <- click_sub$value
    # click_viz_sub$id <- NULL
     if (is.null(last_btn)){
       if (is.null(last_btn)){
         if(lang() == "es") {
-          temp_q <-  questions_dash_6 |> filter(pregunta_es == quest_choose()) |> select(subpergunta_es)
-          last_btn <- unique(temp_q$subpergunta_es)[1]
+         # temp_q <-  questions_dash_6 |> filter(pregunta_es == quest_choose()) |> select(subpergunta_es)
+          last_btn <-sel_subquestion_url() # unique(temp_q$subpergunta_es)[1]
 
         } else {
           if(lang() == "en") {
-            temp_q <-  questions_dash_6 |> filter(pregunta_en == quest_choose()) |> select(subpregunta_en)
-            print("in")
-            print(temp_q)
-            last_btn <- unique(temp_q$subpregunta_en)[1]
+             last_btn <- sel_subquestion_url() #unique(temp_q$subpregunta_en)[1]
           }
           else { if(lang() == "pt")
-            temp_q <-  questions_dash_6 |> filter(pregunta_pt == quest_choose()) |> select(subpregunta_pt)
-            last_btn <- unique(temp_q$subpregunta_pt)[1]
+            # temp_q <-  questions_dash_6 |> filter(pregunta_pt == quest_choose()) |> select(subpregunta_pt)
+            last_btn <-  sel_subquestion_url()  #unique(temp_q$subpregunta_pt)[1]
           }
         }
 
       }
 
     }
-    print("subchoose")
-    print( last_btn)
+
     last_btn
 
   })
 
-  # observe({
-  #   quest_choose_sub
-  # })
+
 
   sel_subquestion <-reactive({
     req(quest_choose())
-    print(quest_choose())
+
 
     if(lang() == "es") {
       t <- questions_dash_6 |> dplyr::filter(pregunta_es %in% quest_choose()) |> select(subpergunta_es)
@@ -315,7 +285,7 @@ server <-  function(input, output, session) {
       }
       else { if(lang() == "pt")
         t <- questions_dash_6 |> dplyr::filter(pregunta_pt %in% quest_choose()) |> select(subpregunta_pt)
-      unique(t$subpregunta_pt)
+       unique(t$subpregunta_pt)
       }
     }
     # ui_(unique(oxfam_one$es$new_vaccinations$pais), lang = lang())
@@ -336,13 +306,12 @@ server <-  function(input, output, session) {
 
   Indicador <- reactiveValues( value = NULL)
 
-  sel_question_url<- reactive({
+  sel_question_url <- reactive({
 
     query <- parseQueryString(session$clientData$url_search)
     temp <- stringr::str_to_title(query[["question"]])
     temp2 <- NULL
-
-    if(!is.null(temp) & !identical(temp, character(0))) {
+     if(!is.null(temp) & !identical(temp, character(0))) {
       # questions_dash_6$q1 <-  as.numeric(as.factor(questions_dash_6$pregunta_en))
 
       questions_dash_6 <-   questions_dash_6 |> mutate(q1 = case_when(
@@ -355,6 +324,7 @@ server <-  function(input, output, session) {
       ))
       if(lang()=="en" | is.null(lang())) {
         temp2 <- questions_dash_6 |> filter(q1 %in% temp)  |> select(pregunta_en) |> rename(pregunta =  pregunta_en)
+
       }
       if(lang()=="es") {
         temp2 <- questions_dash_6 |> filter(q1 %in% temp)  |> select(pregunta_es) |> rename(pregunta =  pregunta_es)
@@ -362,7 +332,9 @@ server <-  function(input, output, session) {
       if(lang()=="pt") {
         temp2 <- questions_dash_6 |> filter(q1 %in% temp) |>   select(pregunta_pt)  |> rename(pregunta =  pregunta_pt)
       }
-      i_(temp2$pregunta, lang=lang())
+
+      #temp2
+      i_(unique(temp2$pregunta), lang=lang())
     }
 
     else{
@@ -383,8 +355,8 @@ server <-  function(input, output, session) {
   })
 
 
-  sel_subquestion_url<- reactive({
-    req(quest_choose)
+  sel_subquestion_url <- reactive({
+    req(quest_choose())
     query <- parseQueryString(session$clientData$url_search)
     temp <- stringr::str_to_title(query[["subquestion"]])
     temp0 <- stringr::str_to_title(query[["question"]])
@@ -436,42 +408,59 @@ server <-  function(input, output, session) {
 
       if(lang()=="en" | is.null(lang())) {
 
-        data_t <- questions_dash_6 |> filter(pregunta_en %in% unique(sel_question_url()) )
+        data_t <- questions_dash_6 |> filter(pregunta_en %in%  unique(quest_choose())[1] )
+
         temp2 <- data_t |> filter(q2 %in% temp)  |> select(subpregunta_en) |> rename(subpregunta =  subpregunta_en)
+        if(nrow(temp2)==0){
+          temp2 <- data_t  |> select(subpregunta_en) |> rename(subpregunta =  subpregunta_en) |> head(1)
+
+
+        }
 
       }
       if(lang()=="es") {
 
-        data_t <-questions_dash_6 |> filter(pregunta_es  %in%  sel_question_url() )
+        data_t <-questions_dash_6 |> filter(pregunta_es  %in%  unique(quest_choose())[1])
         temp2 <- data_t |> filter(q2 %in% temp)  |> select(subpergunta_es) |> rename(subpregunta =  subpergunta_es)
 
+        if(nrow(temp2)==0){
+          temp2 <- data_t  |> select(subpergunta_es) |> rename(subpregunta =  subpergunta_es) |> head(1)
+
+
+        }
       }
       if(lang()=="pt") {
-        data_t <-questions_dash_6 |> filter(pregunta_pt == sel_question_url() )
+        data_t <-questions_dash_6 |> filter(pregunta_pt ==  unique(quest_choose())[1] )
         temp2 <- data_t |> filter(q2 %in% temp)  |> select(subpregunta_pt) |> rename(subpregunta =  subpregunta_pt)
+        if(nrow(temp2)==0){
+          temp2 <- data_t  |> select(subpregunta_pt) |> rename(subpregunta =  subpregunta_pt) |> head(1)
+
+
+        }
       }
 
-      temp <- temp2$subpregunta
+      temp <- unique(temp2$subpregunta)
     }
     else{
       if(lang() == "es") {
-        data_t <-questions_dash_6 |> filter(pregunta_es  %in%   unique(questions_dash_6$pregunta_es)[1])
+        data_t <-questions_dash_6 |> filter(pregunta_es  %in%   unique(quest_choose())[1])
         temp2 <- data_t  |> select(subpergunta_es) |> rename(subpregunta = subpergunta_es)
         temp <- unique(temp2$subpregunta)[1]
 
 
       } else {
         if(lang() == "en") {
-          data_t <-questions_dash_6 |> filter(pregunta_en  %in%   unique(questions_dash_6$pregunta_en)[1])
+          data_t <-questions_dash_6 |> filter(pregunta_en  %in%   unique(quest_choose())[1])
           temp2 <- data_t  |> select(subpregunta_en) |> rename(subpregunta =  subpregunta_en)
           temp <- unique(temp2$subpregunta)[1]
         }
         else {
-          if(lang() == "pt")
-            unique(questions_dash_6$pregunta_pt)[1]
-          data_t <-questions_dash_6 |> filter(pregunta_pt  %in%   unique(questions_dash_6$pregunta_pt)[1])
+          if(lang() == "pt"){
+           unique(questions_dash_6$pregunta_pt)[1]
+          data_t <-questions_dash_6 |> filter(pregunta_pt  %in%   unique(quest_choose())[1])
           temp2 <- data_t  |> select(subpregunta_pt) |> rename(subpregunta =  subpregunta_pt)
           temp <- unique(temp2$subpregunta)[1]
+          }
         }
       }}
 
@@ -549,10 +538,9 @@ server <-  function(input, output, session) {
 
 
     v <- intersect(v,viz)
-    print("v")
-    print(v)
+
     v <- c(v,"table")
-    print(v)
+
     v
   })
 
@@ -566,7 +554,7 @@ server <-  function(input, output, session) {
 
     req(possible_viz())
     possible_vizt <- possible_viz()
-    print( possible_vizt)
+
     if(is.null(actual_but$active)) actual <- possible_viz()[1]
     else actual <- actual_but$active
     #
@@ -614,8 +602,7 @@ server <-  function(input, output, session) {
 
    if (!is.null(input$viz_selection)){
         req(possible_viz())
-     print("entro2")
-       print(input$viz_selection)
+
         viz_rec <- possible_viz()
         if (input$viz_selection %in% viz_rec) {
           actual_but$active <- input$viz_selection
@@ -626,8 +613,7 @@ server <-  function(input, output, session) {
     else{
      req(possible_viz())
      viz_rec <- possible_viz()
-     print("entro")
-     print(viz_rec[1])
+
      actual_but$active <- viz_rec[1]
    }
 
@@ -643,37 +629,50 @@ server <-  function(input, output, session) {
     # req(operations())
     # req(input$Operation_rb)
 
+    trad= "sum"
+    if(lang()=="es" | lang()=="pt")  dta <- as.data.frame(dta)
 
-    if(lang()=="es")  dta <- as.data.frame(dta)
+    group_var ="pais"
 
     if(lang() == "es"){
 
-      dta <-  dta |> select(!c(pais_en,pais_pt)) |> rename(pais = pais_es,slug_en = slug_es)
+        if(actual_but$active %in% c("mapa")){
+          dta <-   dta |> select(!c(pais_es,pais_pt)) |> rename(pais = pais_en,slug_en = slug_es)
+          group_var = "pais"
+
+        }
+        else {
+
+             dta <-  dta |> select(!c(pais_en,pais_pt)) |> rename(pais = pais_es,slug_en = slug_es)
+        }
     }
     if(lang() == "en"){
 
-      dta <-   dta |> select(!c(pais_es,pais_pt)) |> rename(pais = pais_en)
+       dta <-   dta |> select(!c(pais_es,pais_pt)) |> rename(pais = pais_en)
     }
     if(lang( )== "pt"){
 
-      dta <-   dta |> select(!c(pais_es,pais_en)) |> rename(pais = pais_pt,slug_en = slug_pt)
-    }
-    # var <- slug_translate |> filter(slug_en %in% input$Indicator)  |> select(slug)
-    # var <- "new_vaccinations"
-    # var_agg <- slug_agg_one |> filter(slug %in% var) |> select(agg)
+        if(actual_but$active %in% c("mapa")){
+          dta <-   dta |> select(!c(pais_es,pais_pt)) |> rename(pais = pais_en)
+          group_var = "pais"
 
-    # dta$Year <-  format(as.Date(dta$fecha, format="%d/%m/%Y"),"%Y")
-    group_var ="pais"
-    print("#################################")
-    print(Indicador$value)
-    print(class(Indicador$value))
-    print(as.vector((Indicador$value$indicador)))
+        }
+        else {
+          dta <-   dta |> select(!c(pais_es,pais_en)) |> rename(pais = pais_pt,slug_en = slug_pt)
+        }
+
+
+    }
+
+    var <- slug_translate |> filter(slug_en %in% input$Indicator)  |> select(slug)
+
 
     if(actual_but$active %in% c("linea","scatter"))  group_var = c("pais","fecha")
     if(actual_but$active %in% c("mapa","barras","treemap"))  group_var = "pais"
-    if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
-    if(actual_but$active %in% c("sankey")  & Indicador$value  == "doses_delivered_vaccine_donations")   names(data_result) = i_(c("pais","pais_donante", trad),lang=lang())
-    if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
+    if(actual_but$active %in% c("sankey") & Indicador$value  == "covid_vaccine_agreements")  group_var = c("pais","fabrica")
+    if(actual_but$active %in% c("sankey") & Indicador$value  == "doses_delivered_vaccine_donations")  group_var = c("pais","donante")
+    if(actual_but$active %in% c("sankey") & Indicador$value  == "geopolitics_vaccine_donations")  group_var = c("pais","unidad")
+
 
 
 
@@ -704,7 +703,7 @@ server <-  function(input, output, session) {
     # hgch_sankey_CatCatNum(data_result)
     # if(input$Operation_rb %in% c("Total")) trad = "sum"
     # if(input$Operation_rb %in% c("Mean","Promedio","Média")) trad = "mean"
-    trad= "sum"
+
     if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
     data_result <- var_aggregation(data = dta,
                                    # dic = dic,
@@ -1048,8 +1047,8 @@ server <-  function(input, output, session) {
     #oxfam_one
     # input$last_click
     # quest_choose()
- #  data_prep() |> head(1)
-  data_viz()
+  #data_prep() |> head(1)
+ # data_viz()
    # get_basic_lang_data()
 
   })
