@@ -66,9 +66,10 @@ ui <- panelsPage(
   ),
   panel(title = ui_("data_viz"),
         id = "viz-style",
-        header_right = div(
+        header_right = div(style="display:flex;",
           class = "head-viz",
-          div(class = "viz-style",
+          div(style = "display:flex;",
+              class = "viz-style",
               uiOutput("viz_icons")),
           uiOutput("downloads")
         ),
@@ -87,6 +88,7 @@ ui <- panelsPage(
   )
 
 )
+
 
 
 server <-  function(input, output, session) {

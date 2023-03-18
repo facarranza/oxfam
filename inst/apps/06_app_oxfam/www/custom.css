@@ -34,7 +34,6 @@ html, body {
 }
 
 
-
 .panel-header-title {
  font-family: 'IBM Plex Sans';
  font-weight: 500;
@@ -69,6 +68,19 @@ html, body {
 }
 
 
+.basic_active_sub {
+  color: #ffffff !important;
+  background-color:#4B3C69 !important;
+  border-color: #4B3C69 !important;
+
+}
+
+
+.basic_active_sub:hover {
+  background-color:#4B3C69 !important;
+  border-color: #4B3C69 !important;
+
+}
 .btn {
  color: #252525;
  cursor: pointer;
