@@ -78,7 +78,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-          # verbatimTextOutput("debug"),
+        #  verbatimTextOutput("debug"),
 
          #  shinycustomloader::withLoader(
              uiOutput("viz_view")
@@ -327,6 +327,7 @@ server <-  function(input, output, session) {
 
 
   Indicador <- reactiveValues( value = NULL)
+
 
   sel_question_url <- reactive({
 
@@ -737,35 +738,48 @@ server <-  function(input, output, session) {
 
     if(actual_but$active %in% c("linea","scatter"))  group_var = c("pais","fecha")
     if(actual_but$active %in% c("mapa","barras","treemap"))  group_var = "pais"
-    if(actual_but$active %in% c("sankey") & Indicador$value  == "covid_vaccine_agreements")  group_var = c("pais","fabrica")
-    if(actual_but$active %in% c("sankey") & Indicador$value  == "doses_delivered_vaccine_donations")  group_var = c("pais","donante")
-    if(actual_but$active %in% c("sankey") & Indicador$value  == "geopolitics_vaccine_donations")  group_var = c("pais","unidad")
+    print(( "Indicador$value"))
+    print(( Indicador$value))
+    print(nrow( Indicador$value))
+    if(nrow( Indicador$value)==1){
+        if(actual_but$active %in% c("sankey") & Indicador$value  == "covid_vaccine_agreements")  group_var = c("pais","fabrica")
+        if(actual_but$active %in% c("sankey") & Indicador$value  == "doses_delivered_vaccine_donations")  group_var = c("pais","donante")
+        if(actual_but$active %in% c("sankey") & Indicador$value  == "geopolitics_vaccine_donations")  group_var = c("pais","unidad")
 
 
 
+        if( Indicador$value  == "covid_vaccine_agreements" ) {
+
+          # a |> tidyr::pivot_wider(names_from=unidad)
+          dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "-")) |> tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna"))
 
 
-    if( Indicador$value  == "covid_vaccine_agreements" ) {
+        }
 
-      # a |> tidyr::pivot_wider(names_from=unidad)
-      dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "-")) |> tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna"))
+        if( Indicador$value  == "doses_delivered_vaccine_donations" ) {
 
+          dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("donante","vacuna"))
+
+
+        }
+
+        if( Indicador$value  == "geopolitics_vaccine_donations" ) {
+
+          dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("unidad","vacuna"))
+
+
+        }
+    }
+    else{
+      print(unique(dta$unidad))
+      if(length(unique(dta$unidad))==1){
+
+
+      }
 
     }
 
-    if( Indicador$value  == "doses_delivered_vaccine_donations" ) {
-
-      dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("donante","vacuna"))
-
-
-    }
-
-    if( Indicador$value  == "geopolitics_vaccine_donations" ) {
-
-      dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("unidad","vacuna"))
-
-
-    }
+   # return()
 
 
     # hgch_sankey_CatCatNum(data_result)
@@ -827,7 +841,7 @@ server <-  function(input, output, session) {
 
 
   viz_opts <- reactive({
-    tryCatch({
+   # tryCatch({
       req(data_viz())
       req(actual_but$active)
 
@@ -882,7 +896,9 @@ server <-  function(input, output, session) {
       }
 
       data_v <- as.data.frame(data_viz())
-
+        print("names(data_v)")
+      print(names(data_v))
+      print(class(data_v))
       opts <- list(
         data = data_v,
         orientation = "hor",
@@ -898,25 +914,29 @@ server <-  function(input, output, session) {
         cursor = "pointer",
         map_tiles = "OpenStreetMap",
         legend_position = "bottomleft",
-        border_weight = 0.3,
-        map_provider_tile = "url",
-        map_extra_layout = "https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png?apiKey=3ccf9d5f19894b32b502485362c99163",
-        map_name_layout = "osm-brigh",
+        border_weight = 0.3
+        # map_provider_tile = "url",
+        # map_extra_layout = "https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png?apiKey=3ccf9d5f19894b32b502485362c99163",
+        # map_name_layout = "osm-brigh",
         # format_sample_num = "10M",
-        format_numericSymbols = T
+        # format_numericSymbols = T
       )
       if (actual_but$active == "mapa") {
         # opts$legend_title <- input$InsId_rb
-        opts$legend_color <-  "Black"
-        opts$map_bins <- 3
-        opts$map_color_scale = "Bins"
-        opts$na_color <- "transparent"
+        # opts$legend_color <-  "Black"
+        # opts$map_bins <- 3
+        # opts$map_color_scale <- "Bins"
+        # opts$na_color <- "transparent"
+        print("names(data_v[1])")
+        print(names(data_v[1]))
         opts$map_name <- "latamcaribbean_countries"
-        #opts$tooltip <- " {Total}"        # opts$tooltip <- "<b>Country:</b> {Country}<br/><b>Average Price:</b> {mean_show} USD"
+        tooltp <-  paste("<b>",names(data_v[1]),":</b>  {a}</br>","<b>", names(data_v[2]), ":</b> {b}")
+        print(tooltp)
+        opts$tooltip_template <- tooltp   # opts$tooltip <- "<b>Country:</b> {Country}<br/><b>Average Price:</b> {mean_show} USD"
         #opts$format_sample_num = "10M"
         # opts$palette_colors <- rev(c("#ef4e00", "#f66a02", "#fb8412", "#fd9d29",
         # "#ffb446", "#ffca6b", "#ffdf98"))
-        opts$palette_colors <- rev(c( "#151E42","#A5F1DF"))
+        # opts$palette_colors <- rev(c( "#151E42","#A5F1DF"))
       } else {
         opts$clickFunction <- htmlwidgets::JS(myFunc)
         opts$palette_colors <- "#ef4e00"
@@ -951,7 +971,7 @@ server <-  function(input, output, session) {
       if (actual_but$active == "barras") {
         opts$palette_colors <- c("#47BAA6", "#151E42", "#FF4824", "#FFCF06",
                                  "#FBCFA4", "#FF3D95","#B13168")
-        opts$ver_title <- "Drug type"
+        opts$ver_title <- ""
        # opts$tooltip <- paste(paste("{pais_",lang(),"}"), " {Total}")
         # opts$hor_title <- stringr::str_to_sentence(input$InsId_rb)
        # opts$format_sample_num = "10M"
@@ -959,10 +979,10 @@ server <-  function(input, output, session) {
       }
 
       opts
-    },
-    error = function(cond) {
-      return()
-    })
+    # },
+    # error = function(cond) {
+    #   return()
+    # })
   })
 
 
@@ -1016,15 +1036,15 @@ server <-  function(input, output, session) {
   })
 
   output$hgch_viz <- highcharter::renderHighchart({
-    tryCatch({
+    # tryCatch({
       req(data_viz())
       req(actual_but$active)
       if (actual_but$active %in% c("table")) return()
       viz_down()
-    },
-    error = function(cond) {
-      return()
-    })
+    # },
+    # error = function(cond) {
+    #   return()
+    # })
   })
   #
   output$lflt_viz <- leaflet::renderLeaflet({
@@ -1124,7 +1144,7 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
- # data_viz()
+  #data_viz()
    # get_basic_lang_data()
 
   })
