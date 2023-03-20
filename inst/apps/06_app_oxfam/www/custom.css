@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@200;300;500&display=swap');
 
 html, body {
- font-family: 'IBM Plex Sans', sans-serif;
+ font-family: 'IBM Plex Sans',  normal;
 }
 
 .layout-panels {
@@ -15,13 +15,20 @@ html, body {
 
 .needed, .needed_sub{
   margin-top: 20px!important;
+  border-width: 2px !important;
 
 }
 
+
+.controls-style {
+
+   border: 1px solid #252525;
+}
 .panel-body {
   flex-grow: 1;
   margin-top: -2rem;
   padding: 0 1rem;
+  border: 25px !important;
 }
 
 .panel-content {
@@ -49,11 +56,13 @@ html, body {
   align-items: start;
   border-top: 1px solid #252525;
   padding: 1rem 1rem 1rem 1rem;
+  border: 2px !important;;
 }
 
 
 .top-malibu {
   border-top: 0px;
+  border: 2px !important;
 }
 
 
@@ -117,7 +126,10 @@ html, body {
 }
 
 .button-container{
-  box-shadow:0px !important;
+  /*box-shadow:0px !important;*/
+  -webkit-box-shadow: none !important;
+	-moz-box-shadow: none !important;
+	box-shadow: none !important;
   border-radius: 7px !important;
 }
 

@@ -35,13 +35,14 @@ ui <- panelsPage(
     background = "#FFF"
   ),
   langSelectorInput("lang", position = "fixed"),
-  panel(title = ui_("pregunta"),
+  panel(title = ui_("data_filter"),
         id = "controls-style",
         collapse = FALSE,
         can_collapse = FALSE,
         width = 300,
         body = div(
-
+          div(id = "myDiv", style = "font-family: 'IBM Plex Sans'; font-weight: 500; font-size: 14px; line-height: 18.2px;,  background-color:#252525;" , ui_("pregunta")),
+          verbatimTextOutput("choices_print"),
           uiOutput("generalFilters")
         ),
 
@@ -514,13 +515,47 @@ server <-  function(input, output, session) {
     #
     # data_result <-  data_result |> filter(fecha >= input$data_range[1]  & fecha <= input$data_range[2] )
     # # checking results
+
+
+
     data
 
   })
 
   #########################################################
 
+  data_table <- reactive({
+    req(data_prep())
+    dta <- bind_rows(data_prep())
 
+    if(lang() == "es"){
+      dta <-   dta |> select(!c(pais_en,pais_pt)) |> rename(pais = pais_es)
+
+   }
+    if(lang() == "en"){
+      dta <-   dta |> select(!c(pais_es,pais_pt)) |> rename(pais = pais_en)
+    }
+    if(lang( )== "pt"){
+      dta <-   dta |> select(!c(pais_es,pais_en)) |> rename(pais = pais_pt)
+
+
+    }
+    temp <-NULL
+    print(names(dta))
+    print(ncol(dta))
+    lang_names <-  c("id","slug","slug_",i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad",lang()))
+    print(length(lang_names))
+    print(lang_names)
+    if(ncol(dta)==7)  colnames(dta) <-  lang_names
+    else colnames(dta) <- c("id","slug","slug_",i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()))
+    # if(actual_but$active %in% c("linea","scatter"))   names(data_) = i_(c("pais","fecha", trad),lang=lang())
+    # if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
+    # if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
+    # if(actual_but$active %in% c("sankey")  & Indicador$value  == "doses_delivered_vaccine_donations")   names(data_result) = i_(c("pais","pais_donante", trad),lang=lang())
+    # if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
+    #
+    dta
+  })
 
   possible_viz <- reactive({
     req(quest_choose())
@@ -722,6 +757,9 @@ server <-  function(input, output, session) {
     if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
 
 
+
+
+
     data_result
   })
   ###############calendar pending
@@ -843,8 +881,8 @@ server <-  function(input, output, session) {
         opts$map_color_scale = "Bins"
         opts$na_color <- "transparent"
         opts$map_name <- "latamcaribbean_countries"
-        # opts$tooltip <- "<b>Country:</b> {Country}<br/><b>Average Price:</b> {mean_show} USD"
-        opts$format_sample_num = "10M"
+        #opts$tooltip <- " {Total}"        # opts$tooltip <- "<b>Country:</b> {Country}<br/><b>Average Price:</b> {mean_show} USD"
+        #opts$format_sample_num = "10M"
         # opts$palette_colors <- rev(c("#ef4e00", "#f66a02", "#fb8412", "#fd9d29",
         # "#ffb446", "#ffca6b", "#ffdf98"))
         opts$palette_colors <- rev(c( "#151E42","#A5F1DF"))
@@ -856,8 +894,10 @@ server <-  function(input, output, session) {
           opts$palette_colors <- c("#47BAA6", "#151E42", "#FF4824", "#FFCF06",
                                    "#FBCFA4", "#FF3D95","#B13168")
           # opts$ver_title <- "Tender Year"
+         # opts$tooltip <- paste(paste("{pais_",lang(),"}"), " {Total")
+
           # opts$hor_title <- stringr::str_to_sentence(input$InsId_rb)
-          opts$format_sample_num = "10M"
+          #opts$format_sample_num = "10M"
           # opts$tooltip <- "<b>Country:</b> {Country}<br/><b>Tender Year:</b> {Tender Year}<br/><b>Average Price:</b> {mean_show} USD"
         }
       }
@@ -871,6 +911,7 @@ server <-  function(input, output, session) {
         opts$legend_show <- FALSE
         opts$palette_colors <- c("#47BAA6", "#151E42", "#FF4824", "#FFCF06",
                                  "#FBCFA4", "#FF3D95","#B13168")
+      #  opts$tooltip <- paste(paste("{pais_",lang(),"}"), " {Total}")
 
 
 
@@ -880,8 +921,9 @@ server <-  function(input, output, session) {
         opts$palette_colors <- c("#47BAA6", "#151E42", "#FF4824", "#FFCF06",
                                  "#FBCFA4", "#FF3D95","#B13168")
         opts$ver_title <- "Drug type"
+       # opts$tooltip <- paste(paste("{pais_",lang(),"}"), " {Total}")
         # opts$hor_title <- stringr::str_to_sentence(input$InsId_rb)
-        opts$format_sample_num = "10M"
+       # opts$format_sample_num = "10M"
 
       }
 
@@ -1023,7 +1065,8 @@ server <-  function(input, output, session) {
     req(actual_but$active)
     if (actual_but$active != "table") return()
     req(data_prep())
-    df <- data_prep()
+    req(data_table())
+    df <- data_table()
     reactable(df,
               showSortIcon = TRUE)
     # dtable <- DT::datatable(df,
