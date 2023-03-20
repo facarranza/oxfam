@@ -569,12 +569,9 @@ server <-  function(input, output, session) {
 
 
     }
+
     temp <-NULL
-    print(names(dta))
-    print(ncol(dta))
     lang_names <-  c("id","slug","slug_",i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad",lang()))
-    print(length(lang_names))
-    print(lang_names)
     if(ncol(dta)==7)  colnames(dta) <-  lang_names
     else colnames(dta) <- c("id","slug","slug_",i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()))
     # if(actual_but$active %in% c("linea","scatter"))   names(data_) = i_(c("pais","fecha", trad),lang=lang())
@@ -774,6 +771,7 @@ server <-  function(input, output, session) {
       print(unique(dta$unidad))
       if(length(unique(dta$unidad))==1){
 
+        group_var = c("pais","slug")
 
       }
 
@@ -795,13 +793,21 @@ server <-  function(input, output, session) {
                                    group_var =group_var)
 
 
-    if(actual_but$active %in% c("linea","scatter"))   names(data_result) = i_(c("pais","fecha", trad),lang=lang())
-    if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
-    if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
-    if(actual_but$active %in% c("sankey")  & Indicador$value  == "doses_delivered_vaccine_donations")   names(data_result) = i_(c("pais","pais_donante", trad),lang=lang())
-    if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
+    if(nrow( Indicador$value)==1){
+
+        if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
+        if(actual_but$active %in% c("sankey")  & Indicador$value  == "doses_delivered_vaccine_donations")   names(data_result) = i_(c("pais","pais_donante", trad),lang=lang())
+        if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
+        if(actual_but$active %in% c("linea","scatter"))   names(data_result) = i_(c("pais","fecha", trad),lang=lang())
+        if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
 
 
+
+    }
+    else{
+
+      if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", "indicador",trad),lang=lang())
+    }
 
 
 
@@ -823,7 +829,8 @@ server <-  function(input, output, session) {
       prex <- "CatDatNum"
     }
     if(type_viz=="barras" ) {
-      prex <- "CatNum"
+      if(nrow( Indicador$value)==1)   prex <- "CatNum"
+      else prex <- "CatCatNum"
 
 
     }
@@ -1102,7 +1109,7 @@ server <-  function(input, output, session) {
 
         shinycustomloader::withLoader(
         highcharter::highchartOutput("hgch_viz", height = 600),
-         type = "html", loader = "loader4"
+         type = "image", loader = "loading_gris.gif"
         )
       }
     },
