@@ -196,13 +196,32 @@ server <-  function(input, output, session) {
   })
 
   output$generalFilters <- renderUI({
+    req( sel_question_url())
+    req(question_url_def$val)
+
     #req(quest_choose())
-    dsapptools:::make_buttons( sel_question(), labels = sel_question(), default_active =  sel_question_url())
+    buttons <- dsapptools:::make_buttons( sel_question(), labels = sel_question(), default_active =  sel_question_url())
+
+    val <- as.numeric(question_url_def$val)
+
+    buttons[[val]] <- gsub("needed", "needed basic_active",  buttons[[val]])
+    buttons[[val]] <- htmltools::HTML(paste0(paste( buttons[[val]], collapse = '')))
+    buttons
+    #question_buttons_2(c( "Inspecciones","Aprehensiones"),
+                  #   c( "Visitas de control","Aprehensiones" )
+
+
   })
 
   output$generalsubFilters <- renderUI({
-    req(sel_question_url())
-    dsapptools:::make_buttons( sel_subquestion(), labels = sel_subquestion(), class="needed_sub", class_active = "basic_active_sub", default_active =   sel_subquestion_url()[1])
+    req(sel_subquestion_url())
+    buttons <- dsapptools:::make_buttons( sel_subquestion(), labels = sel_subquestion(), class="needed_sub", class_active = "basic_active_sub", default_active =   sel_subquestion_url())
+
+    val <- as.numeric(subquestion_url_def$val)
+
+    buttons[[val]] <- gsub("needed_sub", "needed_sub basic_active_sub",  buttons[[val]])
+    buttons[[val]] <- htmltools::HTML(paste0(paste( buttons[[val]], collapse = '')))
+    buttons
   })
 
 
@@ -325,6 +344,9 @@ server <-  function(input, output, session) {
         pregunta_es ==  "¿Cuáles compras, desarrollos y aprobaciones de vacunas han hecho los países?"    ~ 5,
         pregunta_es ==  "¿Qué donaciones y apoyos financieros han obtenido los países para responder a la pandemia?"   ~ 6
       ))
+
+      question_url_def$val = temp
+
       if(lang()=="en" | is.null(lang())) {
         temp2 <- questions_dash_6 |> filter(q1 %in% temp)  |> select(pregunta_en) |> rename(pregunta =  pregunta_en)
 
@@ -341,6 +363,8 @@ server <-  function(input, output, session) {
     }
 
     else{
+
+      question_url_def$val =1
 
       if(lang() == "es") {
         unique(questions_dash_6$pregunta_es)[1]
@@ -407,7 +431,7 @@ server <-  function(input, output, session) {
         subpergunta_es =="¿Cuál es la diferencia entre las dosis obtenidas por acuerdos con fabricantes y por donaciones?"  ~ 37
       ))
 
-
+      subquestion_url_def$val <- temp
 
       if(lang()=="en" | is.null(lang())) {
 
@@ -445,27 +469,31 @@ server <-  function(input, output, session) {
       temp <- unique(temp2$subpregunta)
     }
     else{
+      subquestion_url_def$val <- 1
       if(lang() == "es") {
+
         data_t <-questions_dash_6 |> filter(pregunta_es  %in%   unique(quest_choose())[1])
-        temp2 <- data_t  |> select(subpergunta_es) |> rename(subpregunta = subpergunta_es)
-        temp <- unique(temp2$subpregunta)[1]
+          temp2 <- data_t  |> select(subpergunta_es) |> rename(subpregunta = subpergunta_es)
+          temp <- unique(temp2$subpregunta)[1]
 
 
-      } else {
-        if(lang() == "en") {
-          data_t <-questions_dash_6 |> filter(pregunta_en  %in%   unique(quest_choose())[1])
-          temp2 <- data_t  |> select(subpregunta_en) |> rename(subpregunta =  subpregunta_en)
-          temp <- unique(temp2$subpregunta)[1]
-        }
-        else {
-          if(lang() == "pt"){
-           unique(questions_dash_6$pregunta_pt)[1]
-          data_t <-questions_dash_6 |> filter(pregunta_pt  %in%   unique(quest_choose())[1])
-          temp2 <- data_t  |> select(subpregunta_pt) |> rename(subpregunta =  subpregunta_pt)
-          temp <- unique(temp2$subpregunta)[1]
+        } else {
+          if(lang() == "en") {
+            data_t <-questions_dash_6 |> filter(pregunta_en  %in%   unique(quest_choose())[1])
+            temp2 <- data_t  |> select(subpregunta_en) |> rename(subpregunta =  subpregunta_en)
+            temp <- unique(temp2$subpregunta)[1]
+          }
+          else {
+            if(lang() == "pt"){
+             unique(questions_dash_6$pregunta_pt)[1]
+            data_t <-questions_dash_6 |> filter(pregunta_pt  %in%   unique(quest_choose())[1])
+            temp2 <- data_t  |> select(subpregunta_pt) |> rename(subpregunta =  subpregunta_pt)
+            temp <- unique(temp2$subpregunta)[1]
+            }
           }
         }
-      }}
+
+      }
 
 
   })
@@ -583,6 +611,9 @@ server <-  function(input, output, session) {
 
   actual_but <- reactiveValues(active = NULL)
   country_url <-  reactiveValues(paises = NULL)
+  question_url_def <-  reactiveValues(val= NULL)
+  subquestion_url_def <-  reactiveValues(val= NULL)
+
 
 
 
