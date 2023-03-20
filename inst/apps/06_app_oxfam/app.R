@@ -78,7 +78,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-        #  verbatimTextOutput("debug"),
+       verbatimTextOutput("debug"),
 
          #  shinycustomloader::withLoader(
              uiOutput("viz_view")
@@ -327,6 +327,7 @@ server <-  function(input, output, session) {
 
 
   Indicador <- reactiveValues( value = NULL)
+  Unidad <-  reactiveValues( value = NULL)
 
 
   sel_question_url <- reactive({
@@ -573,7 +574,7 @@ server <-  function(input, output, session) {
     temp <-NULL
     lang_names <-  c("id","slug","slug_",i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad",lang()))
     if(ncol(dta)==7)  colnames(dta) <-  lang_names
-    else colnames(dta) <- c("id","slug","slug_",i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()))
+    else colnames(dta) <- c("id",i_("slug",lang()),"slug_",i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()))
     # if(actual_but$active %in% c("linea","scatter"))   names(data_) = i_(c("pais","fecha", trad),lang=lang())
     # if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
     # if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
@@ -597,8 +598,13 @@ server <-  function(input, output, session) {
     if(lang()=="pt")
       viz <- questions_dash_6 |> filter(pregunta_pt %in% question & subpregunta_pt %in% subquestion ) |>  select(viz) |> as.vector()
 
-    viz  <- unlist(strsplit(viz$viz,","))
+    viz$viz[viz$viz == "scatter_plot"] = "scatter"
 
+    viz  <- unique(unlist(strsplit(viz$viz,",")))
+    print("vizzzzzzzzzzz")
+    print(question)
+    print(subquestion)
+    print(viz)
 
     v <- intersect(v,viz)
 
@@ -691,11 +697,13 @@ server <-  function(input, output, session) {
     req(data_prep())
     req(actual_but$active)
     dta <- data_prep()
+    Unidad$value <- NULL
 
     # req(operations())
     # req(input$Operation_rb)
 
-    trad= "sum"
+    trad <- "mean"
+    var_calc <- "valor"
     if(lang()=="es" | lang()=="pt")  dta <- as.data.frame(dta)
 
     group_var ="pais"
@@ -732,13 +740,16 @@ server <-  function(input, output, session) {
 
     var <- slug_translate |> filter(slug_en %in% input$Indicator)  |> select(slug)
 
-
-    if(actual_but$active %in% c("linea","scatter"))  group_var = c("pais","fecha")
-    if(actual_but$active %in% c("mapa","barras","treemap"))  group_var = "pais"
     print(( "Indicador$value"))
     print(( Indicador$value))
     print(nrow( Indicador$value))
+
+
     if(nrow( Indicador$value)==1){
+
+        if(actual_but$active %in% c("linea","scatter"))  group_var = c("pais","fecha")
+        if(actual_but$active %in% c("mapa","barras","treemap"))  group_var = "pais"
+
         if(actual_but$active %in% c("sankey") & Indicador$value  == "covid_vaccine_agreements")  group_var = c("pais","fabrica")
         if(actual_but$active %in% c("sankey") & Indicador$value  == "doses_delivered_vaccine_donations")  group_var = c("pais","donante")
         if(actual_but$active %in% c("sankey") & Indicador$value  == "geopolitics_vaccine_donations")  group_var = c("pais","unidad")
@@ -766,31 +777,87 @@ server <-  function(input, output, session) {
 
 
         }
+
+
+        if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
+
+          data_result <- var_aggregation(data = dta,
+                                       # dic = dic,
+                                       agg =trad,
+                                       to_agg = var_calc,
+                                       name =trad,
+                                       group_var =group_var)
     }
     else{
+      print("hhhhhhhhhhhhhhhhhhhhhhh")
       print(unique(dta$unidad))
+      print(nrow(unique(dta$unidad)))
+      print(length(unique(dta$unidad)))
+
+
       if(length(unique(dta$unidad))==1){
 
         group_var = c("pais","slug")
 
+        if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
+         data_result <- var_aggregation(data = dta,
+                                       # dic = dic,
+                                       agg =trad,
+                                       to_agg = var_calc,
+                                       name =trad,
+                                       group_var =group_var)
+
       }
+      else {
+
+
+        if(actual_but$active  %in% c("linea","scatter")){
+
+          group_var = c("slug","fecha")
+
+          if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
+          data_result <- var_aggregation(data = dta,
+                                         # dic = dic,
+                                         agg =trad,
+                                         to_agg = var_calc,
+                                         name =trad,
+                                         group_var =group_var)
+
+          data_result$slug <- as.factor( data_result$slug)
+         }
+        else{
+                dta2 <- dta |> tidyr::pivot_wider(names_from=slug,values_from=valor)
+                print("elssssssssssssse1")
+                print(Indicador$value[1,1][1]$indicador)
+                print("elssssssssssssse2")
+                print(Indicador$value[2,1][1]$indicador)
+
+                group_var <- c("fecha")
+              #  var_calc <- c(Indicador$value[1,1][1]$indicador,Indicador$value[2,1][1]$indicador)
+
+                print(dta2 |> head(2))
+                data_result1 <- var_aggregation(data = dta2,
+                                               # dic = dic,
+                                               agg =trad,
+                                               to_agg = Indicador$value[1,1][1]$indicador,
+                                               name =trad,
+                                               group_var =group_var)
+
+                data_result2 <- var_aggregation(data = dta2,
+                                                # dic = dic,
+                                                agg =trad,
+                                                to_agg = Indicador$value[2,1][1]$indicador,
+                                                name =trad,
+                                                group_var =group_var)
+
+
+               data_result <-  data_result1 |> left_join(data_result2, by = c("fecha"="fecha"))
+               print(data_result |> head(2))
+        }
+      data_result
+       }
 
     }
-
-   # return()
-
-
-    # hgch_sankey_CatCatNum(data_result)
-    # if(input$Operation_rb %in% c("Total")) trad = "sum"
-    # if(input$Operation_rb %in% c("Mean","Promedio","Média")) trad = "mean"
-
-    if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
-    data_result <- var_aggregation(data = dta,
-                                   # dic = dic,
-                                   agg =trad,
-                                   to_agg = "valor",
-                                   name =trad,
-                                   group_var =group_var)
 
 
     if(nrow( Indicador$value)==1){
@@ -805,12 +872,26 @@ server <-  function(input, output, session) {
 
     }
     else{
+      Unidad$value <-length(unique(dta$unidad))
+      if(length(unique(dta$unidad))==1){
+        if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", "indicador",trad),lang=lang())
+      }
+      else{
 
-      if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", "indicador",trad),lang=lang())
+        print("lang")
+        indicador1 <- dta |> filter(slug == Indicador$value[1,1][1]$indicador) |> select(slug_en) |> distinct()
+        print(indicador1)
+        indicador2 <- dta |> filter(slug == Indicador$value[2,1][1]$indicador) |> select(slug_en)  |> distinct()
+        print(indicador2)
+        if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = c(i_("fecha", lang()),indicador1$slug_en,indicador2$slug_en)
+
+
+
+      }
     }
 
 
-
+   print( data_result |> head(1))
     data_result
   })
   ###############calendar pending
@@ -827,6 +908,10 @@ server <-  function(input, output, session) {
     if(type_viz=="linea") {
       # if(ncol(df) > 2)
       prex <- "CatDatNum"
+      if(!is.null( Unidad$value )){
+        if(nrow( Unidad$value) ==2)  prex <- "DatNumNum"
+      }
+
     }
     if(type_viz=="barras" ) {
       if(nrow( Indicador$value)==1)   prex <- "CatNum"
@@ -1151,7 +1236,7 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
-  #data_viz()
+  data_viz()
    # get_basic_lang_data()
 
   })
