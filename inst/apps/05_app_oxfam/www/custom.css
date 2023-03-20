@@ -19,6 +19,13 @@ html, body {
   padding: 0 1rem;
 }
 
+.head-viz {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+
 #viz-style_body {
   margin-top: 0rem !important;
 }
@@ -88,9 +95,11 @@ html, body {
   border-radius: 7px !important;
 }
 
-.button-container:hover{
+.button-container.active-btn{
   background-color: #252525 !important;
 }
+
+
 
 .buttons-group .button-style:hover {
   background-color:#ffffff !important;
@@ -111,6 +120,14 @@ html, body {
   display:none
 }
 
+.dropdown-action-trigger {
+  background-color: #FFF !important;
+  font-family: inherit !important;
+  border: 1px solid #252525 !important;
+  border-radius: 20px !important;
+  color: #252525 !important;
+  padding: 0.5rem 0.15rem !important;
+}
 
 .control-label {
   color: #252525;

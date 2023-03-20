@@ -7,7 +7,6 @@ library(shi18ny)
 library(parmesan)
 library(oxfam)
 library(hgchmaps)
-library(highcharter)
 library(hgchmagic)
 library(dsmodules)
 library(dsapptools)
@@ -49,9 +48,8 @@ ui <- panelsPage(
         color = "chardonnay",
         can_collapse = FALSE,
         body = div(
-          verbatimTextOutput("test_url"),
-          uiOutput("viz_out")
-          #verbatimTextOutput("debug")
+          uiOutput("viz_show"),
+          verbatimTextOutput("test_url")
         )
   ),
   panel(title = ui_("data_dtail"),
@@ -250,13 +248,15 @@ server <-  function(input, output, session) {
   data_slug <- reactive({
     req(data_filter_slug())
     req(slug_selected())
+    req(viz_select())
+
     if (length(slug_selected()) == 1) {
       if (is.null(show_unidad())) return()
       d <- data_filter_slug()
       if (show_unidad()) {
         req(input$id_unidad)
         if (!"all" %in% input$id_unidad) {
-        d <- d |> filter(unidad %in% input$id_unidad)
+          d <- d |> filter(unidad %in% input$id_unidad)
         }
       }
     } else {
@@ -266,6 +266,7 @@ server <-  function(input, output, session) {
                                      "product_pipeline"))) {
         d <- ls |> bind_rows()
       } else {
+        if (viz_select() == "line") {
         id_valor <- grep("valor", names(ls[[1]]))
         names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
         id_valor <- grep("valor", names(ls[[2]]))
@@ -273,6 +274,9 @@ server <-  function(input, output, session) {
         d <- ls |> purrr::reduce(left_join,
                                  by = c("fecha", "pais_en", "pais_es", "pais_pt"),
                                  multiple = "any")
+        } else {
+          d <- ls |> bind_rows() |> tidyr::drop_na(valor)
+        }
       }
     }
     d
@@ -368,6 +372,8 @@ server <-  function(input, output, session) {
 
   date_format_opts <- reactive({
     req(have_date())
+    req(viz_select())
+    if (viz_select() != "line") return()
     if (!have_date()) return()
     setNames(c("anio", "anio_mes", "anio_mes_dia"),
              i_(c("anio", "anio_mes", "anio_mes_dia"), lang())
@@ -389,24 +395,278 @@ server <-  function(input, output, session) {
 
 
   data_load <- reactive({
-    if (is.null(have_date())) return()
     req(data_countries())
+    req(viz_select())
+    if (is.null(have_date())) return()
+    agg <- input$id_slug_agg
+    if (is.null(slug_agg_show())) agg <- NULL
     df <- data_countries()
     if (have_date()) {
       if (is.null(input$id_slug_dates)) return()
       range <- input$id_slug_dates
       df <- dsapptools:::filter_ranges(df, range, "fecha")
+
+      if (viz_select() == "line") {
+
+        if (is.null(input$id_date_format)) return()
+
+        if (input$id_date_format == "anio_mes") {
+          df$fecha <- format(df$fecha, "%Y-%m")
+        }
+        if (input$id_date_format == "anio") {
+          df$fecha <- format(df$fecha, "%Y")
+        }
+      }
     }
+
     df
   })
 
 
+  var_viz <- reactive({
+    req(viz_select())
+    req(slug_selected())
+    if (is.null(have_date())) return()
+
+    viz <- viz_select()
+    var_date <- NULL
+    if (viz %in% c("line", "scatter")) {
+      if (have_date()) var_date <- "fecha"
+    }
+    var_cat <- paste0("pais_", lang())
+    var_num <- "valor"
+    var_cat_viz <- var_cat
+    if (viz == "map") var_cat_viz <- "pais_en"
+    agg <- input$id_slug_agg
+    if (!is.null(agg)) {
+      label_agg <- i_(agg, lang())
+    }
+    var <- list(
+      agg = agg,
+      cat = c(var_cat, var_date),
+      num = var_num,
+      label_agg = label_agg,
+      var_viz = var_cat_viz,
+      var_viz_date = var_date
+    )
+
+    if (slug_selected()[1] %in% "product_pipeline") {
+      print("PENDIENTE")
+    }
+
+    if (slug_selected()[1] %in% c("school_closures")) {
+      var_other <- list(
+        var_viz = c("unidad", var_cat_viz),
+        cat = c("unidad", var_cat_viz),
+        num = NULL,
+        agg = "count")
+      if (viz == "line") {
+        var_other$cat <- c("unidad", "fecha")
+        var_other$var_viz <- "unidad"
+      }
+      var <- modifyList(var, var_other)
+    }
+
+    if (length(slug_selected()) == 2) {
+      if (viz == "line") {
+      req(data_load())
+      data <- data_load()
+      var_double <- list(
+        var_viz = NULL,
+        cat = "fecha",
+        num = setdiff(c(unique(data[[paste0("slug_", lang(), ".x")]]),
+                        unique(data[[paste0("slug_", lang(), ".y")]])), NA)
+      )
+      var_double$label_agg <- var_double$num
+      var <- modifyList(var, var_double)
+      } else {
+        var_double <- list(
+          var_viz = "slug",
+          cat = c("slug", "fecha"),
+          num = "valor"
+        )
+        var_double$label_agg <- var_double$num
+        var <- modifyList(var, var_double)
+      }
+    }
 
 
+    var
+  })
+
+  data_viz <- reactive({
+    req(data_load())
+    req(var_viz())
+    req(viz_select())
+    req(slug_selected())
+
+    data <- data_load()
+
+    var_cat <- var_viz()$cat
+    if (is.null(var_cat)) var_cat <- var_viz()$var_viz_date
+    var_num <- var_viz()$num
+    label_agg <- var_viz()$label_agg
 
 
-  output$test_url <- renderPrint({
+    if (!is.null(var_viz()$agg)) {
+      data <- dsdataprep::aggregation_data(data = data,
+                                           agg = var_viz()$agg,
+                                           agg_name = label_agg,
+                                           group_var = var_cat,
+                                           to_agg = var_num,
+                                           extra_col = TRUE,
+                                           agg_extra = var_viz()$agg)
+
+      var <- c(unique(var_viz()$var_viz, var_viz()$var_viz_date), label_agg)
+      if (length(var_num) == 2) {
+        data <- data |> select({{ var }})
+        data$..labels <- " "
+      } else {
+        data <- data |> select({{ var }}, everything())
+      }
+    }
+
+    data
+  })
+
+
+  viz_func <- reactive({
+    req(viz_select())
+    if (viz_select() == "table") return()
+    viz <- NULL
+    if (viz_select() == "map") {
+      viz <- "hgch_choropleth_GnmNum"
+    } else {
+      viz <- paste0("hgch_", viz_select())
+    }
+
+    viz
+
+  })
+
+
+  viz_theme <- reactive({
+    req(viz_select())
+    viz <- viz_select()
+    opts <- list(
+      theme = list(
+        marker_radius = 0,
+        palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
+      )
+    )
+
+    if (viz == "map") {
+      opts$theme$palette_colors <- c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF")
+      opts$theme$tooltip_template <- "<b>{a}<br/> {b} {f}"
+      if (lang() == "es")  opts$theme$tooltip_template <- "<b>{a}<br/> {b} {i}"
+      if (lang() == "pt") opts$theme$tooltip_template <- "<b>{c}<br/> {b} {i}"
+    }
+
+    opts
+
+  })
+
+  hgch_viz <- reactive({
+    req(viz_func())
+    req(data_viz())
+    req(var_viz())
+    req(viz_theme())
+
+   var_num <- var_viz()$label_agg
+   var_date <- var_viz()$var_viz_date
+   var_cat <- var_viz()$var_viz
+   if (length(var_num) == 2) {
+     var_date <- 'fecha'
+     var_cat <- NULL
+   }
+
+    do.call(viz_func(), list(
+      data = data_viz(),
+      var_cat = var_cat,
+      var_dat = var_date,
+      var_num = var_num,
+      map_name = "latamcaribbean_countries",
+      opts = viz_theme()
+    ))
+  })
+
+  output$viz_hgch <- renderHighchart({
+    req(hgch_viz())
+    hgch_viz()
+  })
+
+
+  data_down <- reactive({
+    req(data_load())
     data_load()
+  })
+
+  output$dt_viz <- DT::renderDataTable({
+    req(viz_select())
+    if (viz_select() != "table") return()
+    req(data_down())
+    df <- data_down()
+    df <- dplyr::as_tibble(data_down())
+    dtable <- DT::datatable(df,
+                            rownames = F,
+                            selection = 'none',
+                            escape = FALSE,
+                            options = list(
+                              scrollX = T,
+                              fixedColumns = TRUE,
+                              fixedHeader = TRUE,
+                              autoWidth = TRUE,
+                              scrollY = "500px")
+    )
+    dtable
+  })
+
+  output$viz_show <- renderUI({
+    req(viz_select())
+    height_viz <- 650
+    if(!is.null(input$dimension)) height_viz <- input$dimension[2] - 150
+
+    if (viz_select() == "table") {
+      DT::dataTableOutput("dt_viz", height = height_viz, width = input$dimension[1] - 400)
+    } else {
+      withLoader(
+        highchartOutput("viz_hgch", height = height_viz),
+        type = "image", loader = "icons/loading_gris.gif")
+    }
+
+  })
+
+
+  # output$test_url <- renderPrint({
+  #   data_viz()
+  # })
+
+
+  output$downloads <- renderUI({
+    if (is.null(actual_but$active)) return()
+    if (actual_but$active != "table") {
+      dsmodules::downloadImageUI("download_viz",
+                                 dropdownLabel = i_("download", lang()),
+                                 formats = c("jpeg", "pdf", "png", "html"),
+                                 display = "dropdown",
+                                 text = i_("download", lang()))
+    } else {
+      dsmodules::downloadTableUI("dropdown_table",
+                                 dropdownLabel = i_("download", lang()),
+                                 formats = c("csv", "xlsx", "json"),
+                                 display = "dropdown", text = i_("download", lang()))
+    }
+  })
+
+  observe({
+    dsmodules::downloadTableServer("dropdown_table",
+                                   element = data_down(),
+                                   formats = c("csv", "xlsx", "json"))
+    dsmodules::downloadImageServer("download_viz",
+                                   element = hgch_viz(),
+                                   lib = "highcharter",
+                                   formats = c("jpeg", "pdf", "png", "html"),
+                                   file_prefix = "plot")
   })
 
 }

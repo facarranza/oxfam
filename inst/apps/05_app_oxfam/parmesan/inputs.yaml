@@ -76,6 +76,8 @@ id_date_format:
   show_if:
     have_date():
       equals: true
+    viz_select():
+      equals: line
   input_type: radioButtons
   input_params:
     label: date_format_label
