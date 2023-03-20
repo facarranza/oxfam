@@ -459,6 +459,7 @@ server <-  function(input, output, session) {
         var_viz = c("unidad", var_cat_viz),
         cat = c("unidad", var_cat_viz),
         num = NULL,
+        label_agg = "Total",
         agg = "count")
       if (viz == "line") {
         var_other$cat <- c("unidad", "fecha")
@@ -506,16 +507,18 @@ server <-  function(input, output, session) {
     if (is.null(var_cat)) var_cat <- var_viz()$var_viz_date
     var_num <- var_viz()$num
     label_agg <- var_viz()$label_agg
-
+    agg <- var_viz()$agg
+    agg_extra <- agg
+    if (agg == "count") agg_extra <- "sum"
 
     if (!is.null(var_viz()$agg)) {
       data <- dsdataprep::aggregation_data(data = data,
-                                           agg = var_viz()$agg,
+                                           agg = agg,
                                            agg_name = label_agg,
                                            group_var = var_cat,
                                            to_agg = var_num,
                                            extra_col = TRUE,
-                                           agg_extra = var_viz()$agg)
+                                           agg_extra = agg_extra)
 
       var <- c(unique(var_viz()$var_viz, var_viz()$var_viz_date), label_agg)
       if (length(var_num) == 2) {
@@ -555,11 +558,35 @@ server <-  function(input, output, session) {
       )
     )
 
+    req(data_viz())
+    unidad <- FALSE
+    if ("unidad" %in% names(data_viz())) unidad <- TRUE
+
     if (viz == "map") {
-      opts$theme$palette_colors <- c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF")
-      opts$theme$tooltip_template <- "<b>{a}<br/> {b} {f}"
-      if (lang() == "es")  opts$theme$tooltip_template <- "<b>{a}<br/> {b} {i}"
-      if (lang() == "pt") opts$theme$tooltip_template <- "<b>{c}<br/> {b} {i}"
+      unidad_label <- "{i}"
+      if (!unidad) unidad_label <- "{f}"
+      opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
+      opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} ", unidad_label)
+      if (lang() == "es") {
+        if (!unidad) unidad_label <- "{g}"
+        opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} ", unidad_label)
+      }
+      if (lang() == "pt") {
+        if (!unidad) unidad_label <- "{g}"
+        opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} ", unidad_label)
+      }
+    } else {
+
+      pais <- paste0("{pais_", lang(), "}")
+      valor <- paste0("{",var_viz()$label_agg, "}")
+      unidad_label <- "{unidad}"
+      if (!unidad) unidad_label <- paste0("{slug_", lang(), "}")
+      fecha <- NULL
+      if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
+      tooltip <- paste0("<b>",pais, "</b><br/>",
+                        fecha,
+                        valor, " ", unidad_label)
+      opts$theme$tooltip_template <- tooltip
     }
 
     opts
