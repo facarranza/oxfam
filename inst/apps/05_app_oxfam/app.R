@@ -271,7 +271,7 @@ server <-  function(input, output, session) {
           names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
           id_valor <- grep("valor", names(ls[[2]]))
           names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
-          d <- ls |> purrr::reduce(left_join,
+          d <- ls |> purrr::reduce(inner_join,
                                    by = c("fecha", "pais_en", "pais_es", "pais_pt"),
                                    multiple = "any")
         } else {
@@ -566,6 +566,14 @@ server <-  function(input, output, session) {
     opts <- list(
       theme = list(
         marker_radius = 0,
+        text_family = "Barlow",
+        legend_family = "Barlow",
+        text_color = "#0F1116",
+        background_color = "#FFFFFF",
+        grid_x_width = 0,
+        axis_line_y_size = 1,
+        axis_line_x_size = 1,
+        axis_line_color = "#CECECE",
         palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
       )
     )
@@ -584,7 +592,7 @@ server <-  function(input, output, session) {
         opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} ", unidad_label)
       }
       if (lang() == "pt") {
-       # if (!unidad) unidad_label <- "{g}"
+        # if (!unidad) unidad_label <- "{g}"
         opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} ", unidad_label)
       }
     } else {
@@ -595,7 +603,8 @@ server <-  function(input, output, session) {
       if (!unidad) unidad_label <- paste0("{slug_", lang(), "}")
       fecha <- NULL
       if (viz %in% c("line", "scatter")) {
-      if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
+        opts$theme$axis_line_x_size <- 0
+        if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
       }
       tooltip <- paste0("<b>",pais, "</b><br/>",
                         fecha,
