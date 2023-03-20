@@ -48,7 +48,7 @@ ui <- panelsPage(
 
         footer = tags$a(
           href="https://www.datasketch.co", target="blank",
-          img(src= 'logos_es.svg', style = "border-top: 1px solid #252525;",
+          img(src= 'logos.svg', style = "border-top: 1px solid #252525;",
               align = "left", width = 300, height = 80))
   ),
   panel(title = ui_("subpregunta"),
@@ -78,7 +78,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-       verbatimTextOutput("debug"),
+      # verbatimTextOutput("debug"),
 
          #  shinycustomloader::withLoader(
              uiOutput("viz_view")
@@ -1033,7 +1033,8 @@ server <-  function(input, output, session) {
         opts$clickFunction <- htmlwidgets::JS(myFunc)
         opts$palette_colors <- "#ef4e00"
         if (actual_but$active == "linea" | actual_but$active == "scatter" ) {
-          opts$marker_enabled <- FALSE
+          #opts$marker_enabled <- FALSE
+          marker_radius = 0
           opts$palette_colors <- c("#47BAA6", "#151E42", "#FF4824", "#FFCF06",
                                    "#FBCFA4", "#FF3D95","#B13168")
           # opts$ver_title <- "Tender Year"
@@ -1060,7 +1061,7 @@ server <-  function(input, output, session) {
 
       }
 
-      if (actual_but$active == "barras") {
+      if (actual_but$active == "barras" | actual_but$active == "sankey" ) {
         opts$palette_colors <- c("#47BAA6", "#151E42", "#FF4824", "#FFCF06",
                                  "#FBCFA4", "#FF3D95","#B13168")
         opts$ver_title <- ""
@@ -1236,7 +1237,7 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
-  data_viz()
+  #data_viz()
    # get_basic_lang_data()
 
   })
