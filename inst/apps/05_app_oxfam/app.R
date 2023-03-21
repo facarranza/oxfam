@@ -48,8 +48,9 @@ ui <- panelsPage(
         color = "chardonnay",
         can_collapse = FALSE,
         body = div(
-          uiOutput("viz_show"),
-          verbatimTextOutput("test_url")
+          verbatimTextOutput("test_url"),
+          uiOutput("viz_show")#,
+
         )
   ),
   panel(title = ui_("data_dtail"),
@@ -160,10 +161,22 @@ server <-  function(input, output, session) {
   })
 
 
+  slug_comparation <- reactiveValues(id = NULL)
+
+  observe({
+    if (is.null(input$id_slug_comparisons)) return()
+    slug_comparation$id <- input$id_slug_comparisons
+  })
+
+  observeEvent(input$id_slug, {
+    slug_comparation$id <- NULL
+  })
+
+
   slug_selected <- reactive({
     req(viz_select())
     if (viz_select() %in% c("line", "scatter")) {
-      c(input$id_slug, input$id_slug_comparisons)
+      c(input$id_slug, slug_comparation$id)
     } else {
       input$id_slug
     }
@@ -461,8 +474,23 @@ server <-  function(input, output, session) {
       var_viz_date = var_date
     )
 
-    if (slug_selected()[1] %in% "product_pipeline") {
+    if (slug_selected()[1] %in% c(#"product_pipeline",
+      "doses_delivered_vaccine_donations", "immunization_campaigns",
+      "covid_vaccine_agreements","geopolitics_vaccine_donations")) {
       print("PENDIENTE")
+    }
+
+    if (slug_selected()[1] %in% "product_pipeline") {
+      if (viz != "map") {
+        var_pipe <- list(
+          var_viz = c(var_cat_viz, "unidad"),
+          cat = c(var_cat_viz, "unidad"),
+          num = NULL,
+          label_agg = "Total",
+          agg = "count"
+        )
+        var <- modifyList(var, var_pipe)
+      }
     }
 
     if (slug_selected()[1] %in% c("school_closures")) {
@@ -502,6 +530,15 @@ server <-  function(input, output, session) {
       }
     }
 
+
+    if (viz == "sankey") {
+      var_sankey <- list(
+        var_viz = c("unidad", var_cat_viz),
+        cat = c("unidad", var_cat_viz),
+        num = "valor"
+      )
+      var <- modifyList(var, var_sankey)
+    }
 
     var
   })
@@ -574,6 +611,8 @@ server <-  function(input, output, session) {
         axis_line_y_size = 1,
         axis_line_x_size = 1,
         axis_line_color = "#CECECE",
+        shiny_cursor = "pointer",
+        shiny_clickable = TRUE,
         palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
       )
     )
@@ -584,32 +623,40 @@ server <-  function(input, output, session) {
 
     if (viz == "map") {
       unidad_label <- "{i}"
-      #if (!unidad) unidad_label <- "{f}"
+      if (!unidad) unidad_label <- "{e}"
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
-      opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} ", unidad_label)
-      if (lang() == "es") {
-        #if (!unidad) unidad_label <- "{g}"
-        opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} ", unidad_label)
-      }
-      if (lang() == "pt") {
-        # if (!unidad) unidad_label <- "{g}"
-        opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} ", unidad_label)
-      }
-    } else {
+      # print("*************")
+      # print(unidad)
+      # if (unidad) {
+      # opts$theme$tooltip_template <- "a {a}<br/>b {b}<br/>c {c}<br/>d {d}<br/> e {e} <br/> f {f}<br/>g {g}" #paste0("<b>{a}<br/> {b} ", unidad_label)
+      # } else {
+      #   opts$theme$tooltip_template <- "a {a}<br/>b {b}<br/>c {c}<br/>d {d}<br/>f {f}<br/>g {g}<br/> h {h}"
+      # }
 
-      pais <- paste0("{pais_", lang(), "}")
-      valor <- paste0("{",var_viz()$label_agg, "}")
-      unidad_label <- "{unidad}"
-      if (!unidad) unidad_label <- paste0("{slug_", lang(), "}")
-      fecha <- NULL
-      if (viz %in% c("line", "scatter")) {
-        opts$theme$axis_line_x_size <- 0
-        if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
+      opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} ", unidad_label)
+      if (lang() != "en") {
+        if (!unidad) unidad_label <- "{g}"
       }
-      tooltip <- paste0("<b>",pais, "</b><br/>",
-                        fecha,
-                        valor, " ", unidad_label)
-      opts$theme$tooltip_template <- tooltip
+      if (lang() == "es")  opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} ", unidad_label)
+
+      if (lang() == "pt")  opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} ", unidad_label)
+
+    } else {
+      if (viz != "sankey") {
+        pais <- paste0("{pais_", lang(), "}")
+        valor <- paste0("{",var_viz()$label_agg, "}")
+        unidad_label <- "{unidad}"
+        if (!unidad) unidad_label <- paste0("{slug_", lang(), "}")
+        fecha <- NULL
+        if (viz %in% c("line", "scatter")) {
+          opts$theme$axis_line_x_size <- 0
+          if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
+        }
+        tooltip <- paste0("<b>",pais, "</b><br/>",
+                          fecha,
+                          valor, " ", unidad_label)
+        opts$theme$tooltip_template <- tooltip
+      }
     }
 
     opts
@@ -629,7 +676,7 @@ server <-  function(input, output, session) {
       var_date <- 'fecha'
       var_cat <- NULL
     }
-
+    print(names(data_viz()))
     do.call(viz_func(), list(
       data = data_viz(),
       var_cat = var_cat,
@@ -687,9 +734,9 @@ server <-  function(input, output, session) {
   })
 
 
-  # output$test_url <- renderPrint({
-  #   data_viz()
-  # })
+  output$test_url <- renderPrint({
+    input$hcClicked
+  })
 
 
   output$downloads <- renderUI({
