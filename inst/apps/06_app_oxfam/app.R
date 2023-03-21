@@ -67,7 +67,7 @@ ui <- panelsPage(
   ),
   panel(title = ui_("data_viz"),
         id = "viz-style",
-        header_right = div(style="display:flex;",
+        header_right = div(style="display:flex;align-items: flex-end;",
           class = "head-viz",
           div(style = "display:flex;",
               class = "viz-style",
@@ -789,11 +789,6 @@ server <-  function(input, output, session) {
                                        group_var =group_var)
     }
     else{
-      print("hhhhhhhhhhhhhhhhhhhhhhh")
-      print(unique(dta$unidad))
-      print(nrow(unique(dta$unidad)))
-      print(length(unique(dta$unidad)))
-
 
       if(length(unique(dta$unidad))==1){
 
@@ -825,13 +820,8 @@ server <-  function(input, output, session) {
 
           data_result$slug <- as.factor( data_result$slug)
          }
-        else{
+        else {
                 dta2 <- dta |> tidyr::pivot_wider(names_from=slug,values_from=valor)
-                print("elssssssssssssse1")
-                print(Indicador$value[1,1][1]$indicador)
-                print("elssssssssssssse2")
-                print(Indicador$value[2,1][1]$indicador)
-
                 group_var <- c("fecha")
               #  var_calc <- c(Indicador$value[1,1][1]$indicador,Indicador$value[2,1][1]$indicador)
 
@@ -993,25 +983,16 @@ server <-  function(input, output, session) {
       print(class(data_v))
       opts <- list(
         data = data_v,
-        orientation = "hor",
-        ver_title = " ",
-        hor_title = " ",
-        label_wrap_legend = 100,
-        label_wrap = 40,
-        background_color = "#ffffff",
+        marker_radius = 0,
+        text_family = "Barlow",
+        legend_family = "Barlow",
+        text_color = "#0F1116",
+        background_color = "#FFFFFF",
+        grid_x_width = 0,
         axis_line_y_size = 1,
-        axis_line_color = "#dbd9d9",
-        grid_y_color = "#dbd9d9",
-        grid_x_color = "#fafafa",
-        cursor = "pointer",
-        map_tiles = "OpenStreetMap",
-        legend_position = "bottomleft",
-        border_weight = 0.3
-        # map_provider_tile = "url",
-        # map_extra_layout = "https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png?apiKey=3ccf9d5f19894b32b502485362c99163",
-        # map_name_layout = "osm-brigh",
-        # format_sample_num = "10M",
-        # format_numericSymbols = T
+        axis_line_x_size = 1,
+        axis_line_color = "#CECECE",
+        palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
       )
       if (actual_but$active == "mapa") {
         # opts$legend_title <- input$InsId_rb
@@ -1019,11 +1000,10 @@ server <-  function(input, output, session) {
         # opts$map_bins <- 3
         # opts$map_color_scale <- "Bins"
         # opts$na_color <- "transparent"
-        print("names(data_v[1])")
-        print(names(data_v[1]))
+
         opts$map_name <- "latamcaribbean_countries"
         tooltp <-  paste("<b>",names(data_v[1]),":</b>  {a}</br>","<b>", names(data_v[2]), ":</b> {b}")
-        print(tooltp)
+        opts$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
         opts$tooltip_template <- tooltp   # opts$tooltip <- "<b>Country:</b> {Country}<br/><b>Average Price:</b> {mean_show} USD"
         #opts$format_sample_num = "10M"
         # opts$palette_colors <- rev(c("#ef4e00", "#f66a02", "#fb8412", "#fd9d29",

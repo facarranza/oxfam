@@ -25,10 +25,9 @@ html, body {
    border: 1px solid #252525;
 }
 .panel-body {
-  flex-grow: 1;
+ flex-grow: 1;
   margin-top: -2rem;
-  padding: 0 1rem;
-  border: 25px !important;
+  padding: 0 1rem
 }
 
 .panel-content {
@@ -39,8 +38,23 @@ html, body {
 #viz-style_body {
   margin-top: 0rem !important;
 }
+#viz-style {
+  style: flex-grow !important;
+}
+
+.panel-header_right{
+  width: 1000px !important;
 
 
+}
+
+.head-viz{
+  height: 40px !important;
+
+}
+#viz_icons{
+  margin-top: 0px important;
+}
 .panel-header-title {
  font-family: 'IBM Plex Sans';
  font-weight: 500;
@@ -105,7 +119,7 @@ html, body {
  font-size: 15px;
  display: flex;
  align-items: center;
- text-align: center;
+ text-align: left !important;
  letter-spacing: -0.02em;
  text-decoration: none;
  background: #FFFFFF;
@@ -211,11 +225,13 @@ html, body {
 
 
 .dropdown-action-trigger {
-  background-color:#FAFAFA !important;
-  font-family: 'Fira Sans' !important;
-  letter-spacing: 1px !important;
-  border-color:  black !important;
-  color: black !important;
+  background-color: #FFF !important;
+  font-family: inherit !important;
+  border: 1px solid #252525 !important;
+  border-radius: 20px !important;
+  color: #252525 !important;
+  padding: 0.5rem 0.5rem !important;
+  margin-left: 500px !important;
 }
 
 .dropdown-action-item {
