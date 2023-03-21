@@ -78,7 +78,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-      # verbatimTextOutput("debug"),
+     verbatimTextOutput("debug"),
 
          #  shinycustomloader::withLoader(
              uiOutput("viz_view")
@@ -115,14 +115,18 @@ server <-  function(input, output, session) {
   get_basic_lang_data <- reactive({
     req(quest_choose())
     req(quest_choose_sub())
-
+    indicador_title$value <- NULL
     temp <-  NULL
     question <- quest_choose()
     subquestion <- quest_choose_sub()
+
     if(lang()=="en"){
 
       indicador <- questions_dash_6 |> filter(pregunta_en %in% question & subpregunta_en %in% subquestion ) |>  select(indicador)
       Indicador$value <- indicador
+
+      indicador_title$value <- slug_translate |> filter(slug=="new_vaccinations") |> select(slug_en)  |> rename(slug = slug_en)
+
       temp <- plyr::ldply( 1:length(indicador$indicador), function(i){
         t  <- as.data.frame(oxfam_6$en[as.vector(indicador$indicador[i])])
         if(ncol(t) == 9) {
@@ -144,6 +148,7 @@ server <-  function(input, output, session) {
       if(lang()=="es"){
         indicador <- questions_dash_6 |> filter(pregunta_es %in% question & subpergunta_es %in% subquestion ) |>  select(indicador)
         Indicador$value <- indicador
+        indicador_title$value <- slug_translate |> filter(slug==indicador) |> select(slug_es) |> rename(slug = slug_es)
         # temp <- indicador
         temp <- lapply( 1:length(indicador$indicador), function(i){
           t  <- as.data.frame(oxfam_6$es[as.vector(indicador$indicador[i])])
@@ -160,6 +165,7 @@ server <-  function(input, output, session) {
         if(lang()=="pt"){
           indicador <- questions_dash_6 |> filter(pregunta_pt %in% question & subpregunta_pt %in% subquestion ) |>  select(indicador)
           Indicador$value <- indicador
+          indicador_title$value <- slug_translate |> filter(slug==indicador) |> select(slug_pt) |> rename(slug = slug_pt)
           temp <- lapply( 1:length(indicador$indicador), function(i){
             t  <- as.data.frame(oxfam_6$pt[as.vector(indicador$indicador[i])])
             if(ncol(t)==9)
@@ -327,6 +333,7 @@ server <-  function(input, output, session) {
 
 
   Indicador <- reactiveValues( value = NULL)
+  indicador_title <- reactiveValues( value = NULL)
   Unidad <-  reactiveValues( value = NULL)
 
 
@@ -617,6 +624,9 @@ server <-  function(input, output, session) {
   country_url <-  reactiveValues(paises = NULL)
   question_url_def <-  reactiveValues(val= NULL)
   subquestion_url_def <-  reactiveValues(val= NULL)
+  title_x_axis <- reactiveValues(val= NULL)
+  title_y_axis <- reactiveValues(val= NULL)
+
 
 
 
@@ -698,15 +708,22 @@ server <-  function(input, output, session) {
     req(actual_but$active)
     dta <- data_prep()
     Unidad$value <- NULL
+    title_x_axis$value <- NULL
+    title_y_axis$value <- NULL
+
 
     # req(operations())
     # req(input$Operation_rb)
 
     trad <- "mean"
+    title_y_axis$value <-  i_("mean",lang=lang())
     var_calc <- "valor"
+
+
     if(lang()=="es" | lang()=="pt")  dta <- as.data.frame(dta)
 
-    group_var ="pais"
+    group_var <- "pais"
+    title_x_axis$value  <- i_("pais",lang=lang())
 
     if(lang() == "es"){
 
@@ -740,16 +757,19 @@ server <-  function(input, output, session) {
 
     var <- slug_translate |> filter(slug_en %in% input$Indicator)  |> select(slug)
 
-    print(( "Indicador$value"))
-    print(( Indicador$value))
-    print(nrow( Indicador$value))
-
 
     if(nrow( Indicador$value)==1){
 
-        if(actual_but$active %in% c("linea","scatter"))  group_var = c("pais","fecha")
-        if(actual_but$active %in% c("mapa","barras","treemap"))  group_var = "pais"
+        if(actual_but$active %in% c("linea","scatter")){
+          group_var = c("pais","fecha")
+          title_x_axis$value <- i_("fecha",lang=lang())
 
+        }
+        if(actual_but$active %in% c("mapa","barras","treemap"))  group_var = "pais"
+        if(actual_but$active %in% c("barras")){
+          title_y_axis$value <- i_("mean",lang=lang())
+          title_x_axis$value <- i_("pais",lang=lang())
+        }
         if(actual_but$active %in% c("sankey") & Indicador$value  == "covid_vaccine_agreements")  group_var = c("pais","fabrica")
         if(actual_but$active %in% c("sankey") & Indicador$value  == "doses_delivered_vaccine_donations")  group_var = c("pais","donante")
         if(actual_but$active %in% c("sankey") & Indicador$value  == "geopolitics_vaccine_donations")  group_var = c("pais","unidad")
@@ -802,6 +822,9 @@ server <-  function(input, output, session) {
                                        name =trad,
                                        group_var =group_var)
 
+         title_x_axis$value <- i_("slug",lang=lang())
+         title_y_axis$value <- i_("mean",lang=lang())
+
       }
       else {
 
@@ -809,6 +832,9 @@ server <-  function(input, output, session) {
         if(actual_but$active  %in% c("linea","scatter")){
 
           group_var = c("slug","fecha")
+
+          title_x_axis$value <- i_("fecha",lang=lang())
+          title_y_axis$value <- i_("mean",lang=lang())
 
           if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
           data_result <- var_aggregation(data = dta,
@@ -820,9 +846,12 @@ server <-  function(input, output, session) {
 
           data_result$slug <- as.factor( data_result$slug)
          }
+
         else {
                 dta2 <- dta |> tidyr::pivot_wider(names_from=slug,values_from=valor)
                 group_var <- c("fecha")
+                title_x_axis$value <- i_("mean",lang=lang())
+                title_y_axis$value <- i_("fecha",lang=lang())
               #  var_calc <- c(Indicador$value[1,1][1]$indicador,Indicador$value[2,1][1]$indicador)
 
                 print(dta2 |> head(2))
@@ -868,20 +897,14 @@ server <-  function(input, output, session) {
       }
       else{
 
-        print("lang")
         indicador1 <- dta |> filter(slug == Indicador$value[1,1][1]$indicador) |> select(slug_en) |> distinct()
-        print(indicador1)
         indicador2 <- dta |> filter(slug == Indicador$value[2,1][1]$indicador) |> select(slug_en)  |> distinct()
-        print(indicador2)
         if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = c(i_("fecha", lang()),indicador1$slug_en,indicador2$slug_en)
-
-
 
       }
     }
 
 
-   print( data_result |> head(1))
     data_result
   })
   ###############calendar pending
@@ -899,7 +922,10 @@ server <-  function(input, output, session) {
       # if(ncol(df) > 2)
       prex <- "CatDatNum"
       if(!is.null( Unidad$value )){
-        if(nrow( Unidad$value) ==2)  prex <- "DatNumNum"
+        print("Unidad$value ")
+        print(Unidad$value )
+        print(length( Unidad$value))
+        if(length( Unidad$value) ==2)  prex <- "DatNumNum"
       }
 
     }
@@ -926,73 +952,29 @@ server <-  function(input, output, session) {
    # tryCatch({
       req(data_viz())
       req(actual_but$active)
-
+      print("TITTLE")
+      print(indicador_title$value)
       myFunc <- NULL
 
-      if (actual_but$active %in% c("treemap")) {
-        myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "',{cat:event.point.node, id:event.point.name, timestamp: new Date().getTime()});}");
+     data_v <- as.data.frame(data_viz())
 
-      }
-
-
-      if(length(unique(input$Country)) > 1){
-        if (!"All" %in% input$Country){
-          if (actual_but$active %in% c("treemap")) {
-            myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "',{cat:event.point.node, id:event.point.name, timestamp: new Date().getTime()});}");
-
-          }
-          if (actual_but$active %in% c("barras","linea")) {
-            myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "', {cat:this.name, id:event.point.category, timestamp: new Date().getTime()});}")
-          }
-        }
-        else {
-          if (actual_but$active %in% c( "barras")) {
-            myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "', {id:event.point.name, timestamp: new Date().getTime()});}")
-
-          }
-          if (actual_but$active %in% c("linea")) {
-            myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "', {cat:this.name, id:event.point.category, timestamp: new Date().getTime()});}")
-
-          }
-
-          if (actual_but$active %in% c("treemap")) {
-            myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "',{cat:event.point.node, id:event.point.name, timestamp: new Date().getTime()});}");
-
-          }
-
-
-        }
-      }
-      else {
-        if (actual_but$active %in% c( "barras")) {
-          myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "', {id:event.point.name, timestamp: new Date().getTime()});}")
-        }
-        if (actual_but$active %in% c("linea")) {
-          myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "', {cat:this.name, id:event.point.category, timestamp: new Date().getTime()});}")
-
-        }
-        # if (actual_but$active %in% c("treemap")) {
-        #   myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "',{cat:event.point.node, id:event.point.name, timestamp: new Date().getTime()});}");
-        #
-        # }
-      }
-
-      data_v <- as.data.frame(data_viz())
-        print("names(data_v)")
-      print(names(data_v))
-      print(class(data_v))
       opts <- list(
         data = data_v,
         marker_radius = 0,
-        text_family = "Barlow",
-        legend_family = "Barlow",
+        text_family = "IBM Plex Sans",
+        legend_family = "IBM Plex Sans",
         text_color = "#0F1116",
         background_color = "#FFFFFF",
         grid_x_width = 0,
         axis_line_y_size = 1,
         axis_line_x_size = 1,
         axis_line_color = "#CECECE",
-        palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
+        palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168"),
+        title = indicador_title$value$slug,
+        title_align = "center",
+        tiltle_siza = 16,
+        hor_title=   title_x_axis$value,
+        ver_title=title_y_axis$value
       )
       if (actual_but$active == "mapa") {
         # opts$legend_title <- input$InsId_rb
@@ -1044,7 +1026,7 @@ server <-  function(input, output, session) {
       if (actual_but$active == "barras" | actual_but$active == "sankey" ) {
         opts$palette_colors <- c("#47BAA6", "#151E42", "#FF4824", "#FFCF06",
                                  "#FBCFA4", "#FF3D95","#B13168")
-        opts$ver_title <- ""
+        #opts$ver_title <- ""
        # opts$tooltip <- paste(paste("{pais_",lang(),"}"), " {Total}")
         # opts$hor_title <- stringr::str_to_sentence(input$InsId_rb)
        # opts$format_sample_num = "10M"
@@ -1217,7 +1199,7 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
-  #data_viz()
+  data_viz()
    # get_basic_lang_data()
 
   })
