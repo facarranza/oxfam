@@ -350,8 +350,8 @@ server <-  function(input, output, session) {
         pregunta_es == "¿Cómo ha evolucionado el COVID-19 en los países de la región?"       ~ 2,
         pregunta_es == "¿Cuál ha sido el comportamiento de los fallecimientos por COVID-19 en los países entre 2020 y 2022?"  ~ 3,
         pregunta_es == "¿Qué efectos ha tenido el COVID-19 en cada país?"     ~ 4,
-        pregunta_es ==  "¿Cuáles compras, desarrollos y aprobaciones de vacunas han hecho los países?"    ~ 5,
-        pregunta_es ==  "¿Qué donaciones y apoyos financieros han obtenido los países para responder a la pandemia?"   ~ 6
+        pregunta_es == "¿Cuáles compras, desarrollos y aprobaciones de vacunas han hecho los países?"    ~ 5,
+        pregunta_es == "¿Qué donaciones y apoyos financieros han obtenido los países para responder a la pandemia?"   ~ 6
       ))
 
       question_url_def$val = temp
@@ -812,7 +812,7 @@ server <-  function(input, output, session) {
 
       if(length(unique(dta$unidad))==1){
 
-        group_var = c("pais","slug")
+        group_var = c("pais","slug_en")
 
         if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
          data_result <- var_aggregation(data = dta,
@@ -831,7 +831,7 @@ server <-  function(input, output, session) {
 
         if(actual_but$active  %in% c("linea","scatter")){
 
-          group_var = c("slug","fecha")
+          group_var = c("slug_en","fecha")
 
           title_x_axis$value <- i_("fecha",lang=lang())
           title_y_axis$value <- i_("mean",lang=lang())
@@ -844,7 +844,10 @@ server <-  function(input, output, session) {
                                          name =trad,
                                          group_var =group_var)
 
-          data_result$slug <- as.factor( data_result$slug)
+          data_result$slug_en <- as.factor( data_result$slug_en)
+          data_result <- data_result |> rename(slug = slug_en)
+          if(actual_but$active %in% c("treemap","mapa","barras","scatter"))   names(data_result) = c(i_("slug",lang = lang()) ,i_("fecha",lang = lang()), i_(trad, lang=lang()))
+
          }
 
         else {
@@ -881,7 +884,7 @@ server <-  function(input, output, session) {
 
     if(nrow( Indicador$value)==1){
 
-        if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
+          if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
         if(actual_but$active %in% c("sankey")  & Indicador$value  == "doses_delivered_vaccine_donations")   names(data_result) = i_(c("pais","pais_donante", trad),lang=lang())
         if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
         if(actual_but$active %in% c("linea","scatter"))   names(data_result) = i_(c("pais","fecha", trad),lang=lang())
