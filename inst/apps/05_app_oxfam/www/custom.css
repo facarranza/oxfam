@@ -161,6 +161,8 @@ html, body {
 .click {
   text-align: center;
   font-family: inherit;
+  color: #000;
+  font-weight: bolder;
 }
 
 .click-img {

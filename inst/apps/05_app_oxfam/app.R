@@ -608,6 +608,7 @@ server <-  function(input, output, session) {
         text_color = "#0F1116",
         background_color = "#FFFFFF",
         grid_x_width = 0,
+        label_wrap = 70,
         axis_line_y_size = 1,
         axis_line_x_size = 1,
         axis_line_color = "#CECECE",
@@ -734,8 +735,105 @@ server <-  function(input, output, session) {
   })
 
 
+  click_viz <- reactiveValues(id = NULL, cat = NULL)
+
+  observe({
+    if (is.null(input$hcClicked)) return()
+    click_viz$id <- gsub("<br/>", " ", input$hcClicked$id)
+    if ("cat" %in% names(input$hcClicked)) {
+      click_viz$cat <- gsub("<br/>", " ", input$hcClicked$cat)
+    }
+  })
+
+  observeEvent(input$id_slug, {
+    click_viz$id <- NULL
+    click_viz$cat <- NULL
+  })
+
+  observeEvent(input$viz_selection, {
+    click_viz$id <- NULL
+    click_viz$cat <- NULL
+  })
+
+
+
+  data_click <- reactive({
+    req(viz_select())
+    req(slug_selected())
+    if (is.null(click_viz$id)) return()
+    pais_click <- click_viz$id
+    fecha_click <- click_viz$cat
+    cat_click <- NULL
+    slug_click <- NULL
+
+    if (viz_select() %in% c("bar")) {
+      if (!is.null(click_viz$cat)) {
+        if (slug_selected()[1] != "product_pipeline") {
+          pais_click <- click_viz$cat
+          cat_click <- click_viz$id
+        } else {
+          pais_click <- click_viz$id
+          cat_click <- click_viz$cat
+        }
+        fecha_click <- NULL
+      }
+    }
+
+    if (viz_select() %in% c( "treemap")) {
+      if (!is.null(click_viz$cat)) {
+        if (slug_selected()[1] != "product_pipeline") {
+        cat_click <- click_viz$cat
+        } else {
+          pais_click <- click_viz$cat
+          cat_click <- click_viz$id
+        }
+        fecha_click <- NULL
+      }
+    }
+
+    if (length(slug_selected()) == 2) {
+      pais_click <- NULL
+      slug_click <- click_viz$id
+    }
+
+
+    list(
+      pais = pais_click,
+      fecha = fecha_click,
+      cat = cat_click,
+      slug = slug_click
+    )
+  })
+
+
+  output$click_info <- renderUI({
+    req(lang())
+    if (lang() == "en") {
+      tx <- HTML("<div class = 'click'>
+               <img src='click/click.svg' class = 'click-img'/><br/>
+               <b>Click on the visualisation</b> to see more information.")
+    }
+    if (lang() == "es") {
+      tx <- HTML("<div class = 'click'>
+               <img src='click/click.svg' class = 'click-img'/><br/>
+               Da <b>clic sobre la visualización</b> para ver más información.")
+    }
+    if (lang() == "pt") {
+      tx <- HTML("<div class = 'click'>
+               <img src='click/click.svg' class = 'click-img'/><br/>
+               <b>Clique na visualização</b> para ver mais informações.")
+    }
+    if (is.null(click_viz$id)) return(tx)
+    tx <- click_viz$id
+    tx
+  })
+
   output$test_url <- renderPrint({
-    input$hcClicked
+    # list(
+    #   click_viz$id,
+    #   click_viz$cat
+    # )
+    data_click()
   })
 
 
