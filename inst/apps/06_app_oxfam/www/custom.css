@@ -27,7 +27,7 @@ html, body {
 .panel-body {
  flex-grow: 1;
   margin-top: -2rem;
-  padding: 0 1rem
+  padding: 0 1rem;
 }
 
 .panel-content {
@@ -56,9 +56,13 @@ html, body {
   margin-top: 0px important;
 }
 .panel-header-title {
- font-family: 'IBM Plex Sans';
- font-weight: 500;
- letter-spacing: 0.09em;
+
+ font-family: IBM Plex Sans;
+ font-size: 16px;
+ font-weight: 700;
+ line-height: 21px;
+ letter-spacing: 0em;
+ text-align: left;
  color: #252525;
  text-align: left;
  text-transform: capitalize;
@@ -98,25 +102,25 @@ html, body {
 
 }
 
-
+/*
 .basic_active_sub:hover {
-  background-color:#252525 !important;
-  border-color: #4B3C69 !important;
+ background-color:#ffffff !important;
 
 }
 
 .basic_active:hover {
-  background-color:#252525 !important;
-  border-color: #4B3C69 !important;
+ background-color:#ffffff !important;
 
 }
+*/
 .btn {
  color: #252525;
  cursor: pointer;
  font-family: 'IBM Plex Sans';
  font-style: normal;
- font-weight: 400;
- font-size: 15px;
+ font-weight: 300;
+ font-size: 14px;
+ line-height: 18px;
  display: flex;
  align-items: center;
  text-align: left !important;
@@ -125,7 +129,8 @@ html, body {
  background: #FFFFFF;
  text-transform: none;
  border: 1px solid #252525;
- border-radius: 10px;
+ border-radius: 5px;
+
 }
 
 #generalFilters{
@@ -151,7 +156,19 @@ html, body {
 	-moz-box-shadow: none !important;
 	box-shadow: none !important;
   border-radius: 7px !important;
+
+  box-sizing: border-box;
+
+    position: absolute;
+    width: 40px;
+    height: 40px;
+
+    background: #FFFFFF;
+    border: 1px solid #252525 !important;
+
+    border-radius: 10px!important;
 }
+
 /*
 .button-container:hover{
   background-color: #252525 !important;
@@ -161,6 +178,11 @@ html, body {
   background-color: #252525 !important;
 }
 */
+.btn:hover {
+  background-color: #252525 !important;
+  background: #252525 !important;
+  color: #FAFAFA !important;
+}
 
 .buttons-group .button-style {
   width: 30px !important;
@@ -168,14 +190,19 @@ html, body {
 }
 
 
-.buttons-group .button-style.active-btn:hover {
+ .basic_active_sub:hover{
   background-color: #252525 !important;
-  background: #252525 !important;
-  color: #252525  !important;
+  color:#FAFAFA;
+
+}
+
+
+.btn .btn-default .action-button {
+ hover: none !important;
 }
 
 .buttons-group .button-style.active-btn {
- background-color:#252525  !important;
+ background-color: #DDDDDD !important;
 }
 
 
