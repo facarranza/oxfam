@@ -78,7 +78,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-     verbatimTextOutput("debug"),
+     #verbatimTextOutput("debug"),
 
          #  shinycustomloader::withLoader(
              uiOutput("viz_view")
@@ -608,10 +608,6 @@ server <-  function(input, output, session) {
     viz$viz[viz$viz == "scatter_plot"] = "scatter"
 
     viz  <- unique(unlist(strsplit(viz$viz,",")))
-    print("vizzzzzzzzzzz")
-    print(question)
-    print(subquestion)
-    print(viz)
 
     v <- intersect(v,viz)
 
@@ -857,7 +853,7 @@ server <-  function(input, output, session) {
                 title_y_axis$value <- i_("fecha",lang=lang())
               #  var_calc <- c(Indicador$value[1,1][1]$indicador,Indicador$value[2,1][1]$indicador)
 
-                print(dta2 |> head(2))
+
                 data_result1 <- var_aggregation(data = dta2,
                                                # dic = dic,
                                                agg =trad,
@@ -874,7 +870,7 @@ server <-  function(input, output, session) {
 
 
                data_result <-  data_result1 |> left_join(data_result2, by = c("fecha"="fecha"))
-               print(data_result |> head(2))
+
         }
       data_result
        }
@@ -925,9 +921,7 @@ server <-  function(input, output, session) {
       # if(ncol(df) > 2)
       prex <- "CatDatNum"
       if(!is.null( Unidad$value )){
-        print("Unidad$value ")
-        print(Unidad$value )
-        print(length( Unidad$value))
+
         if(length( Unidad$value) ==2)  prex <- "DatNumNum"
       }
 
@@ -955,8 +949,6 @@ server <-  function(input, output, session) {
    # tryCatch({
       req(data_viz())
       req(actual_but$active)
-      print("TITTLE")
-      print(indicador_title$value)
       myFunc <- NULL
 
      data_v <- as.data.frame(data_viz())
@@ -1202,7 +1194,7 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
-  data_viz()
+ # data_viz()
    # get_basic_lang_data()
 
   })
