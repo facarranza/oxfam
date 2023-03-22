@@ -67,7 +67,7 @@ ui <- panelsPage(
   ),
   panel(title = ui_("data_viz"),
         id = "viz-style",
-        width = 619,
+        #width = 879,
         header_right = div(style="display:flex;align-items: flex-end;",
           class = "head-viz",
           div(style = "display:flex;",
@@ -79,7 +79,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-     verbatimTextOutput("debug"),
+#     verbatimTextOutput("debug"),
 
          #  shinycustomloader::withLoader(
              uiOutput("viz_view")
@@ -717,7 +717,7 @@ server <-  function(input, output, session) {
     # req(input$Operation_rb)
 
     trad <- "mean"
-    title_y_axis$value <-  i_("mean",lang=lang())
+    title_y_axis$value <-  i_(trad,lang=lang())
     var_calc <- "valor"
 
 
@@ -779,7 +779,15 @@ server <-  function(input, output, session) {
         if(actual_but$active %in% c("sankey") & Indicador$value  == "covid_vaccine_agreements")  group_var = c("pais","fabrica")
         if(actual_but$active %in% c("sankey") & Indicador$value  == "doses_delivered_vaccine_donations")  group_var = c("pais","donante")
         if(actual_but$active %in% c("sankey") & Indicador$value  == "geopolitics_vaccine_donations")  group_var = c("pais","unidad")
-
+        if(actual_but$active %in% c("barras") &  Indicador$value  == "school_closures"){
+          group_var = c("unidad","pais")
+          trad <- "count"
+          title_y_axis$value <-  i_(trad,lang=lang())
+        }
+        if(actual_but$active %in% c("barras") &  Indicador$value  == "school_closures") {
+          trad <- "count"
+          title_y_axis$value <-  i_(trad,lang=lang())
+        }
 
 
         if( Indicador$value  == "covid_vaccine_agreements" ) {
@@ -839,7 +847,7 @@ server <-  function(input, output, session) {
                                        group_var =group_var)
 
          title_x_axis$value <- i_("slug",lang=lang())
-         title_y_axis$value <- i_("mean",lang=lang())
+         title_y_axis$value <- i_(trad,lang=lang())
 
       }
       else {
@@ -850,7 +858,7 @@ server <-  function(input, output, session) {
           group_var = c("slug_en","fecha")
 
           title_x_axis$value <- i_("fecha",lang=lang())
-          title_y_axis$value <- i_("mean",lang=lang())
+          title_y_axis$value <- i_(trad,lang=lang())
 
           if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
           data_result <- var_aggregation(data = dta,
@@ -869,7 +877,7 @@ server <-  function(input, output, session) {
         else {
                 dta2 <- dta |> tidyr::pivot_wider(names_from=slug,values_from=valor)
                 group_var <- c("fecha")
-                title_x_axis$value <- i_("mean",lang=lang())
+                title_x_axis$value <- i_(trad,lang=lang())
                 title_y_axis$value <- i_("fecha",lang=lang())
               #  var_calc <- c(Indicador$value[1,1][1]$indicador,Indicador$value[2,1][1]$indicador)
 
@@ -905,6 +913,9 @@ server <-  function(input, output, session) {
         if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
         if(actual_but$active %in% c("linea","scatter"))   names(data_result) = i_(c("pais","fecha", trad),lang=lang())
         if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
+        if(actual_but$active %in% c("barras") & Indicador$value  == "school_closures"){
+          names(data_result) = i_(c("unidad","pais",trad),lang=lang())
+          }
 
 
 
@@ -935,7 +946,6 @@ server <-  function(input, output, session) {
     # Vizualizaciones requeridas:Clorepethc  Line  Bar   treemap   table, se pueden dejar en un solo if las que no necesitan desagregacion
     prex <- "DatNum"
     if(type_viz=="scatter") {  prex <-  "CatDatNum" }
-
     if(type_viz=="mapa") {  prex <- "GnmNum" }
     if(type_viz=="linea") {
       # if(ncol(df) > 2)
@@ -944,11 +954,17 @@ server <-  function(input, output, session) {
 
         if(length( Unidad$value) ==2)  prex <- "DatNumNum"
       }
+      # if(Indicador$value  == "school_closures"){
+      #   prex <- "CatCatNum"
+      # }
 
     }
     if(type_viz=="barras" ) {
       if(nrow( Indicador$value)==1)   prex <- "CatNum"
       else prex <- "CatCatNum"
+      if(Indicador$value  == "school_closures"){
+        prex <- "CatCatNum"
+      }
 
 
     }
@@ -1219,7 +1235,7 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
-   data_viz()
+   #data_viz()
    # get_basic_lang_data()
 
   })
