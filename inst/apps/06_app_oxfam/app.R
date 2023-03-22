@@ -131,17 +131,21 @@ server <-  function(input, output, session) {
     req(quest_choose())
     req(quest_choose_sub())
 
-    indicador_title$value <- NULL
     temp <-  NULL
     question <- quest_choose()
     subquestion <- quest_choose_sub()
+    indicador_title$value <- NULL
+
 
     if(lang()=="en"){
 
       indicador <- questions_dash_6 |> filter(pregunta_en %in% question & subpregunta_en %in% subquestion ) |>  select(indicador)
       Indicador$value <- indicador
-      indicador_title$value <- slug_translate |> filter(slug==indicador$indicador) |> select(slug_en)  |> rename(slug = slug_en)
-
+      indicador_title$value <- slug_translate |> filter(slug %in% indicador$indicador) |> select(slug_en)  |> rename(slug = slug_en)
+      print("indicador")
+      print(indicador)
+      print("indicador_title$value ")
+      print(indicador_title$value)
       temp <- plyr::ldply( 1:length(indicador$indicador), function(i){
 
       t  <- as.data.frame(oxfam_6$en[as.vector(indicador$indicador[i])])
@@ -162,8 +166,9 @@ server <-  function(input, output, session) {
       if(lang()=="es"){
         indicador <- questions_dash_6 |> filter(pregunta_es %in% question & subpergunta_es %in% subquestion ) |>  select(indicador)
         Indicador$value <- indicador
-        indicador_title$value <- slug_translate |> filter(slug==indicador$indicador) |> select(slug_es) |> rename(slug = slug_es)
+        indicador_title$value <- slug_translate |> filter(slug %in% indicador$indicador) |> select(slug_es) |> rename(slug = slug_es)
         # temp <- indicador
+
         temp <- lapply( 1:length(indicador$indicador), function(i){
           t  <- as.data.frame(oxfam_6$es[as.vector(indicador$indicador[i])])
           if(ncol(t)==9)
@@ -179,7 +184,13 @@ server <-  function(input, output, session) {
         if(lang()=="pt"){
           indicador <- questions_dash_6 |> filter(pregunta_pt %in% question & subpregunta_pt %in% subquestion ) |>  select(indicador)
           Indicador$value <- indicador
-          indicador_title$value <- slug_translate |> filter(slug==indicador$indicador) |> select(slug_pt) |> rename(slug = slug_pt)
+          print("indicador")
+          print(indicador)
+
+          indicador_title$value <- slug_translate |> filter(slug %in% indicador$indicador) |> select(slug_pt) |> rename(slug = slug_pt)
+          print("indicador_title$value ")
+          print(indicador_title$value)
+
           temp <- lapply( 1:length(indicador$indicador), function(i){
            t  <- as.data.frame(oxfam_6$pt[as.vector(indicador$indicador[i])])
             if(ncol(t)==9)
@@ -534,14 +545,9 @@ server <-  function(input, output, session) {
 
 
 
-
-
-
   data_prep <- reactive({
     req(quest_choose())
     req(quest_choose_sub())
-
-
     data  <- get_basic_lang_data() #todo; epserar nuevos filtros
     # dic <- homodatum::create_dic(data)
     # names(data) <- dic$id
@@ -557,8 +563,6 @@ server <-  function(input, output, session) {
     #
     # data_result <-  data_result |> filter(fecha >= input$data_range[1]  & fecha <= input$data_range[2] )
     # # checking results
-
-
 
     data
 
@@ -653,7 +657,7 @@ server <-  function(input, output, session) {
                                   text = i_("download",lang=lang()))
     } else {
       dsmodules::downloadTableUI("dropdown_table",
-                                 dropdownLabel = "download", #i_("download",lang=lang()),
+                                 dropdownLabel = i_("download",lang=lang()),
                                  formats = c("csv", "xlsx", "json"),
                                  display = "dropdown", text ="download")# i_("download",lang=lang()))
     }
@@ -712,10 +716,14 @@ server <-  function(input, output, session) {
     var_calc <- "valor"
 
 
-    if(lang()=="es" | lang()=="pt")  dta <- as.data.frame(dta)
+    if(lang()=="es" | lang()=="pt")  {
+      dta <- as.data.frame(bind_rows(dta))
+    }
 
     group_var <- "pais"
     title_x_axis$value  <- i_("pais",lang=lang())
+
+
 
     if(lang() == "es"){
 
@@ -741,13 +749,14 @@ server <-  function(input, output, session) {
 
         }
         else {
+
           dta <-   dta |> select(!c(pais_es,pais_en)) |> rename(pais = pais_pt,slug_en = slug_pt)
         }
 
 
     }
 
-    var <- slug_translate |> filter(slug_en %in% input$Indicator)  |> select(slug)
+#    var <- slug_translate |> filter(slug_en %in% input$Indicator)  |> select(slug)
 
 
     if(nrow( Indicador$value)==1){
@@ -789,7 +798,6 @@ server <-  function(input, output, session) {
 
 
         }
-
 
         if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
 
@@ -942,12 +950,17 @@ server <-  function(input, output, session) {
 
 
   viz_opts <- reactive({
-   # tryCatch({
+   tryCatch({
       req(data_viz())
       req(actual_but$active)
       myFunc <- NULL
+     # var_indicador <- indicador_title$value  |> summarise(slug <- paste(slug,collapse = "-")) |> select(slug)
+     # print(var_indicador)
+      data_v <- as.data.frame(data_viz())
 
-     data_v <- as.data.frame(data_viz())
+      indicator_temp <- apply(indicador_title$value, 2, function(y) paste(y, collapse = " <BR> "))
+      print("sL")
+          print( indicator_temp[[1]])
 
       opts <- list(
         data = data_v,
@@ -961,7 +974,7 @@ server <-  function(input, output, session) {
         axis_line_x_size = 1,
         axis_line_color = "#CECECE",
         palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168"),
-        title = indicador_title$value$slug,
+        title =  indicator_temp[[1]],
         title_align = "center",
         tiltle_siza = 16,
         hor_title=   title_x_axis$value,
@@ -1025,10 +1038,10 @@ server <-  function(input, output, session) {
       }
 
       opts
-    # },
-    # error = function(cond) {
-    #   return()
-    # })
+    },
+    error = function(cond) {
+      return()
+    })
   })
 
 
@@ -1082,15 +1095,15 @@ server <-  function(input, output, session) {
   })
 
   output$hgch_viz <- highcharter::renderHighchart({
-    # tryCatch({
+    tryCatch({
       req(data_viz())
       req(actual_but$active)
       if (actual_but$active %in% c("table")) return()
       viz_down()
-    # },
-    # error = function(cond) {
-    #   return()
-    # })
+    },
+    error = function(cond) {
+      return()
+    })
   })
   #
   output$lflt_viz <- leaflet::renderLeaflet({
@@ -1185,12 +1198,12 @@ server <-  function(input, output, session) {
   # })
 
   output$debug <- renderPrint({
-
+    #indicador_title$value
     #oxfam_one
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
- # data_viz()
+  #data_viz()
    # get_basic_lang_data()
 
   })
