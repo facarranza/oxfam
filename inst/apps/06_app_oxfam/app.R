@@ -58,10 +58,10 @@ ui <- panelsPage(
         width = 285,
         body = div(
 
-          shinycustomloader::withLoader(
-            uiOutput("generalsubFilters"),
-            type = "html", loader = "loader4"
-          )
+          #shinycustomloader::withLoader(
+            uiOutput("generalsubFilters")
+           # type = "html", loader = "loader4"
+          #)
 
         )
   ),
@@ -79,7 +79,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-     #verbatimTextOutput("debug"),
+     verbatimTextOutput("debug"),
 
          #  shinycustomloader::withLoader(
              uiOutput("viz_view")
@@ -423,39 +423,38 @@ server <-  function(input, output, session) {
         subpergunta_es == "¿Cuántas dosis de refuerzo de la vacuna fueron administradas por cada cien personas?"                             ~ 4,
         subpergunta_es == "¿Cuántas personas recibieron al menos una dosis de vacuna entre 100 personas?"                                    ~ 5,
         subpergunta_es == "¿Cuántas personas completamente vacunadas hay en comparación con las personas que recibieron mínimo una dosis?"   ~ 6,
-        subpergunta_es =="¿Cuántos casos de COVID-19 por millón de habitantes se confirmaron por día?"                                       ~ 7,
-        subpergunta_es =="¿Cuántas personas han sido internadas en Unidades de Cuidado Intensivo?"                                               ~ 8,
-        subpergunta_es =="¿Cuál es la diferencia entre el número de pacientes en Unidades de Cuidado Intensivo y en hospitales por millón?"        ~ 9,
-        subpergunta_es =="¿Cuál es la admisión semanal en hospitales por millón en comparación con la admisión en Unidades de Cuidado Intensivo?"    ~ 10,
-        subpergunta_es =="¿Cuántas nuevas infecciones en promedio ha causado un solo individuo infectado de COVID-19 en cada país?"                       ~ 11,
-        subpergunta_es =="¿Cuántas pruebas de COVID-19 en promedio se han hecho entre mil habitantes de cada país?"                                      ~ 12,
-        subpergunta_es == "¿Cuál es la tasa de pruebas positivas de COVID-19 por país?"                                                                      ~ 13,
-        subpergunta_es =="¿Cuánto ha sido el total de pruebas dividido entre el número de casos confirmados por país?"                                       ~ 14,
-        subpergunta_es =="¿Cuántas muertes a causa de COVID-19 por millón de habitantes se reportaron en cada país, incluyendo presuntas muertes?"          ~ 15,
-        subpergunta_es =="¿Cuál es la diferencia de porcentaje entre el número reportado de muertes semanales o mensuales entre 2020 y 2022 y el número proyectado de muertes para el mismo período con base en años anteriores de los países de América Latina y el Caribe?" ~ 16,
-        subpergunta_es =="¿Cuál es la diferencia acumulada entre el número informado de muertes desde el 1 de enero de 2020 y el número proyectado de muertes para el mismo período con base en años anteriores de los países de América Latina y el Caribe?" ~ 17,
-        subpergunta_es =="¿Cuántas muertes en exceso hubo en total en los países respecto a las proyectadas en años anteriores?" ~ 18,
-        subpergunta_es =="¿Cuál es la correlación entre las nuevas muertes por millón y el acumulado en el exceso de mortalidad?"   ~ 19,
-        subpergunta_es =="¿Cuál es la diferencia entre las nuevas muerte y los nuevos casos  por millón en cada país entre 2020 y 2022?" ~ 20,
-        subpergunta_es =="¿Cuál fue el Índice de Rigurosidad de los países a lo largo de la pandemia por establecer cierres de escuelas, cierres de lugares de trabajo y prohibiciones de viaje, entre otras medidas?" ~ 21,
-        subpergunta_es =="¿Cuántas personas con necesidad de asistencia y protección humanitarias fueron asistidas por el Plan de Respuesta Interagencial de Naciones Unidas en los países?"  ~ 22,
-        subpergunta_es =="¿Cuántas personas no fueron vacunadas de otras enfermedades debido al COVID-19?"                                                                                    ~ 23,
-        subpergunta_es =="¿Cuál ha sido el estado de operación de las instituciones educativas debido a las medidas de los gobiernos para mitigar la pandemia?"                               ~ 24,
-        subpergunta_es =="¿Cuál es el Índice de Seguridad de Salud Global de los países, de acuerdo con su seguridad sanitaria y otras capacidades relacionadas para responder a epidemias y pandemias?" ~ 25,
-        subpergunta_es =="¿Cuál es la correlación entre el promedio del Índice de Rigurosidad y el Índice de Seguridad de Salud Global de los países?"                                                    ~ 26,
-        subpergunta_es =="¿Cuántas dosis recibieron los países de la región a partir de acuerdos con los fabricantes?"                                                                                        ~ 27,
-        subpergunta_es =="¿Cuáles fueron los fabricantes con los que los países establecieron acuerdos para obtener vacunas?"                                                                               ~ 28,
-        subpergunta_es =="¿Cuáles son los precios por dosis en los países según las investigaciones periodísticas?"                                                                                         ~ 29,
-        subpergunta_es =="¿En qué fase de ensayo clínico están las vacunas en los países de la región?"                                                                                                     ~ 30,
-        subpergunta_es =="¿Cuántos proyectos de vacunas contra el COVID-19 desarrollaron algunas instituciones en países de América Latina y el Caribe?"                                                    ~ 31,
-        subpergunta_es =="¿Cuánto apoyo financiero en dólares recibieron los países por parte de la Alianza para las Vacunas Gavi y el Banco Mundial?"                                                      ~ 32,
-        subpergunta_es =="¿Cuánta asignación de financiación de proyectos en dólares han recibido los países por parte del Fondo Central para la Acción en Casos de Emergencia (CERF) de OCHA?"             ~ 33,
-        subpergunta_es =="¿Qué países donaron vacunas a América Latina y el Caribe?"                                                                                                                        ~ 34,
-        subpergunta_es =="¿Cuántas dosis donadas recibieron los países de América Latina y el Caribe?"                                                                                                      ~ 35,
-        subpergunta_es =="¿Cuántas dosis donaron China y Estados Unidos a los países de la región y cómo están distribuidas?"                                                                               ~ 36,
-        subpergunta_es =="¿Cuál es la diferencia entre las dosis obtenidas por acuerdos con fabricantes y por donaciones?"  ~ 37
+        subpergunta_es =="¿Cuántos casos de COVID-19 por millón de habitantes se confirmaron por día?"                                       ~ 1,
+        subpergunta_es =="¿Cuántas personas han sido internadas en Unidades de Cuidado Intensivo?"                                               ~ 2,
+        subpergunta_es =="¿Cuál es la diferencia entre el número de pacientes en Unidades de Cuidado Intensivo y en hospitales por millón?"        ~ 3,
+        subpergunta_es =="¿Cuál es la admisión semanal en hospitales por millón en comparación con la admisión en Unidades de Cuidado Intensivo?"    ~ 4,
+        subpergunta_es =="¿Cuántas nuevas infecciones en promedio ha causado un solo individuo infectado de COVID-19 en cada país?"                       ~ 5,
+        subpergunta_es =="¿Cuántas pruebas de COVID-19 en promedio se han hecho entre mil habitantes de cada país?"                                      ~ 6,
+        subpergunta_es == "¿Cuál es la tasa de pruebas positivas de COVID-19 por país?"                                                                      ~ 7,
+        subpergunta_es =="¿Cuánto ha sido el total de pruebas dividido entre el número de casos confirmados por país?"                                       ~ 8,
+        subpergunta_es =="¿Cuántas muertes a causa de COVID-19 por millón de habitantes se reportaron en cada país, incluyendo presuntas muertes?"          ~ 1,
+        subpergunta_es =="¿Cuál es la diferencia de porcentaje entre el número reportado de muertes semanales o mensuales entre 2020 y 2022 y el número proyectado de muertes para el mismo período con base en años anteriores de los países de América Latina y el Caribe?" ~ 2,
+        subpergunta_es =="¿Cuál es la diferencia acumulada entre el número informado de muertes desde el 1 de enero de 2020 y el número proyectado de muertes para el mismo período con base en años anteriores de los países de América Latina y el Caribe?" ~ 3,
+        subpergunta_es =="¿Cuántas muertes en exceso hubo en total en los países respecto a las proyectadas en años anteriores?" ~ 4,
+        subpergunta_es =="¿Cuál es la correlación entre las nuevas muertes por millón y el acumulado en el exceso de mortalidad?"   ~ 5,
+        subpergunta_es =="¿Cuál es la diferencia entre las nuevas muerte y los nuevos casos  por millón en cada país entre 2020 y 2022?" ~ 6,
+        subpergunta_es =="¿Cuál fue el Índice de Rigurosidad de los países a lo largo de la pandemia por establecer cierres de escuelas, cierres de lugares de trabajo y prohibiciones de viaje, entre otras medidas?" ~ 1,
+        subpergunta_es =="¿Cuántas personas con necesidad de asistencia y protección humanitarias fueron asistidas por el Plan de Respuesta Interagencial de Naciones Unidas en los países?"  ~ 2,
+        subpergunta_es =="¿Cuántas personas no fueron vacunadas de otras enfermedades debido al COVID-19?"                                                                                    ~ 3,
+        subpergunta_es =="¿Cuál ha sido el estado de operación de las instituciones educativas debido a las medidas de los gobiernos para mitigar la pandemia?"                               ~ 4,
+        subpergunta_es =="¿Cuál es el Índice de Seguridad de Salud Global de los países, de acuerdo con su seguridad sanitaria y otras capacidades relacionadas para responder a epidemias y pandemias?" ~ 5,
+        subpergunta_es =="¿Cuál es la correlación entre el promedio del Índice de Rigurosidad y el Índice de Seguridad de Salud Global de los países?"                                                    ~ 6,
+        subpergunta_es =="¿Cuántas dosis recibieron los países de la región a partir de acuerdos con los fabricantes?"                                                                                        ~ 1,
+        subpergunta_es =="¿Cuáles fueron los fabricantes con los que los países establecieron acuerdos para obtener vacunas?"                                                                               ~2,
+        subpergunta_es =="¿Cuáles son los precios por dosis en los países según las investigaciones periodísticas?"                                                                                         ~ 3,
+        subpergunta_es =="¿En qué fase de ensayo clínico están las vacunas en los países de la región?"                                                                                                     ~ 4,
+        subpergunta_es =="¿Cuántos proyectos de vacunas contra el COVID-19 desarrollaron algunas instituciones en países de América Latina y el Caribe?"                                                    ~ 5,
+        subpergunta_es =="¿Cuánto apoyo financiero en dólares recibieron los países por parte de la Alianza para las Vacunas Gavi y el Banco Mundial?"                                                      ~ 1,
+        subpergunta_es =="¿Cuánta asignación de financiación de proyectos en dólares han recibido los países por parte del Fondo Central para la Acción en Casos de Emergencia (CERF) de OCHA?"             ~ 2,
+        subpergunta_es =="¿Qué países donaron vacunas a América Latina y el Caribe?"                                                                                                                        ~ 3,
+        subpergunta_es =="¿Cuántas dosis donadas recibieron los países de América Latina y el Caribe?"                                                                                                      ~ 4,
+        subpergunta_es =="¿Cuántas dosis donaron China y Estados Unidos a los países de la región y cómo están distribuidas?"                                                                               ~ 5,
+        subpergunta_es =="¿Cuál es la diferencia entre las dosis obtenidas por acuerdos con fabricantes y por donaciones?"  ~ 6
       ))
-
       subquestion_url_def$val <- temp
 
       if(lang()=="en" | is.null(lang())) {
@@ -463,8 +462,12 @@ server <-  function(input, output, session) {
         data_t <- questions_dash_6 |> filter(pregunta_en %in%  unique(quest_choose())[1] )
 
         temp2 <- data_t |> filter(q2 %in% temp)  |> select(subpregunta_en) |> rename(subpregunta =  subpregunta_en)
+
         if(nrow(temp2)==0){
-          temp2 <- data_t  |> select(subpregunta_en) |> rename(subpregunta =  subpregunta_en) |> head(1)
+
+         temp2 <- data_t  |> select(subpregunta_en) |> rename(subpregunta =  subpregunta_en) |> head(1)
+         subquestion_url_def$val <- 1
+
 
 
         }
@@ -477,6 +480,7 @@ server <-  function(input, output, session) {
 
         if(nrow(temp2)==0){
           temp2 <- data_t  |> select(subpergunta_es) |> rename(subpregunta =  subpergunta_es) |> head(1)
+          subquestion_url_def$val <- 1
 
 
         }
@@ -486,6 +490,7 @@ server <-  function(input, output, session) {
         temp2 <- data_t |> filter(q2 %in% temp)  |> select(subpregunta_pt) |> rename(subpregunta =  subpregunta_pt)
         if(nrow(temp2)==0){
           temp2 <- data_t  |> select(subpregunta_pt) |> rename(subpregunta =  subpregunta_pt) |> head(1)
+          subquestion_url_def$val <- 1
 
 
         }
@@ -807,6 +812,17 @@ server <-  function(input, output, session) {
                                        to_agg = var_calc,
                                        name =trad,
                                        group_var =group_var)
+
+
+          # if(actual_but$active %in% c("mapa")){
+          #   data_result$pais_l <- data_result_pais
+          #   if(lang( )== "es"){
+          #       paises <- unique(dta$pais_es)
+          #       paises_en <- unique(dta$paises_en)
+          #       data_result |> select(mutate case_when())
+          #
+          #      }
+
     }
     else{
 
@@ -896,13 +912,13 @@ server <-  function(input, output, session) {
     else{
       Unidad$value <-length(unique(dta$unidad))
       if(length(unique(dta$unidad))==1){
-        if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", "indicador",trad),lang=lang())
+        if(actual_but$active %in% c("treemap","mapa","barras","linea"))   names(data_result) = i_(c("pais", "indicador",trad),lang=lang())
       }
       else{
 
         indicador1 <- dta |> filter(slug == Indicador$value[1,1][1]$indicador) |> select(slug_en) |> distinct()
         indicador2 <- dta |> filter(slug == Indicador$value[2,1][1]$indicador) |> select(slug_en)  |> distinct()
-        if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = c(i_("fecha", lang()),indicador1$slug_en,indicador2$slug_en)
+        if(actual_but$active %in% c("treemap","mapa","barras","linea"))   names(data_result) = c(i_("fecha", lang()),indicador1$slug_en,indicador2$slug_en)
 
       }
     }
@@ -1203,7 +1219,7 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
-  #data_viz()
+   data_viz()
    # get_basic_lang_data()
 
   })
