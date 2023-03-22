@@ -992,7 +992,7 @@ server <-  function(input, output, session) {
         palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168"),
         title =  indicator_temp[[1]],
         title_align = "center",
-        tiltle_siza = 16,
+        tiltle_size = 15,
         hor_title=   title_x_axis$value,
         ver_title=title_y_axis$value
       )
