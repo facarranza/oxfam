@@ -584,9 +584,11 @@ server <-  function(input, output, session) {
     }
 
     temp <-NULL
-    lang_names <-  c("id","slug","slug_",i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad",lang()))
+
+    slug_id <-  paste(i_("slug",lang()),"id",sep="_")
+    lang_names <-  c("id",slug_id ,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad",lang()))
     if(ncol(dta)==7)  colnames(dta) <-  lang_names
-    else colnames(dta) <- c("id",i_("slug",lang()),"slug_",i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()))
+    else colnames(dta) <- c("id",slug_id,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()))
     # if(actual_but$active %in% c("linea","scatter"))   names(data_) = i_(c("pais","fecha", trad),lang=lang())
     # if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
     # if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
