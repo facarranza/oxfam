@@ -805,7 +805,7 @@ server <-  function(input, output, session) {
     if (!is.null(fecha_click)) {
       fecha <- "fecha"
       if (viz_select() == "scatter") {
-        df$fecha_ct <- as.numeric(as.POSIXct(df[["fecha"]], format="%Y-%m-%d"))*1000
+        print(df)
         fecha <- "fecha_ct"
       }
       df <- df |> filter(!!dplyr::sym(fecha) %in% fecha_click)
