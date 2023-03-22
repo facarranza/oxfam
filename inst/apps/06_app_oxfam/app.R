@@ -39,7 +39,7 @@ ui <- panelsPage(
         id = "controls-style",
         collapse = FALSE,
         can_collapse = FALSE,
-        width = 300,
+        width = 285,
         body = div(
           div(id = "myDiv", style = "font-family: 'IBM Plex Sans'; font-weight: 500; font-size: 14px; line-height: 18.2px;,  background-color:#252525;" , ui_("pregunta")),
           verbatimTextOutput("choices_print"),
@@ -55,7 +55,7 @@ ui <- panelsPage(
         id = "controls-style2",
 
         can_collapse = FALSE,
-        width = 300,
+        width = 285,
         body = div(
 
           shinycustomloader::withLoader(
@@ -67,6 +67,7 @@ ui <- panelsPage(
   ),
   panel(title = ui_("data_viz"),
         id = "viz-style",
+        width = 619,
         header_right = div(style="display:flex;align-items: flex-end;",
           class = "head-viz",
           div(style = "display:flex;",
@@ -880,7 +881,7 @@ server <-  function(input, output, session) {
 
     if(nrow( Indicador$value)==1){
 
-          if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
+        if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
         if(actual_but$active %in% c("sankey")  & Indicador$value  == "doses_delivered_vaccine_donations")   names(data_result) = i_(c("pais","pais_donante", trad),lang=lang())
         if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
         if(actual_but$active %in% c("linea","scatter"))   names(data_result) = i_(c("pais","fecha", trad),lang=lang())
