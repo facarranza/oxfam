@@ -841,6 +841,12 @@ server <-  function(input, output, session) {
     df
   })
 
+  text_click <- reactive({
+    req(data_click())
+    df <- data_click()
+    extra <- slug_extra
+  })
+
 
   output$click_info <- renderUI({
     req(lang())

@@ -10,7 +10,9 @@ usethis::use_data(slug_translate, overwrite = TRUE)
 
 slug_extras <-  general_info |>
   select(slug, slug_description_es = descripcion_es,
-         slug_description_en = description, fuente, url)
+         slug_description_en = description,
+         slug_description_pt = descrição,
+         fuente, url)
 usethis::use_data(slug_extras, overwrite = TRUE)
 
 
