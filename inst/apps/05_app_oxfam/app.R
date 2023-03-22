@@ -172,6 +172,9 @@ server <-  function(input, output, session) {
     slug_comparation$id <- NULL
   })
 
+  observeEvent(input$viz_selection, {
+    slug_comparation$id <- NULL
+  })
 
   slug_selected <- reactive({
     req(viz_select())
@@ -549,7 +552,8 @@ server <-  function(input, output, session) {
     req(slug_selected())
 
     data <- data_load()
-
+    id_ct <- grep("fecha_ct", names(data))
+    data <- data[,-id_ct]
     var_cat <- var_viz()$cat
     if (is.null(var_cat)) var_cat <- var_viz()$var_viz_date
     var_num <- var_viz()$num
@@ -568,6 +572,8 @@ server <-  function(input, output, session) {
                                            agg_extra = agg_extra)
 
       var <- c(unique(var_viz()$var_viz, var_viz()$var_viz_date), label_agg)
+      print("%%%%%%%%%%%%%%%%%%%%%")
+      print(var)
       if (length(var_num) == 2) {
         data <- data |> select({{ var }})
         data$..labels <- " "
@@ -575,6 +581,8 @@ server <-  function(input, output, session) {
         data <- data |> select({{ var }}, everything())
       }
     }
+
+
 
     data
   })
@@ -631,7 +639,6 @@ server <-  function(input, output, session) {
       # } else {
       #   opts$theme$tooltip_template <- "a {a}<br/>b {b}<br/>c {c}<br/>d {d}<br/>f {f}<br/>g {g}<br/> h {h}"
       # }
-
       opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} ", unidad_label)
       if (lang() != "en") {
         if (!unidad) unidad_label <- "{g}"
@@ -667,7 +674,7 @@ server <-  function(input, output, session) {
     req(data_viz())
     req(var_viz())
     req(viz_theme())
-
+   #print(data_viz())
     var_num <- var_viz()$label_agg
     var_date <- var_viz()$var_viz_date
     var_cat <- var_viz()$var_viz
@@ -755,17 +762,13 @@ server <-  function(input, output, session) {
 
 
 
-  data_click <- reactive({
+  viz_click <- reactive({
     req(viz_select())
     req(slug_selected())
-    req(data_load())
-    if (is.null(click_viz$id)) return()
-    df <- data_load()
     pais_click <- click_viz$id
     fecha_click <- click_viz$cat
     cat_click <- NULL
     slug_click <- NULL
-
     if (viz_select() %in% c("bar")) {
       if (!is.null(click_viz$cat)) {
         if (slug_selected()[1] != "product_pipeline") {
@@ -791,33 +794,51 @@ server <-  function(input, output, session) {
       }
     }
 
+    if (viz_select() %in% c( "sankey")) {
+      cat_click <- click_viz$id
+      pais_click <- click_viz$cat
+      fecha_click <- NULL
+    }
+
     if (length(slug_selected()) == 2) {
       pais_click <- NULL
       slug_click <- click_viz$id
     }
 
+    list(
+      pais_click = pais_click,
+      fecha_click = fecha_click,
+      cat_click = cat_click,
+      slug_click = slug_click
+    )
 
-    if (!is.null(pais_click)) {
+  })
+
+  data_click <- reactive({
+    req(viz_click())
+    req(data_load())
+    if (is.null(click_viz$id)) return()
+    df <- data_load()
+
+
+    if (!is.null(viz_click()$pais_click)) {
       pais <- paste0("pais_", lang())
-      df <- df |> filter(!!dplyr::sym(pais) %in% pais_click)
+      if (viz_select() == "map") pais <- "pais_en"
+      df <- df |> filter(!!dplyr::sym(pais) %in% viz_click()$pais_click)
     }
 
-    if (!is.null(fecha_click)) {
+    if (!is.null(viz_click()$fecha_click)) {
       fecha <- "fecha"
-      if (viz_select() == "scatter") {
-        print(df)
-        fecha <- "fecha_ct"
-      }
-      df <- df |> filter(!!dplyr::sym(fecha) %in% fecha_click)
+      if (viz_select() == "scatter") fecha <- "fecha_ct"
+      df <- df |> filter(!!dplyr::sym(fecha) %in% viz_click()$fecha_click)
+    }
+
+    if (!is.null(viz_click()$cat_click)) {
+      cat <- "unidad"
+      df <- df |> filter(!!dplyr::sym(cat) %in% viz_click()$cat_click)
     }
 
     df
-    # list(
-    #   pais = pais_click,
-    #   fecha = fecha_click,
-    #   cat = cat_click,
-    #   slug = slug_click
-    # )
   })
 
 
@@ -844,10 +865,8 @@ server <-  function(input, output, session) {
   })
 
   output$test_url <- renderPrint({
-    # list(
-    #   click_viz$id,
-    #   click_viz$cat
-    # )
+   #viz_click()
+  #input$hcClicked
     data_click()
   })
 
