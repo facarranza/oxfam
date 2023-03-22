@@ -126,7 +126,10 @@ server <-  function(input, output, session) {
       indicador <- questions_dash_6 |> filter(pregunta_en %in% question & subpregunta_en %in% subquestion ) |>  select(indicador)
       Indicador$value <- indicador
 
-      indicador_title$value <- slug_translate |> filter(slug=="new_vaccinations") |> select(slug_en)  |> rename(slug = slug_en)
+      indicador_title$value <- slug_translate |> filter(slug==indicador$indicador) |> select(slug_en)  |> rename(slug = slug_en)
+      print(indicador)
+      print(" indicador_title$value")
+      print( indicador_title$value)
 
       temp <- plyr::ldply( 1:length(indicador$indicador), function(i){
         t  <- as.data.frame(oxfam_6$en[as.vector(indicador$indicador[i])])
@@ -149,7 +152,7 @@ server <-  function(input, output, session) {
       if(lang()=="es"){
         indicador <- questions_dash_6 |> filter(pregunta_es %in% question & subpergunta_es %in% subquestion ) |>  select(indicador)
         Indicador$value <- indicador
-        indicador_title$value <- slug_translate |> filter(slug==indicador) |> select(slug_es) |> rename(slug = slug_es)
+        indicador_title$value <- slug_translate |> filter(slug==indicador$indicador) |> select(slug_es) |> rename(slug = slug_es)
         # temp <- indicador
         temp <- lapply( 1:length(indicador$indicador), function(i){
           t  <- as.data.frame(oxfam_6$es[as.vector(indicador$indicador[i])])
@@ -166,7 +169,7 @@ server <-  function(input, output, session) {
         if(lang()=="pt"){
           indicador <- questions_dash_6 |> filter(pregunta_pt %in% question & subpregunta_pt %in% subquestion ) |>  select(indicador)
           Indicador$value <- indicador
-          indicador_title$value <- slug_translate |> filter(slug==indicador) |> select(slug_pt) |> rename(slug = slug_pt)
+          indicador_title$value <- slug_translate |> filter(slug==indicador$indicador) |> select(slug_pt) |> rename(slug = slug_pt)
           temp <- lapply( 1:length(indicador$indicador), function(i){
             t  <- as.data.frame(oxfam_6$pt[as.vector(indicador$indicador[i])])
             if(ncol(t)==9)
