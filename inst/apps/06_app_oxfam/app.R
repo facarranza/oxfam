@@ -111,11 +111,26 @@ server <-  function(input, output, session) {
     shinyjs::delay(500, uiLangUpdate(input$shi18ny_ui_classes, lang()))
   })
 
+  #TODO create objetcs that group variables
+  click_viz <- reactiveValues(id = NULL)
+  click_sub <- reactiveValues(value = NULL)
+  click_viz_sub <- reactiveValues(id = NULL)
+  Indicador <- reactiveValues( value = NULL)
+  indicador_title <- reactiveValues( value = NULL)
+  Unidad <-  reactiveValues( value = NULL)
+  actual_but <- reactiveValues(active = NULL)
+  country_url <-  reactiveValues(paises = NULL)
+  question_url_def <-  reactiveValues(val= NULL)
+  subquestion_url_def <-  reactiveValues(val= NULL)
+  title_x_axis <- reactiveValues(val= NULL)
+  title_y_axis <- reactiveValues(val= NULL)
 
 
+  #genera la data con base a las preguntas elegidas y el tipo de idioma
   get_basic_lang_data <- reactive({
     req(quest_choose())
     req(quest_choose_sub())
+
     indicador_title$value <- NULL
     temp <-  NULL
     question <- quest_choose()
@@ -125,14 +140,11 @@ server <-  function(input, output, session) {
 
       indicador <- questions_dash_6 |> filter(pregunta_en %in% question & subpregunta_en %in% subquestion ) |>  select(indicador)
       Indicador$value <- indicador
-
       indicador_title$value <- slug_translate |> filter(slug==indicador$indicador) |> select(slug_en)  |> rename(slug = slug_en)
-      print(indicador)
-      print(" indicador_title$value")
-      print( indicador_title$value)
 
       temp <- plyr::ldply( 1:length(indicador$indicador), function(i){
-        t  <- as.data.frame(oxfam_6$en[as.vector(indicador$indicador[i])])
+
+      t  <- as.data.frame(oxfam_6$en[as.vector(indicador$indicador[i])])
         if(ncol(t) == 9) {
 
          colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
@@ -140,8 +152,6 @@ server <-  function(input, output, session) {
         else  {
          colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor")
         }
-        #
-        # colnames(t) <- gsub(".*\\.", "", t)
 
         temp <- rbind(temp,t)
       })
@@ -171,7 +181,7 @@ server <-  function(input, output, session) {
           Indicador$value <- indicador
           indicador_title$value <- slug_translate |> filter(slug==indicador$indicador) |> select(slug_pt) |> rename(slug = slug_pt)
           temp <- lapply( 1:length(indicador$indicador), function(i){
-            t  <- as.data.frame(oxfam_6$pt[as.vector(indicador$indicador[i])])
+           t  <- as.data.frame(oxfam_6$pt[as.vector(indicador$indicador[i])])
             if(ncol(t)==9)
               colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
             else{
@@ -190,6 +200,7 @@ server <-  function(input, output, session) {
     temp
   })
 
+  #filtro de pereguntas
   sel_question <-reactive({
     if(lang() == "es") {
       unique(questions_dash_6$pregunta_es)
@@ -205,6 +216,7 @@ server <-  function(input, output, session) {
     # ui_(unique(oxfam_one$es$new_vaccinations$pais), lang = lang())
   })
 
+  #Genera botones de selección de preguntas
   output$generalFilters <- renderUI({
     req( sel_question_url())
     req(question_url_def$val)
@@ -235,11 +247,6 @@ server <-  function(input, output, session) {
   })
 
 
-
-  click_viz <- reactiveValues(id = NULL)
-
-  click_sub <- reactiveValues(value = NULL)
-
   observe({
     click_sub$value <-  input$last_click_sub
   })
@@ -268,7 +275,7 @@ server <-  function(input, output, session) {
 
   })
 
-  click_viz_sub <- reactiveValues(id = NULL)
+
 
 
 
@@ -333,12 +340,6 @@ server <-  function(input, output, session) {
     i_(c("subpregunta"), lang = lang())
   })
 
-
-
-
-  Indicador <- reactiveValues( value = NULL)
-  indicador_title <- reactiveValues( value = NULL)
-  Unidad <-  reactiveValues( value = NULL)
 
 
   sel_question_url <- reactive({
@@ -619,17 +620,6 @@ server <-  function(input, output, session) {
 
     v
   })
-
-  actual_but <- reactiveValues(active = NULL)
-  country_url <-  reactiveValues(paises = NULL)
-  question_url_def <-  reactiveValues(val= NULL)
-  subquestion_url_def <-  reactiveValues(val= NULL)
-  title_x_axis <- reactiveValues(val= NULL)
-  title_y_axis <- reactiveValues(val= NULL)
-
-
-
-
 
 
   output$viz_icons <- renderUI({
