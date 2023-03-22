@@ -422,7 +422,7 @@ server <-  function(input, output, session) {
       if (viz_select() == "line") {
 
         if (is.null(input$id_date_format)) return()
-
+        df$fecha_all <- df$fecha
         if (input$id_date_format == "anio_mes") {
           df$fecha <- format(df$fecha, "%Y-%m")
         }
@@ -433,7 +433,6 @@ server <-  function(input, output, session) {
     }
 
     if ("valor" %in% names(df)) {
-      print(length(unique(df$id)) != nrow(df))
       if (length(unique(df$id)) != nrow(df)) {
         df1 <- df |> group_by(id) |>
           summarise(dplyr::across(dplyr::everything(), list(dsapptools:::paste_vector)))
@@ -560,7 +559,6 @@ server <-  function(input, output, session) {
     if (agg == "count") agg_extra <- "sum"
 
     if (!is.null(var_viz()$agg)) {
-
       data <- dsdataprep::aggregation_data(data = data,
                                            agg = agg,
                                            agg_name = label_agg,
@@ -677,7 +675,7 @@ server <-  function(input, output, session) {
       var_date <- 'fecha'
       var_cat <- NULL
     }
-    print(names(data_viz()))
+
     do.call(viz_func(), list(
       data = data_viz(),
       var_cat = var_cat,
@@ -760,7 +758,9 @@ server <-  function(input, output, session) {
   data_click <- reactive({
     req(viz_select())
     req(slug_selected())
+    req(data_load())
     if (is.null(click_viz$id)) return()
+    df <- data_load()
     pais_click <- click_viz$id
     fecha_click <- click_viz$cat
     cat_click <- NULL
@@ -782,7 +782,7 @@ server <-  function(input, output, session) {
     if (viz_select() %in% c( "treemap")) {
       if (!is.null(click_viz$cat)) {
         if (slug_selected()[1] != "product_pipeline") {
-        cat_click <- click_viz$cat
+          cat_click <- click_viz$cat
         } else {
           pais_click <- click_viz$cat
           cat_click <- click_viz$id
@@ -797,12 +797,27 @@ server <-  function(input, output, session) {
     }
 
 
-    list(
-      pais = pais_click,
-      fecha = fecha_click,
-      cat = cat_click,
-      slug = slug_click
-    )
+    if (!is.null(pais_click)) {
+      pais <- paste0("pais_", lang())
+      df <- df |> filter(!!dplyr::sym(pais) %in% pais_click)
+    }
+
+    if (!is.null(fecha_click)) {
+      fecha <- "fecha"
+      if (viz_select() == "scatter") {
+        df$fecha_ct <- as.numeric(as.POSIXct(df[["fecha"]], format="%Y-%m-%d"))*1000
+        fecha <- "fecha_ct"
+      }
+      df <- df |> filter(!!dplyr::sym(fecha) %in% fecha_click)
+    }
+
+    df
+    # list(
+    #   pais = pais_click,
+    #   fecha = fecha_click,
+    #   cat = cat_click,
+    #   slug = slug_click
+    # )
   })
 
 
