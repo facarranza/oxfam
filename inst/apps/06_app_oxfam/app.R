@@ -79,9 +79,10 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-#     verbatimTextOutput("debug"),
+    #verbatimTextOutput("debug"),
 
          #  shinycustomloader::withLoader(
+             uiOutput("country"),
              uiOutput("viz_view")
           #   type = "html", loader = "loader4"
         #   )
@@ -531,22 +532,43 @@ server <-  function(input, output, session) {
 
 
 
-  output$subquestion <- renderUI({
+  output$country <- renderUI({
+    req(Indicador$value)
+    if(actual_but$active %in% c("barras","linea") &  Indicador$value  == "school_closures") {
+        default_select <- NULL
+        default_select <- NULL
 
-
-    default_select <- NULL
-    default_select <- NULL
-
-    shiny::selectizeInput("subquestion", label= "", choices=  sel_subquestion(), selected = sel_subquestion_url(), multiple =TRUE,
-                          options = list(
-                            placeholder = "All", plugins=list("remove_button","drag_drop"))
-    )
+        shiny::selectizeInput("country", label= i_("pais",lang()), choices=  sel_country(), selected= sel_country()[1],  multiple =TRUE,
+                              options = list(
+                                placeholder = "All", plugins=list("remove_button","drag_drop"))
+        )
+    }
 
 
 
 
   })
 
+
+  sel_country <-reactive({
+    req(data_prep())
+    dta <- bind_rows(data_prep())
+
+    if(lang() == "es"){
+      dta <-   dta |> select(!c(pais_en,pais_pt)) |> rename(pais = pais_es)
+
+    }
+    if(lang() == "en"){
+      dta <-   dta |> select(!c(pais_es,pais_pt)) |> rename(pais = pais_en)
+    }
+    if(lang( )== "pt"){
+      dta <-   dta |> select(!c(pais_es,pais_en)) |> rename(pais = pais_pt)
+
+
+    }
+    unique(dta$pais)
+    # ui_(unique(oxfam_one$es$new_vaccinations$pais), lang = lang())
+  })
 
 
 
@@ -784,9 +806,21 @@ server <-  function(input, output, session) {
           trad <- "count"
           title_y_axis$value <-  i_(trad,lang=lang())
         }
-        if(actual_but$active %in% c("barras") &  Indicador$value  == "school_closures") {
+
+
+        if(actual_but$active %in% c("linea") &  Indicador$value  == "school_closures") {
+          group_var = c("unidad","fecha")
+          #req(input$country)
+
+          filtro <- input$country
+          if(is.null(input$country)) {
+            filtro <- sel_country()[1]
+          }
           trad <- "count"
           title_y_axis$value <-  i_(trad,lang=lang())
+          dta <-  dta |> filter(pais %in% filtro)
+          dta$fecha <-  format(as.Date(dta$fecha), "%Y-%m")
+          print(dta$fecha)
         }
 
 
@@ -915,7 +949,10 @@ server <-  function(input, output, session) {
         if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
         if(actual_but$active %in% c("barras") & Indicador$value  == "school_closures"){
           names(data_result) = i_(c("unidad","pais",trad),lang=lang())
-          }
+        }
+        if(actual_but$active %in% c("linea") & Indicador$value  == "school_closures"){
+          names(data_result) = i_(c("unidad","fecha",trad),lang=lang())
+        }
 
 
 
