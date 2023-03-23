@@ -173,3 +173,18 @@ html, body {
 #id_slug_dates {
   margin-bottom: 7%;
 }
+
+.head-click {
+  margin-top: 4%;
+}
+
+.title-click {
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.click-select {
+  margin-top: 4%;
+  font-weight: 700;
+}
+

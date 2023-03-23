@@ -176,6 +176,8 @@ server <-  function(input, output, session) {
     slug_comparation$id <- NULL
   })
 
+
+
   slug_selected <- reactive({
     req(viz_select())
     if (viz_select() %in% c("line", "scatter")) {
@@ -572,8 +574,7 @@ server <-  function(input, output, session) {
                                            agg_extra = agg_extra)
 
       var <- c(unique(var_viz()$var_viz, var_viz()$var_viz_date), label_agg)
-      print("%%%%%%%%%%%%%%%%%%%%%")
-      print(var)
+
       if (length(var_num) == 2) {
         data <- data |> select({{ var }})
         data$..labels <- " "
@@ -674,7 +675,7 @@ server <-  function(input, output, session) {
     req(data_viz())
     req(var_viz())
     req(viz_theme())
-   #print(data_viz())
+    #print(data_viz())
     var_num <- var_viz()$label_agg
     var_date <- var_viz()$var_viz_date
     var_cat <- var_viz()$var_viz
@@ -760,6 +761,10 @@ server <-  function(input, output, session) {
     click_viz$cat <- NULL
   })
 
+  observeEvent(input$id_date_format, {
+    click_viz$id <- NULL
+    click_viz$cat <- NULL
+  })
 
 
   viz_click <- reactive({
@@ -805,6 +810,12 @@ server <-  function(input, output, session) {
       slug_click <- click_viz$id
     }
 
+    if (viz_select() == "line") {
+      req(input$id_date_format)
+      if (input$id_date_format == "anio_mes_dia") pais_click <- NULL
+    }
+
+
     list(
       pais_click = pais_click,
       fecha_click = fecha_click,
@@ -827,7 +838,9 @@ server <-  function(input, output, session) {
       df <- df |> filter(!!dplyr::sym(pais) %in% viz_click()$pais_click)
     }
 
+
     if (!is.null(viz_click()$fecha_click)) {
+      df$fecha <- as.character(df$fecha)
       fecha <- "fecha"
       if (viz_select() == "scatter") fecha <- "fecha_ct"
       df <- df |> filter(!!dplyr::sym(fecha) %in% viz_click()$fecha_click)
@@ -841,10 +854,97 @@ server <-  function(input, output, session) {
     df
   })
 
-  text_click <- reactive({
+  slug_description <- reactive({
+    req(viz_click())
+    req(slug_selected())
     req(data_click())
     df <- data_click()
-    extra <- slug_extra
+    slug <- slug_translate |> filter(slug %in% slug_selected())
+    extra <- slug_extras |> filter(slug %in% slug_selected())
+    extra <- extra |> left_join(slug, by = "slug")
+    extra <- extra[, c(paste0("slug_", lang()), paste0("slug_description_", lang()), "fuente", "url")]
+
+    if (!is.null(viz_click()$slug_click)) {
+      extra <- extra |> filter(!!sym(paste0("slug_", lang())) %in% viz_click()$slug_click)
+    }
+    extra
+  })
+
+  viz_extra_click <- reactive({
+    req(viz_select())
+    req(viz_theme())
+
+    req(data_click())
+    df <- data_click()
+    if (nrow(df) == 0) return()
+    if (!"valor" %in% names(df)) return()
+    if (is.null(input$id_slug_agg)) return()
+    if (!"fecha" %in% names(df)) return()
+    if (viz_select() == "scatter") return()
+    viz_line <- TRUE
+
+    if (viz_select() != "line") {
+    df$fecha <- format(df$fecha, "%Y-%m")
+    }
+
+    if (viz_select() == "line") {
+      req(input$id_date_format)
+      df$fecha <- df$fecha_all
+      if (input$id_date_format == "anio") {
+        df$fecha <- format(df$fecha, "%Y-%m")
+      }
+      if (input$id_date_format == "anio_mes_dia") {
+        viz_line <- FALSE
+        df$fecha <- df[[paste0("pais_", lang())]]
+      }
+    }
+    if (length(unique(df$fecha)) == 1) return()
+
+    label_agg <- i_(input$id_slug_agg, lang())
+    df_dates <-  dsdataprep::aggregation_data(data = df,
+                                              agg = input$id_slug_agg,
+                                              agg_name = label_agg,
+                                              group_var = "fecha",
+                                              to_agg = "valor",
+                                              extra_col = FALSE)
+    theme <- viz_theme()
+    theme$theme$tooltip_template <- paste0("{fecha} <br/> ",
+                                           label_agg, ": {", label_agg, "}" )
+    theme$theme$shiny_clickable <- FALSE
+
+    if (viz_line) {
+    viz <- hgch_line(df_dates, var_dat = "fecha", var_num = label_agg, opts = theme)
+    } else {
+      viz <- hgch_bar(df_dates, var_cat = "fecha", var_num = label_agg, opts = theme)
+    }
+    viz
+
+  })
+
+  output$viz_extra <- renderHighchart({
+    req(viz_extra_click())
+    viz_extra_click()
+  })
+
+  output$show_viz_click <- renderUI({
+    req(data_click())
+    req(slug_selected())
+    df <- data_click()
+    if (!is.null(viz_extra_click())) {
+      v <- highchartOutput("viz_extra")
+    } else {
+      v <- NULL
+      if (viz_select() == "scatter") {
+        if (length(slug_selected()) == 1) {
+        v <- HTML(paste0("<ul><li>", df$valor, "</li></ul>"))
+        }
+      } else {
+        v <- "en proceso"
+      }
+
+    }
+
+    v
   })
 
 
@@ -866,15 +966,64 @@ server <-  function(input, output, session) {
                <b>Clique na visualização</b> para ver mais informações.")
     }
     if (is.null(click_viz$id)) return(tx)
-    tx <- click_viz$id
+    if (is.null(slug_description())) return(tx)
+    if (nrow(slug_description()) == 0) return(tx)
+    req(data_click())
+    df <- data_click()
+    click <- viz_click()
+    text_description <- NULL
+
+    df_desc <- slug_description()
+    text_description <- div (class = "head-click",
+                             div(class = "title-click", df_desc[[paste0("slug_", lang())]]),
+                             div(class = "description-click", df_desc[[paste0("slug_description_", lang())]])
+    )
+
+    fuentes <- div(class = "fuente-click",
+                   HTML(
+                     paste0(i_("fuente", lang()),": ",
+                            "<a href=", df_desc$url, " target='_blank'>", df_desc$fuente,"</a>")
+                   )
+    )
+
+    pais <- NULL
+    cat <- NULL
+    fecha <- NULL
+    if (!is.null(viz_click()$pais_click)) {
+      pais <- paste0("<b>",unique(df[[paste0("pais_", lang())]]), "</b><br/>")
+    }
+    if (!is.null(viz_click()$fecha_click)) {
+      cat <- paste0("<b>",unique(df$fecha), "</b><br/>")
+    }
+    if (!is.null(viz_click()$cat_click)) {
+      fecha <- paste0("<b>",viz_click()$cat_click, "</b><br/>")
+    }
+
+
+    click <- div(class = "click-select",
+                 HTML(
+                   paste0(pais, cat, fecha))
+    )
+
+    tx <- div (
+      div (
+        text_description,
+        click,
+        uiOutput("show_viz_click"),
+        fuentes
+      )
+    )
     tx
   })
 
-  output$test_url <- renderPrint({
-   #viz_click()
-  #input$hcClicked
-    data_click()
-  })
+  # output$test_url <- renderPrint({
+  #   list(
+  #  viz_click(),
+  #  data_click()
+  #   )
+  # #input$hcClicked
+  #  # text_click()
+  # })
 
 
   output$downloads <- renderUI({
