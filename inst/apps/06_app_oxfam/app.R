@@ -807,7 +807,18 @@ server <-  function(input, output, session) {
           title_y_axis$value <-  i_(trad,lang=lang())
         }
 
+        if(actual_but$active %in% c("barras") &  Indicador$value == "product_pipeline"){
+          group_var = c("pais","unidad")
+          trad <- "count"
+          title_y_axis$value <-  i_(trad,lang=lang())
+        }
 
+
+        if(actual_but$active %in% c("mapa") &  Indicador$value == "product_pipeline"){
+          group_var = c("pais")
+          trad <- "count"
+
+        }
         if(actual_but$active %in% c("linea") &  Indicador$value  == "school_closures") {
           group_var = c("unidad","fecha")
           #req(input$country)
@@ -855,6 +866,12 @@ server <-  function(input, output, session) {
                                        name =trad,
                                        group_var =group_var)
 
+
+
+          if(actual_but$active %in% c("barras") &  Indicador$value == "product_pipeline"){
+            data_result$unidad <- as.factor( data_result$unidad )
+            data_result$pais <- as.factor( data_result$pais )
+          }
 
           # if(actual_but$active %in% c("mapa")){
           #   data_result$pais_l <- data_result_pais
@@ -953,7 +970,10 @@ server <-  function(input, output, session) {
         if(actual_but$active %in% c("linea") & Indicador$value  == "school_closures"){
           names(data_result) = i_(c("unidad","fecha",trad),lang=lang())
         }
+        if(actual_but$active %in% c("mapa","barras") &  Indicador$value == "product_pipeline"){
+          names(data_result) = i_(c("pais","unidad",trad),lang=lang())
 
+        }
 
 
     }
@@ -999,9 +1019,10 @@ server <-  function(input, output, session) {
     if(type_viz=="barras" ) {
       if(nrow( Indicador$value)==1)   prex <- "CatNum"
       else prex <- "CatCatNum"
-      if(Indicador$value  == "school_closures"){
+      if(Indicador$value  == "school_closures" | Indicador$value =="product_pipeline"){
         prex <- "CatCatNum"
       }
+
 
 
     }
@@ -1273,7 +1294,7 @@ server <-  function(input, output, session) {
     # quest_choose()
   #data_prep() |> head(1)
    #data_viz()
-   # get_basic_lang_data()
+   ## get_basic_lang_data()
 
   })
 
