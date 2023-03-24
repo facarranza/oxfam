@@ -957,7 +957,7 @@ server <-  function(input, output, session) {
 
 
             data_result <-  data_result1 |> left_join(data_result2, by = c("fecha"="fecha"))
-            data_result$..labels <- ""
+            # data_result$..labels <- ""
 
              }
           else {
@@ -1051,9 +1051,9 @@ server <-  function(input, output, session) {
         indicador1 <- dta |> filter(slug == Indicador$value[1,1][1]$indicador) |> select(slug_en) |> distinct()
         indicador2 <- dta |> filter(slug == Indicador$value[2,1][1]$indicador) |> select(slug_en)  |> distinct()
         if(actual_but$active %in% c("treemap","mapa","barras","linea"))   names(data_result) = c(i_("fecha", lang()),indicador1$slug_en,indicador2$slug_en)
-        if( "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
-          names(data_result) = c(i_("fecha", lang()),indicador1$slug_en,indicador2$slug_en, "..labels")
-          }
+        # if( "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
+        #   names(data_result) = c(i_("fecha", lang()),indicador1$slug_en,indicador2$slug_en, "..labels")
+        #   }
 
       }
     }
@@ -1137,13 +1137,13 @@ server <-  function(input, output, session) {
           print( indicator_temp[[1]])
 
           if( "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
-            a <- i_("fecha", lang())
-            b <- i_("indicador",lang())
-            names(data_v)  <- c("fecha", Indicador$value$indicador[1],Indicador$value$indicador[2])
-            a_ext <- paste("<b>",": </b> {fecha} <BR>")
-            b_ext_1 <- paste("<b>",": </b>{",Indicador$value$indicador[1],"} <BR>", sep = "")
-            b_ext_2<- paste("<b>",": </b>{",Indicador$value$indicador[2],"} <BR>", sep = "")
-            toolp <- paste(a,a_ext,b,b_ext_1,b,b_ext_2)
+            # a <- i_("fecha", lang())
+            # b <- i_("indicador",lang())
+            # names(data_v)  <- c("fecha", Indicador$value$indicador[1],Indicador$value$indicador[2])
+            # a_ext <- paste("<b>",": </b> {fecha} <BR>")
+            # b_ext_1 <- paste("<b>",": </b>{",Indicador$value$indicador[1],"} <BR>", sep = "")
+            # b_ext_2<- paste("<b>",": </b>{",Indicador$value$indicador[2],"} <BR>", sep = "")
+            # toolp <- paste(a,a_ext,b,b_ext_1,b,b_ext_2)
 
               }
 
@@ -1190,14 +1190,14 @@ server <-  function(input, output, session) {
                                    "#FBCFA4", "#FF3D95","#B13168")
 
           if( "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
-            a <- i_("fecha", lang())
-            b <- i_("slug",lang())
-            # names(data_v)  <- c("fecha", Indicador$value$indicador[1],Indicador$value$indicador[2])
-            # a_ext <- paste("<b>",": </b> {fecha} <BR>")
-            # b_ext_1 <- paste("<b>",": </b>{",Indicador$value$indicador[1],"} <BR>", sep = "")
-            # b_ext_2<- paste("<b>",": </b>{",Indicador$value$indicador[2],"} <BR>", sep = "")
-            # tooltp <- paste(a,a_ext,b,b_ext_1,b,b_ext_2)
-            opts$tooltip_template <- "tooltp"
+            # a <- i_("fecha", lang())
+            # b <- i_("slug",lang())
+            # # names(data_v)  <- c("fecha", Indicador$value$indicador[1],Indicador$value$indicador[2])
+            # # a_ext <- paste("<b>",": </b> {fecha} <BR>")
+            # # b_ext_1 <- paste("<b>",": </b>{",Indicador$value$indicador[1],"} <BR>", sep = "")
+            # # b_ext_2<- paste("<b>",": </b>{",Indicador$value$indicador[2],"} <BR>", sep = "")
+            # # tooltp <- paste(a,a_ext,b,b_ext_1,b,b_ext_2)
+            # opts$tooltip_template <- "tooltp"
 
           }
 
