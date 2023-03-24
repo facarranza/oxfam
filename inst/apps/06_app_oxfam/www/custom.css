@@ -208,10 +208,11 @@ html, body {
  hover: none !important;
 }
 
+/*
 .buttons-group .button-style.active-btn {
- background-color: #DDDDDD !important;
+/* background-color: #DDDDDD !important;
 }
-
+*/
 
 .button-checkmark{
   display:none

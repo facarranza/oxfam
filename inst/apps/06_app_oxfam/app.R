@@ -79,7 +79,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-    verbatimTextOutput("debug"),
+       #verbatimTextOutput("debug"),
 
          #  shinycustomloader::withLoader(
              uiOutput("country"),
@@ -636,7 +636,7 @@ server <-  function(input, output, session) {
   possible_viz <- reactive({
     req(quest_choose())
     req(quest_choose_sub())
-    req(Indicador$value)
+    #req(Indicador$value)
     question <- quest_choose()
     subquestion <- quest_choose_sub()
 
@@ -656,15 +656,17 @@ server <-  function(input, output, session) {
 
     print("Possibleeeeee1")
     print(Indicador$value)
-    if( ("new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) &
-         "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)) |
-        ("doses_delivered_vaccine_donations"%in%  as.vector(Indicador$value$indicador) &
-         "covid_vaccine_agreements" %in%  as.vector(Indicador$value$indicador))
-    ){
-      print("Possibleeeeee")
-      print(viz)
-      viz$viz[viz$viz == "barras"] = "linea"
-      print(viz)
+    if(!is.null(Indicador$value)){
+        if( ("new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) &
+             "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)) |
+            ("doses_delivered_vaccine_donations"%in%  as.vector(Indicador$value$indicador) &
+             "covid_vaccine_agreements" %in%  as.vector(Indicador$value$indicador))
+        ){
+          print("Possibleeeeee")
+          print(viz)
+          viz$viz[viz$viz == "barras"] = "linea"
+          print(viz)
+        }
     }
 
     ######################################
@@ -1138,7 +1140,7 @@ server <-  function(input, output, session) {
       myFunc <- NULL
      # var_indicador <- indicador_title$value  |> summarise(slug <- paste(slug,collapse = "-")) |> select(slug)
      # print(var_indicador)
-      data_v <- as.data.frame(data_viz()) |> head(5)
+      data_v <- as.data.frame(data_viz())
 
       indicator_temp <- apply(indicador_title$value, 2, function(y) paste(y, collapse = " <BR> "))
       print("sL")
