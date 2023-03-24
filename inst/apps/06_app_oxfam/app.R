@@ -79,7 +79,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-    #verbatimTextOutput("debug"),
+    verbatimTextOutput("debug"),
 
          #  shinycustomloader::withLoader(
              uiOutput("country"),
@@ -534,7 +534,11 @@ server <-  function(input, output, session) {
 
   output$country <- renderUI({
     req(Indicador$value)
-    if(actual_but$active %in% c("barras","linea") &  Indicador$value  == "school_closures") {
+    req(actual_but$active)
+    print("Indicador$value")
+    print(Indicador$value)
+    print(actual_but$active)
+    if(actual_but$active %in% c("barras","linea") &  Indicador$value %in% c("school_closures")) {
         default_select <- NULL
         default_select <- NULL
 
@@ -632,8 +636,10 @@ server <-  function(input, output, session) {
   possible_viz <- reactive({
     req(quest_choose())
     req(quest_choose_sub())
+    req(Indicador$value)
     question <- quest_choose()
     subquestion <- quest_choose_sub()
+
     v <- c("mapa", "linea", "barras", "treemap", "scatter", "sankey", "table")
 
     if(lang()=="en")
@@ -645,9 +651,27 @@ server <-  function(input, output, session) {
 
     viz$viz[viz$viz == "scatter_plot"] = "scatter"
 
+
+    ####################################### Static update!!! #############
+
+    print("Possibleeeeee1")
+    print(Indicador$value)
+    if( "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
+      print("Possibleeeeee")
+      print(viz)
+      viz$viz[viz$viz == "barras"] = "linea"
+      print(viz)
+    }
+
+    ######################################
+
     viz  <- unique(unlist(strsplit(viz$viz,",")))
 
     v <- intersect(v,viz)
+
+
+
+
 
     v <- c(v,"table")
 
@@ -730,7 +754,7 @@ server <-  function(input, output, session) {
     req(data_prep())
     req(actual_but$active)
     dta <- data_prep()
-    Unidad$value <- NULL
+    Unidad$value <-NULL
     title_x_axis$value <- NULL
     title_y_axis$value <- NULL
 
@@ -906,26 +930,64 @@ server <-  function(input, output, session) {
 
         if(actual_but$active  %in% c("linea","scatter")){
 
-          group_var = c("slug_en","fecha")
+          if( "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
 
-          title_x_axis$value <- i_("fecha",lang=lang())
-          title_y_axis$value <- i_(trad,lang=lang())
+            trad="mean"
+            dta$fecha <-  format(as.Date(dta$fecha), "%Y-%m")
+            dta2 <- dta |> tidyr::pivot_wider(names_from=slug,values_from=valor)
+            group_var <- c("fecha")
+            title_x_axis$value <- i_(trad,lang=lang())
+            title_y_axis$value <- i_("fecha",lang=lang())
+            #  var_calc <- c(Indicador$value[1,1][1]$indicador,Indicador$value[2,1][1]$indicador)
 
-          if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
-          data_result <- var_aggregation(data = dta,
-                                         # dic = dic,
-                                         agg =trad,
-                                         to_agg = var_calc,
-                                         name =trad,
-                                         group_var =group_var)
 
-          data_result$slug_en <- as.factor( data_result$slug_en)
-          data_result <- data_result |> rename(slug = slug_en)
+            data_result1 <- var_aggregation(data = dta2,
+                                            # dic = dic,
+                                            agg =trad,
+                                            to_agg = Indicador$value[1,1][1]$indicador,
+                                            name =trad,
+                                            group_var =group_var)
+
+            data_result2 <- var_aggregation(data = dta2,
+                                            # dic = dic,
+                                            agg =trad,
+                                            to_agg = Indicador$value[2,1][1]$indicador,
+                                            name =trad,
+                                            group_var =group_var)
+
+
+            data_result <-  data_result1 |> left_join(data_result2, by = c("fecha"="fecha"))
+            data_result$..labels <- ""
+
+             }
+          else {
+                group_var = c("slug_en","fecha")
+
+                title_x_axis$value <- i_("fecha",lang=lang())
+                title_y_axis$value <- i_(trad,lang=lang())
+
+                if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
+                data_result <- var_aggregation(data = dta,
+                                               # dic = dic,
+                                               agg =trad,
+                                               to_agg = var_calc,
+                                               name =trad,
+                                               group_var =group_var)
+
+                data_result$slug_en <- as.factor( data_result$slug_en)
+                data_result <- data_result |> rename(slug = slug_en)
+
+
+
+          }
+
           if(actual_but$active %in% c("treemap","mapa","barras","scatter"))   names(data_result) = c(i_("slug",lang = lang()) ,i_("fecha",lang = lang()), i_(trad, lang=lang()))
 
          }
 
         else {
+                trad="count"
+                dta$fecha <-  format(as.Date(dta$fecha), "%Y-%m")
                 dta2 <- dta |> tidyr::pivot_wider(names_from=slug,values_from=valor)
                 group_var <- c("fecha")
                 title_x_axis$value <- i_(trad,lang=lang())
@@ -956,7 +1018,7 @@ server <-  function(input, output, session) {
 
     }
 
-
+  ##################### translate code
     if(nrow( Indicador$value)==1){
 
         if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
@@ -983,10 +1045,15 @@ server <-  function(input, output, session) {
         if(actual_but$active %in% c("treemap","mapa","barras","linea"))   names(data_result) = i_(c("pais", "indicador",trad),lang=lang())
       }
       else{
-
+        print("valueeeeee")
+        Unidad$value <-length(unique(dta$unidad))
+        print(Unidad$value)
         indicador1 <- dta |> filter(slug == Indicador$value[1,1][1]$indicador) |> select(slug_en) |> distinct()
         indicador2 <- dta |> filter(slug == Indicador$value[2,1][1]$indicador) |> select(slug_en)  |> distinct()
         if(actual_but$active %in% c("treemap","mapa","barras","linea"))   names(data_result) = c(i_("fecha", lang()),indicador1$slug_en,indicador2$slug_en)
+        if( "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
+          names(data_result) = c(i_("fecha", lang()),indicador1$slug_en,indicador2$slug_en, "..labels")
+          }
 
       }
     }
@@ -1009,7 +1076,7 @@ server <-  function(input, output, session) {
       prex <- "CatDatNum"
       if(!is.null( Unidad$value )){
 
-        if(length( Unidad$value) ==2)  prex <- "DatNumNum"
+        if( Unidad$value ==2)  prex <- "DatNumNum"
       }
       # if(Indicador$value  == "school_closures"){
       #   prex <- "CatCatNum"
@@ -1017,13 +1084,24 @@ server <-  function(input, output, session) {
 
     }
     if(type_viz=="barras" ) {
-      if(nrow( Indicador$value)==1)   prex <- "CatNum"
-      else prex <- "CatCatNum"
-      if(Indicador$value  == "school_closures" | Indicador$value =="product_pipeline"){
-        prex <- "CatCatNum"
+
+      prex <- "CatCatNum"
+      print("Indicador$value")
+      print(Indicador$value)
+      if(!is.null(  Indicador$value )){
+          if(nrow( Indicador$value)==1)   prex <- "CatNum"
+          else prex <- "CatCatNum"
+          #
+          if( "school_closures" %in% Indicador$value  | "product_pipeline" %in% Indicador$value ){
+            prex <- "CatCatNum"
+          }
+          #
+          if(!is.null( Unidad$value )){
+            print("nrow(Unidad$value)")
+            print(Unidad$value)
+            if(Unidad$value == 2)  prex <- "DatNumNum"
+          }
       }
-
-
 
     }
     if(type_viz=="treemap") {
@@ -1031,16 +1109,22 @@ server <-  function(input, output, session) {
 
 
     }
-
+    print("Prex")
+    print(prex)
     prex
   }
 
 
+  vizFrtype <- reactive({
+    req(actual_but$active)
+    req(data_viz())
+    selecting_viz_typeGraph(data_viz(),actual_but$active)
+  })
 
 
 
   viz_opts <- reactive({
-   tryCatch({
+   #tryCatch({
       req(data_viz())
       req(actual_but$active)
       myFunc <- NULL
@@ -1051,6 +1135,17 @@ server <-  function(input, output, session) {
       indicator_temp <- apply(indicador_title$value, 2, function(y) paste(y, collapse = " <BR> "))
       print("sL")
           print( indicator_temp[[1]])
+
+          if( "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
+            a <- i_("fecha", lang())
+            b <- i_("indicador",lang())
+            names(data_v)  <- c("fecha", Indicador$value$indicador[1],Indicador$value$indicador[2])
+            a_ext <- paste("<b>",": </b> {fecha} <BR>")
+            b_ext_1 <- paste("<b>",": </b>{",Indicador$value$indicador[1],"} <BR>", sep = "")
+            b_ext_2<- paste("<b>",": </b>{",Indicador$value$indicador[2],"} <BR>", sep = "")
+            toolp <- paste(a,a_ext,b,b_ext_1,b,b_ext_2)
+
+              }
 
       opts <- list(
         data = data_v,
@@ -1093,6 +1188,19 @@ server <-  function(input, output, session) {
           marker_radius = 0
           opts$palette_colors <- c("#47BAA6", "#151E42", "#FF4824", "#FFCF06",
                                    "#FBCFA4", "#FF3D95","#B13168")
+
+          if( "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
+            a <- i_("fecha", lang())
+            b <- i_("slug",lang())
+            # names(data_v)  <- c("fecha", Indicador$value$indicador[1],Indicador$value$indicador[2])
+            # a_ext <- paste("<b>",": </b> {fecha} <BR>")
+            # b_ext_1 <- paste("<b>",": </b>{",Indicador$value$indicador[1],"} <BR>", sep = "")
+            # b_ext_2<- paste("<b>",": </b>{",Indicador$value$indicador[2],"} <BR>", sep = "")
+            # tooltp <- paste(a,a_ext,b,b_ext_1,b,b_ext_2)
+            opts$tooltip_template <- "tooltp"
+
+          }
+
           # opts$ver_title <- "Tender Year"
          # opts$tooltip <- paste(paste("{pais_",lang(),"}"), " {Total")
 
@@ -1128,20 +1236,15 @@ server <-  function(input, output, session) {
       }
 
       opts
-    },
-    error = function(cond) {
-      return()
-    })
+    # },
+    # error = function(cond) {
+    #   return()
+    # })
   })
 
 
   ############################### Render
 
-  vizFrtype <- reactive({
-    req(actual_but$active)
-    req(data_viz())
-    selecting_viz_typeGraph(data_viz(),actual_but$active)
-  })
 
 
 
@@ -1177,23 +1280,23 @@ server <-  function(input, output, session) {
     #
     # }
 
-    try({
+    # try({
       do.call(eval(parse(text=viz)),
               viz_opts()
-      )
-    })
+       )
+    # })
   })
 
   output$hgch_viz <- highcharter::renderHighchart({
-    tryCatch({
+    # tryCatch({
       req(data_viz())
       req(actual_but$active)
       if (actual_but$active %in% c("table")) return()
       viz_down()
-    },
-    error = function(cond) {
-      return()
-    })
+    # },
+    # error = function(cond) {
+    #   return()
+    # })
   })
   #
   output$lflt_viz <- leaflet::renderLeaflet({
@@ -1225,7 +1328,7 @@ server <-  function(input, output, session) {
 
 
   output$viz_view <- renderUI({
-    tryCatch({
+   # tryCatch({
 
       req(actual_but$active)
       viz <- actual_but$active
@@ -1254,10 +1357,10 @@ server <-  function(input, output, session) {
          type = "image", loader = "loading_gris.gif"
         )
       }
-    },
-    error = function(cond) {
-      return()
-    })
+    # },
+    # error = function(cond) {
+    #   return()
+    # })
   })
 
 
@@ -1293,7 +1396,7 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
-   #data_viz()
+   data_viz()
    ## get_basic_lang_data()
 
   })
