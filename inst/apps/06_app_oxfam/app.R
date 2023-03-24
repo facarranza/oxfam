@@ -656,7 +656,11 @@ server <-  function(input, output, session) {
 
     print("Possibleeeeee1")
     print(Indicador$value)
-    if( "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
+    if( ("new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) &
+         "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)) |
+        ("doses_delivered_vaccine_donations"%in%  as.vector(Indicador$value$indicador) &
+         "covid_vaccine_agreements" %in%  as.vector(Indicador$value$indicador))
+    ){
       print("Possibleeeeee")
       print(viz)
       viz$viz[viz$viz == "barras"] = "linea"
@@ -930,7 +934,11 @@ server <-  function(input, output, session) {
 
         if(actual_but$active  %in% c("linea","scatter")){
 
-          if( "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
+          if( ("new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) &
+              "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)) |
+              ("doses_delivered_vaccine_donations"%in%  as.vector(Indicador$value$indicador) &
+               "covid_vaccine_agreements" %in%  as.vector(Indicador$value$indicador))
+              ){
 
             trad="mean"
             dta$fecha <-  format(as.Date(dta$fecha), "%Y-%m")
@@ -1076,7 +1084,7 @@ server <-  function(input, output, session) {
       prex <- "CatDatNum"
       if(!is.null( Unidad$value )){
 
-        if( Unidad$value ==2)  prex <- "DatNumNum"
+        if( Unidad$value >=2)  prex <- "DatNumNum"
       }
       # if(Indicador$value  == "school_closures"){
       #   prex <- "CatCatNum"
@@ -1130,7 +1138,7 @@ server <-  function(input, output, session) {
       myFunc <- NULL
      # var_indicador <- indicador_title$value  |> summarise(slug <- paste(slug,collapse = "-")) |> select(slug)
      # print(var_indicador)
-      data_v <- as.data.frame(data_viz())
+      data_v <- as.data.frame(data_viz()) |> head(5)
 
       indicator_temp <- apply(indicador_title$value, 2, function(y) paste(y, collapse = " <BR> "))
       print("sL")
