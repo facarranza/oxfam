@@ -1,3 +1,4 @@
+webshot::install_phantomjs(force = F)
 library(shiny)
 library(shinybusy)
 library(shinyinvoer)
@@ -63,7 +64,8 @@ ui <- panelsPage(
         ),
         footer = tags$a(
           href="https://www.datasketch.co", target="blank",
-          img(src= 'icons/logos.svg', style = "border-top: 1px solid #252525;",
+          img(src= 'icons/logos.svg',
+              style = "border-top: 1px solid #252525;padding: 5px 0px;",
               align = "left", width = 300, height = 80))
   )
 )
@@ -420,6 +422,9 @@ server <-  function(input, output, session) {
     if (is.null(slug_agg_show())) agg <- NULL
     df <- data_countries()
     if (have_date()) {
+      df$fecha <- lubridate::ymd(df$fecha)
+      df <- df |> arrange(fecha)
+      #print(unique(df$fecha))
       if (is.null(input$id_slug_dates)) return()
       range <- input$id_slug_dates
       df <- dsapptools:::filter_ranges(df, range, "fecha")
@@ -616,6 +621,7 @@ server <-  function(input, output, session) {
         background_color = "#FFFFFF",
         grid_x_width = 0,
         label_wrap = 70,
+        format_sample_num = "1,234.56",
         axis_line_y_size = 1,
         axis_line_x_size = 1,
         axis_line_color = "#CECECE",
@@ -877,13 +883,14 @@ server <-  function(input, output, session) {
     req(data_click())
     df <- data_click()
     if (nrow(df) == 0) return()
-    if (!"valor" %in% names(df)) return()
     if (is.null(input$id_slug_agg)) return()
     if (!"fecha" %in% names(df)) return()
+    if (length(slug_selected()) == 1) {
     if (viz_select() == "scatter") return()
+    }
     viz_line <- TRUE
 
-    if (viz_select() != "line") {
+    if (!viz_select() %in% c("line", "scatter")) {
     df$fecha <- format(df$fecha, "%Y-%m")
     }
 
@@ -898,24 +905,52 @@ server <-  function(input, output, session) {
         df$fecha <- df[[paste0("pais_", lang())]]
       }
     }
+    if (!viz_select() %in% c("line", "scatter")) {
     if (length(unique(df$fecha)) == 1) return()
+    }
 
+    var_num <- "valor"
     label_agg <- i_(input$id_slug_agg, lang())
-    df_dates <-  dsdataprep::aggregation_data(data = df,
-                                              agg = input$id_slug_agg,
-                                              agg_name = label_agg,
-                                              group_var = "fecha",
-                                              to_agg = "valor",
-                                              extra_col = FALSE)
+    if ("valor" %in% names(df)) var_num <- "valor"
     theme <- viz_theme()
     theme$theme$tooltip_template <- paste0("{fecha} <br/> ",
                                            label_agg, ": {", label_agg, "}" )
     theme$theme$shiny_clickable <- FALSE
 
+    if (length(slug_selected()) == 2) {
+      slug_num <- slug_translate |> filter(slug %in% slug_selected())
+      var_num <- slug_num[[paste0("slug_", lang())]]
+      label_agg <- var_num
+      if (viz_select() == "scatter") {
+        viz_line <- FALSE
+        df$fecha <- df[[paste0("pais_", lang())]]
+        df <- df |> tidyr::spread(paste0("slug_", lang()), "valor") #|> tidyr::drop_na()
+        df[[var_num[1]]][is.na(df[[var_num[1]]])] <- 0
+        df[[var_num[2]]][is.na(df[[var_num[2]]])] <- 0
+      }
+    }
+   # print(df)
+
+    df_dates <-  dsdataprep::aggregation_data(data = df,
+                                              agg = input$id_slug_agg,
+                                              agg_name = label_agg,
+                                              group_var = "fecha",
+                                              to_agg = var_num,
+                                              extra_col = FALSE)
+   # print(df_dates)
+    var_cat <- "fecha"
+    var_num <- label_agg
+    if (length(slug_selected()) == 2) {
+      df_dates$..labels <- " "
+    }
+    #print(df_dates)
+    # print(label_agg)
+    # print(var_num)
+    # print(var_cat)
     if (viz_line) {
-    viz <- hgch_line(df_dates, var_dat = "fecha", var_num = label_agg, opts = theme)
+    viz <- hgch_line(df_dates, var_dat = var_cat, var_num =  var_num, opts = theme)
     } else {
-      viz <- hgch_bar(df_dates, var_cat = "fecha", var_num = label_agg, opts = theme)
+      viz <- hgch_bar(df_dates, var_cat = var_cat, var_num =  var_num, opts = theme)
     }
     viz
 
