@@ -708,7 +708,18 @@ server <-  function(input, output, session) {
 
   data_down <- reactive({
     req(data_load())
-    data_load()
+    df <- data_load()
+    var_select <- c("id", paste0("slug_", lang()), paste0("pais_", lang()))
+    if ("fecha" %in% names(df)) {
+      var_select <- c(var_select, "fecha")
+    }
+    if ("unidad" %in% names(df)) {
+      var_select <- c(var_select, "unidad")
+    }
+    df <- df[,var_select]
+    names_tr <- i_(names(df), lang = lang())
+    names(df) <- names_tr
+    df
   })
 
   output$dt_viz <- DT::renderDataTable({

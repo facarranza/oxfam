@@ -26,4 +26,10 @@ anio_mes_dia: Ano - Mês - Dia
 slug_unidad: Unidade
 download: Descarregar
 fuente: Fonte
+id: Identificador
+slug_pt: Indicador
+pais_pt: País
+fecha: Data
+unidad: Unidade
+
 
