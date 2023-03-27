@@ -11,6 +11,7 @@ html, body {
 .panel, .controls-style_body{
   border: 1px solid #252525;
   font-family: 'IBM Plex Sans';
+  box-shadow:0px !important;
 }
 
 .needed, .needed_sub{
@@ -86,7 +87,7 @@ html, body {
 
 .top-malibu {
   border-top: 10px !important;
-  border: 2px !important;
+  /*border: 2px !important;*/
 }
 
 

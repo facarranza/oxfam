@@ -1439,7 +1439,7 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
-   data_viz()
+   #data_viz()
    ## get_basic_lang_data()
 
   })
