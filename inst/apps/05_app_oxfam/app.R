@@ -443,9 +443,12 @@ server <-  function(input, output, session) {
     }
 
     if ("valor" %in% names(df)) {
+      paste_fnc <- function (x, collapse = "") {
+        paste0(trimws(unique(x)), collapse = collapse)
+      }
       if (length(unique(df$id)) != nrow(df)) {
         df1 <- df |> group_by(id) |>
-          summarise(dplyr::across(dplyr::everything(), list(dsapptools:::paste_vector)))
+          summarise(dplyr::across(dplyr::everything(), list(paste_fnc)))
         names(df1) <- names(df)
         df <- df1
         df$valor <- as.numeric(df$valor)
@@ -637,7 +640,7 @@ server <-  function(input, output, session) {
 
     if (viz == "map") {
       unidad_label <- "{i}"
-      if (!unidad) unidad_label <- "{e}"
+      if (!unidad) unidad_label <- NULL#"{e}"
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
       # print("*************")
       # print(unidad)
@@ -646,13 +649,13 @@ server <-  function(input, output, session) {
       # } else {
       #   opts$theme$tooltip_template <- "a {a}<br/>b {b}<br/>c {c}<br/>d {d}<br/>f {f}<br/>g {g}<br/> h {h}"
       # }
-      opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} ", unidad_label)
+      opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} <br/>", unidad_label)
       if (lang() != "en") {
         if (!unidad) unidad_label <- "{g}"
       }
-      if (lang() == "es")  opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} ", unidad_label)
+      if (lang() == "es")  opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} <br/>", unidad_label)
 
-      if (lang() == "pt")  opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} ", unidad_label)
+      if (lang() == "pt")  opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} <br/>", unidad_label)
 
     } else {
       if (viz != "sankey") {
@@ -667,7 +670,7 @@ server <-  function(input, output, session) {
         }
         tooltip <- paste0("<b>",pais, "</b><br/>",
                           fecha,
-                          valor, " ", unidad_label)
+                          valor, "<br/>", unidad_label)
         opts$theme$tooltip_template <- tooltip
       }
     }
@@ -709,10 +712,10 @@ server <-  function(input, output, session) {
   data_down <- reactive({
     req(data_load())
     df <- data_load()
-    var_select <- c("id", paste0("slug_", lang()), paste0("pais_", lang()))
-    if ("fecha" %in% names(df)) {
-      var_select <- c(var_select, "fecha")
-    }
+    #print(df)
+    var_select <- c(c("id", paste0("slug_", lang()),
+                      paste0("pais_", lang())), "fecha", "valor")
+
     if ("unidad" %in% names(df)) {
       var_select <- c(var_select, "unidad")
     }
@@ -748,7 +751,7 @@ server <-  function(input, output, session) {
     if(!is.null(input$dimension)) height_viz <- input$dimension[2] - 150
 
     if (viz_select() == "table") {
-      DT::dataTableOutput("dt_viz", height = height_viz, width = input$dimension[1] - 400)
+      DT::dataTableOutput("dt_viz", height = height_viz, width = "100%")
     } else {
       withLoader(
         highchartOutput("viz_hgch", height = height_viz),
@@ -867,7 +870,8 @@ server <-  function(input, output, session) {
       cat <- "unidad"
       df <- df |> filter(!!dplyr::sym(cat) %in% viz_click()$cat_click)
     }
-
+    # print("$$$$$$$$$$$$$")
+    # print(df)
     df
   })
 
@@ -897,12 +901,13 @@ server <-  function(input, output, session) {
     if (is.null(input$id_slug_agg)) return()
     if (!"fecha" %in% names(df)) return()
     if (length(slug_selected()) == 1) {
-    if (viz_select() == "scatter") return()
+      if (viz_select() == "scatter") return()
     }
     viz_line <- TRUE
 
     if (!viz_select() %in% c("line", "scatter")) {
-    df$fecha <- format(df$fecha, "%Y-%m")
+      if (length(unique(df$fecha)) == 1) return()
+      df$fecha <- format(df$fecha, "%Y-%m")
     }
 
     if (viz_select() == "line") {
@@ -916,9 +921,7 @@ server <-  function(input, output, session) {
         df$fecha <- df[[paste0("pais_", lang())]]
       }
     }
-    if (!viz_select() %in% c("line", "scatter")) {
-    if (length(unique(df$fecha)) == 1) return()
-    }
+
 
     var_num <- "valor"
     label_agg <- i_(input$id_slug_agg, lang())
@@ -940,7 +943,7 @@ server <-  function(input, output, session) {
         df[[var_num[2]]][is.na(df[[var_num[2]]])] <- 0
       }
     }
-   # print(df)
+    # print(df)
 
     df_dates <-  dsdataprep::aggregation_data(data = df,
                                               agg = input$id_slug_agg,
@@ -948,7 +951,7 @@ server <-  function(input, output, session) {
                                               group_var = "fecha",
                                               to_agg = var_num,
                                               extra_col = FALSE)
-   # print(df_dates)
+    # print(df_dates)
     var_cat <- "fecha"
     var_num <- label_agg
     if (length(slug_selected()) == 2) {
@@ -959,7 +962,7 @@ server <-  function(input, output, session) {
     # print(var_num)
     # print(var_cat)
     if (viz_line) {
-    viz <- hgch_line(df_dates, var_dat = var_cat, var_num =  var_num, opts = theme)
+      viz <- hgch_line(df_dates, var_dat = var_cat, var_num =  var_num, opts = theme)
     } else {
       viz <- hgch_bar(df_dates, var_cat = var_cat, var_num =  var_num, opts = theme)
     }
@@ -982,10 +985,14 @@ server <-  function(input, output, session) {
       v <- NULL
       if (viz_select() == "scatter") {
         if (length(slug_selected()) == 1) {
-        v <- HTML(paste0("<ul><li>", df$valor, "</li></ul>"))
+          v <- HTML(paste0("<ul><li>", df$valor, "</li></ul>"))
         }
       } else {
-        v <- "en proceso"
+        if (nrow(data_click()) == 1) {
+          v <- HTML(paste0(i_("valor", lang()), ": ", data_click()$valor))
+        } else {
+          v <- "en proceso"
+        }
       }
 
     }
