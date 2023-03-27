@@ -576,6 +576,29 @@ server <-  function(input, output, session) {
 
 
 
+  sel_country_lang <-reactive({
+    req(data_prep())
+    dta <- bind_rows(data_prep())
+
+    if(lang() == "es"){
+      dta <-   dta |> select(!c(pais_pt)) |> rename(pais_lang = pais_es) |> rename(pais_en = pais_en)
+
+    }
+    if(lang() == "en"){
+      dta <-   dta |> select(!c(pais_es,pais_pt)) |> rename(pais_lang = pais_en) |> mutate(pais_en = pais_lang)
+    }
+    if(lang( )== "pt"){
+      dta <-   dta |> select(!c(pais_en)) |> rename(pais_lang = pais_pt,pais_en = pais_en)
+
+
+    }
+    print("dta")
+    print( dta)
+    dta |> select(pais_en, pais_lang) |> distinct()
+    # ui_(unique(oxfam_one$es$new_vaccinations$pais), lang = lang())
+  })
+
+
   data_prep <- reactive({
     req(quest_choose())
     req(quest_choose_sub())
@@ -902,6 +925,14 @@ server <-  function(input, output, session) {
             data_result$unidad <- as.factor( data_result$unidad )
             data_result$pais <- as.factor( data_result$pais )
           }
+         # print("out")
+          if(actual_but$active %in% c("mapa")){
+          # print("in")
+           #print(colnames(sel_country_lang()))
+           #print()
+
+            data_result <- data_result |> left_join(sel_country_lang(), by=c("pais"="pais_en"))
+          }
 
           # if(actual_but$active %in% c("mapa")){
           #   data_result$pais_l <- data_result_pais
@@ -1035,7 +1066,9 @@ server <-  function(input, output, session) {
         if(actual_but$active %in% c("sankey")  & Indicador$value  == "doses_delivered_vaccine_donations")   names(data_result) = i_(c("pais","pais_donante", trad),lang=lang())
         if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
         if(actual_but$active %in% c("linea","scatter"))   names(data_result) = i_(c("pais","fecha", trad),lang=lang())
-        if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
+        if(actual_but$active %in% c("treemap","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
+        if(actual_but$active %in% c("mapa"))   names(data_result) = i_(c("pais", trad,"pais_lang"),lang=lang())
+
         if(actual_but$active %in% c("barras") & Indicador$value  == "school_closures"){
           names(data_result) = i_(c("unidad","pais",trad),lang=lang())
         }
@@ -1183,7 +1216,7 @@ server <-  function(input, output, session) {
         # opts$na_color <- "transparent"
 
         opts$map_name <- "latamcaribbean_countries"
-        tooltp <-  paste("<b>",names(data_v[1]),":</b>  {a}</br>","<b>", names(data_v[2]), ":</b> {b}")
+        tooltp <-  paste("<b>",names(data_v[1]),":</b>  {c}</br>","<b>", names(data_v[2]), ":</b> {b}")
         opts$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
         opts$tooltip_template <- tooltp   # opts$tooltip <- "<b>Country:</b> {Country}<br/><b>Average Price:</b> {mean_show} USD"
         #opts$format_sample_num = "10M"
