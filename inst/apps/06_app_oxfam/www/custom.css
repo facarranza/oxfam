@@ -263,8 +263,8 @@ html, body {
 
 
 .dropdown-action-trigger {
+  font-family: 'IBM Plex Sans',  normal !important;
   background-color: #FFF !important;
-  font-family: inherit !important;
   border: 1px solid #252525 !important;
   border-radius: 20px !important;
   color: #252525 !important;
@@ -273,7 +273,7 @@ html, body {
 }
 
 .dropdown-action-item {
-    font-family: 'Fira Sans' !important;
+    font-family: 'IBM Plex Sans',  normal !important;
     letter-spacing: -0.2px !important;
     color: #212121 !important;
 }

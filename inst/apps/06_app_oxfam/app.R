@@ -48,7 +48,7 @@ ui <- panelsPage(
 
         footer = tags$a(
           href="https://www.datasketch.co", target="blank",
-          img(src= 'logos.svg', style = "border-top: 1px solid #252525;",
+          img(src= 'logos_es.svg', style = "border-top: 1px solid #252525;",
               align = "left", width = 300, height = 80))
   ),
   panel(title = ui_("subpregunta"),
@@ -153,10 +153,16 @@ server <-  function(input, output, session) {
         if(ncol(t) == 9) {
 
          colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
-          }
+        }
+     else{
+       if(ncol(t) == 10) {
+
+        colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad","fecha_ct")
+        }
         else  {
          colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor")
         }
+      }
 
         temp <- rbind(temp,t)
       })
@@ -800,10 +806,15 @@ server <-  function(input, output, session) {
       dta <- as.data.frame(bind_rows(dta))
     }
 
+
+
     group_var <- "pais"
     title_x_axis$value  <- i_("pais",lang=lang())
 
-
+    #print(dta)
+    # print(colnames(dta))
+    # print(dta |> filter(is.na(pais_en)))
+    # return()
 
     if(lang() == "es"){
 
@@ -819,7 +830,10 @@ server <-  function(input, output, session) {
     }
     if(lang() == "en"){
 
+
        dta <-   dta |> select(!c(pais_es,pais_pt)) |> rename(pais = pais_en)
+
+
     }
     if(lang( )== "pt"){
 
@@ -910,6 +924,27 @@ server <-  function(input, output, session) {
 
         }
 
+        ###############################################################################################
+        ################################################################################################
+        #New section if else
+
+        if( Indicador$value %in% c("total_boosters_per_hundred","people_vaccinated_per_hundred","new_cases_per_million", "icu_patients_per_million" )) {
+          trad <- "mean"
+
+        }
+
+
+
+
+
+
+        ################################################################################################
+
+
+
+
+
+
         if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
 
           data_result <- var_aggregation(data = dta,
@@ -942,6 +977,9 @@ server <-  function(input, output, session) {
           #       data_result |> select(mutate case_when())
           #
           #      }
+
+
+
 
     }
     else{
