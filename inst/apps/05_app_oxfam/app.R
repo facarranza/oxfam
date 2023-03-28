@@ -224,8 +224,8 @@ server <-  function(input, output, session) {
   slug_unidad_opts <- reactive({
     req(data_filter_slug())
     if (!"unidad" %in% names(data_filter_slug())) return()
-    setNames(c("all", unique(data_filter_slug()$unidad)),
-             c(i_("all", lang()), unique(data_filter_slug()$unidad))
+    setNames(c("all", unique(data_filter_slug()$unidad_id)),
+             c(i_("all", lang()), unique(data_filter_slug()$unidad_id))
     )
   })
 
@@ -276,7 +276,7 @@ server <-  function(input, output, session) {
       if (show_unidad()) {
         req(input$id_unidad)
         if (!"all" %in% input$id_unidad) {
-          d <- d |> filter(unidad %in% input$id_unidad)
+          d <- d |> filter(unidad_id %in% input$id_unidad)
         }
       }
     } else {
@@ -486,11 +486,11 @@ server <-  function(input, output, session) {
       var_viz_date = var_date
     )
 
-    if (slug_selected()[1] %in% c(#"product_pipeline",
-      "doses_delivered_vaccine_donations", "immunization_campaigns",
-      "covid_vaccine_agreements","geopolitics_vaccine_donations")) {
-      print("PENDIENTE")
-    }
+    # if (slug_selected()[1] %in% c(#"product_pipeline",
+    #   "doses_delivered_vaccine_donations", "immunization_campaigns",
+    #   "covid_vaccine_agreements","geopolitics_vaccine_donations")) {
+    #   print("PENDIENTE")
+    # }
 
     if (slug_selected()[1] %in% "product_pipeline") {
       if (viz != "map") {
@@ -513,8 +513,10 @@ server <-  function(input, output, session) {
         label_agg = "Total",
         agg = "count")
       if (viz == "line") {
-        var_other$cat <- c("unidad", "fecha")
-        var_other$var_viz <- "unidad"
+        var_other$cat <- c(paste0("pais_", lang()), "fecha")
+        var_other$var_viz <- paste0("pais_", lang())
+        var_other$num <- "valor"
+        var_other$agg <- "mean"
       }
       var <- modifyList(var, var_other)
     }
@@ -572,6 +574,12 @@ server <-  function(input, output, session) {
     agg_extra <- agg
     if (agg == "count") agg_extra <- "sum"
 
+    print("############")
+    print(slug_selected())
+    print(var_cat)
+    print(var_num)
+
+
     if (!is.null(var_viz()$agg)) {
       data <- dsdataprep::aggregation_data(data = data,
                                            agg = agg,
@@ -579,7 +587,8 @@ server <-  function(input, output, session) {
                                            group_var = var_cat,
                                            to_agg = var_num,
                                            extra_col = TRUE,
-                                           agg_extra = agg_extra)
+                                           agg_extra = agg_extra,
+                                           extra_sep = "<br/>")
 
       var <- c(unique(var_viz()$var_viz, var_viz()$var_viz_date), label_agg)
 
@@ -798,10 +807,10 @@ server <-  function(input, output, session) {
       if (!is.null(click_viz$cat)) {
         if (slug_selected()[1] != "product_pipeline") {
           pais_click <- click_viz$cat
-          cat_click <- click_viz$id
+          cat_click <- trimws(click_viz$id)
         } else {
           pais_click <- click_viz$id
-          cat_click <- click_viz$cat
+          cat_click <- trimws(click_viz$cat)
         }
         fecha_click <- NULL
       }
@@ -813,14 +822,14 @@ server <-  function(input, output, session) {
           cat_click <- click_viz$cat
         } else {
           pais_click <- click_viz$cat
-          cat_click <- click_viz$id
+          cat_click <- trimws(click_viz$id)
         }
         fecha_click <- NULL
       }
     }
 
     if (viz_select() %in% c( "sankey")) {
-      cat_click <- click_viz$id
+      cat_click <- trimws(click_viz$id)
       pais_click <- click_viz$cat
       fecha_click <- NULL
     }
@@ -833,6 +842,10 @@ server <-  function(input, output, session) {
     if (viz_select() == "line") {
       req(input$id_date_format)
       if (input$id_date_format == "anio_mes_dia") pais_click <- NULL
+      if (slug_selected()[1] == "school_closures") {
+        pais_click <- NULL
+        cat_click <- click_viz$id
+      }
     }
 
 
@@ -868,10 +881,10 @@ server <-  function(input, output, session) {
 
     if (!is.null(viz_click()$cat_click)) {
       cat <- "unidad"
+      df$unidad <- gsub("<br/>", "", df$unidad)
       df <- df |> filter(!!dplyr::sym(cat) %in% viz_click()$cat_click)
     }
-    # print("$$$$$$$$$$$$$")
-    # print(df)
+
     df
   })
 
@@ -897,6 +910,7 @@ server <-  function(input, output, session) {
 
     req(data_click())
     df <- data_click()
+
     if (nrow(df) == 0) return()
     if (is.null(input$id_slug_agg)) return()
     if (!"fecha" %in% names(df)) return()
@@ -905,22 +919,29 @@ server <-  function(input, output, session) {
     }
     viz_line <- TRUE
 
+
     if (!viz_select() %in% c("line", "scatter")) {
       if (length(unique(df$fecha)) == 1) return()
-      df$fecha <- format(df$fecha, "%Y-%m")
+      df$fecha <- format(lubridate::ymd(df$fecha), "%Y-%m")
     }
 
     if (viz_select() == "line") {
       req(input$id_date_format)
       df$fecha <- df$fecha_all
-      if (input$id_date_format == "anio") {
+      if (input$id_date_format %in% c("anio", "anio_mes")) {
         df$fecha <- format(df$fecha, "%Y-%m")
+        if (length(unique(df$fecha)) == 1) {
+          df$fecha <- df$fecha_all
+        }
+        if (length(unique(df$fecha)) == 1) return()
       }
       if (input$id_date_format == "anio_mes_dia") {
         viz_line <- FALSE
         df$fecha <- df[[paste0("pais_", lang())]]
       }
     }
+
+
 
 
     var_num <- "valor"
@@ -943,24 +964,27 @@ server <-  function(input, output, session) {
         df[[var_num[2]]][is.na(df[[var_num[2]]])] <- 0
       }
     }
+
+    agg <- input$id_slug_agg
+    if (slug_selected()[1] == "school_closures") {
+      agg <- "count"
+    }
+
     # print(df)
 
     df_dates <-  dsdataprep::aggregation_data(data = df,
-                                              agg = input$id_slug_agg,
+                                              agg = agg,
                                               agg_name = label_agg,
                                               group_var = "fecha",
                                               to_agg = var_num,
                                               extra_col = FALSE)
-    # print(df_dates)
+
     var_cat <- "fecha"
     var_num <- label_agg
     if (length(slug_selected()) == 2) {
-      df_dates$..labels <- " "
+      theme$theme$tooltip_template <- NULL
     }
-    #print(df_dates)
-    # print(label_agg)
-    # print(var_num)
-    # print(var_cat)
+
     if (viz_line) {
       viz <- hgch_line(df_dates, var_dat = var_cat, var_num =  var_num, opts = theme)
     } else {
@@ -979,19 +1003,28 @@ server <-  function(input, output, session) {
     req(data_click())
     req(slug_selected())
     df <- data_click()
+    options(scipen=999)
     if (!is.null(viz_extra_click())) {
       v <- highchartOutput("viz_extra")
     } else {
       v <- NULL
       if (viz_select() == "scatter") {
         if (length(slug_selected()) == 1) {
-          v <- HTML(paste0("<ul><li>", df$valor, "</li></ul>"))
+          v <- HTML(paste0("<ul><li>",
+                           format(data_click()$valor, big.mark = ",", small_mark = "."),
+                           "</li></ul>"))
         }
       } else {
         if (nrow(data_click()) == 1) {
-          v <- HTML(paste0(i_("valor", lang()), ": ", data_click()$valor))
+          v <- HTML(paste0(i_("valor", lang()), ": ",
+                           format(data_click()$valor, big.mark = ",", small_mark = "."),
+                           "<br/>",
+                           data_click()$unidad))
         } else {
-          v <- "en proceso"
+          v <- HTML(paste0("<br/><b>", i_("valor", lang()), ":</b> ",
+                           format(data_click()$valor, big.mark = ",", small_mark = "."),
+                           "<br/>",
+                           data_click()$unidad))
         }
       }
 
@@ -1097,10 +1130,10 @@ server <-  function(input, output, session) {
 
   observe({
     dsmodules::downloadTableServer("dropdown_table",
-                                   element = data_down(),
+                                   element = reactive(data_down()),
                                    formats = c("csv", "xlsx", "json"))
     dsmodules::downloadImageServer("download_viz",
-                                   element = hgch_viz(),
+                                   element = reactive(hgch_viz()),
                                    lib = "highcharter",
                                    formats = c("jpeg", "pdf", "png", "html"),
                                    file_prefix = "plot")

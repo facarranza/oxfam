@@ -1,5 +1,6 @@
 library(googlesheets4)
 library(dplyr)
+library(tidyr)
 gs4_deauth()
 general_info <- read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "slug_descripcion")
 

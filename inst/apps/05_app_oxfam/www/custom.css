@@ -151,7 +151,7 @@ html, body {
 
 
 .load-container {
-  z-index: -10 !important;
+  z-index: auto !important;
 }
 
 .loader-img {
