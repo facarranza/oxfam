@@ -121,12 +121,19 @@ html, body {
 }
 
 .dropdown-action-trigger {
-  background-color: #FFF !important;
+  background-color: #FF5A32 !important;
   font-family: inherit !important;
-  border: 1px solid #252525 !important;
-  border-radius: 20px !important;
-  color: #252525 !important;
-  padding: 0.5rem 0.15rem !important;
+  border: 1px solid #FF5A32 !important;
+  border-radius: 4px !important;
+  color: #FFFFFF !important;
+  font-size: 20px !important;
+  padding: 0rem !important;
+  height: 35px;
+}
+
+
+.dropdown-action-list.is-open {
+  width: max-content !important;
 }
 
 .control-label {
@@ -198,8 +205,10 @@ html, body {
  background-color: #FFF;
  border: 1px solid rgba(37, 37, 37, 0.15);
  border-radius: 4px;
- display: flex;
- padding: 5px 8px;
+ width: 35px;
+ height: 35px;
+ padding: 4px 7px;
+ text-transform: uppercase;
  cursor: pointer;
 }
 
@@ -234,4 +243,5 @@ html, body {
 .dropdown-shared:hover .dropbtn-shared {
   background-color: rgba(71, 186, 166, 0.2);
 }
+
 

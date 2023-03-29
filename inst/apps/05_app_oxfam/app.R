@@ -79,13 +79,52 @@ server <-  function(input, output, session) {
 
   # url params --------------------------------------------------------------
 
-  url_params <- list(slug = NULL, pais = NULL, viz = NULL)
+  url_params <- list(slug = NULL,
+                     pais = NULL,
+                     unidad = NULL,
+                     fecha = NULL,
+                     agg = NULL,
+                     viz = NULL)
 
   url_par <- reactive({
     shinyinvoer::url_params(url_params, session)
   })
 
 
+  save_inputs <- reactive({
+    req(parmesan_input())
+    ls <- parmesan_input()
+    #ls <- Filter(Negate(is.null), ls)
+    ls
+  })
+
+  # observe({
+  #   if (is.null(save_inputs())) return()
+  #   $id_date_format
+  #   NULL
+  #
+  #   $id_slug_dates
+  #   [1] "2020-01-03" "2023-03-07"
+  #
+  #   $id_slug_countries
+  #   [1] "all"
+  #
+  #   $id_slug_agg
+  #   [1] "mean"
+  #
+  #   $id_unidad
+  #   NULL
+  #
+  #   $id_slug_comparisons
+  #   NULL
+  #
+  #   $id_slug
+  #   [1] "new_deaths_per_million"
+  # })
+
+  output$aver <- renderPrint({
+    save_inputs()
+  })
 
   # Compartir ---------------------------------------------------------------
 
@@ -128,24 +167,33 @@ server <-  function(input, output, session) {
 
 
   output$idiomas <- renderUI({
-    # req(lang())
-    # selectInput("id_lang", " ",
-    #             setNames(c("es", "en", "pt"), c("Es", "En", "Pt")),
-    #             selected = lang())
+     req(lang())
+
+    available_lang <- setdiff(c("en", "es", "pt"), lang())
+    available_lang <- paste0('<a href="?lang=', available_lang,
+                             '" target="_self">',
+                             stringr::str_to_title(available_lang), "</a>", collapse = "")
+
+
     HTML(
-      '
-      <a href="?lang=es" target="_self">Es</a>
-      <a href="?lang=en" target="_self">En</a>
-      <a href="?lang=pt" target="_self">Pt</a>
-      '
+      paste0(
+        '
+         <div class="dropdown-shared">
+        <button class="dropbtn-shared">',
+        lang(),
+        '</button>
+        <div class="dropdown-shared-content">',
+        available_lang,
+        '</div>
+        </div>
+        '
+
+      )
     )
+
   })
 
 
-  # lang_pred <- reactive({
-  #   req(inptu$id_lang)
-  #   inptu$id_lang
-  # })
 
   # opciones de parmesan ----------------------------------------------------
 
@@ -463,7 +511,6 @@ server <-  function(input, output, session) {
   output_parmesan("controls", parmesan = parmesan_lang,
                   input = input, output = output, session = session,
                   env = environment())
-
 
 
   data_load <- reactive({
@@ -1165,13 +1212,16 @@ server <-  function(input, output, session) {
       dsmodules::downloadImageUI("download_viz",
                                  dropdownLabel = icon("download"),#i_("download", lang()),
                                  formats = c("jpeg", "pdf", "png", "html"),
-                                 display = "dropdown",
-                                 text = i_("download", lang()))
+                                 display = "dropdown", dropdownWidth = 60,
+                                 text = ""#i_("download", lang())
+                                 )
     } else {
       dsmodules::downloadTableUI("dropdown_table",
                                  dropdownLabel = icon("download"),
                                  formats = c("csv", "xlsx", "json"),
-                                 display = "dropdown", text = i_("download", lang()))
+                                 display = "dropdown",
+                                 text = ""#i_("download", lang())
+                                 )
     }
   })
 
