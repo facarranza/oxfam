@@ -688,14 +688,21 @@ server <-  function(input, output, session) {
       viz <- questions_dash_6 |> filter(pregunta_es %in% question & subpergunta_es %in% subquestion ) |>  select(viz) |> as.vector()
     if(lang()=="pt")
       viz <- questions_dash_6 |> filter(pregunta_pt %in% question & subpregunta_pt %in% subquestion ) |>  select(viz) |> as.vector()
-    # print("vizzzzzzzzzzzzzzz")
-    # print(question)
-    # print(subquestion)
-    # print(viz)
+    print("vizzzzzzzzzzzzzzz")
+    print(question)
+    print(subquestion)
+    print(viz)
 
      # ques <- "What has been the behavior of COVID-19 deaths in the countries between 2020 and 2022?"
      # subques <- "What is the difference between new deaths and new cases per million in each country between 2020 and 2022?"
-     # viz2 <- questions_dash_6 |> filter(pregunta_en %in% ques & subpregunta_en %in% subques ) |>  select(viz) |> as.vector()
+
+
+
+    # ques <- "¿Qué donaciones y apoyos financieros han obtenido los países para responder a la pandemia?"
+    # subques <-"¿Cuánto apoyo financiero en dólares recibieron los países por parte de la Alianza para las Vacunas Gavi y el Banco Mundial?"
+    #   viz2 <- questions_dash_6 |> filter(pregunta_es %in% ques & subpergunta_es %in% subques ) |>  select(viz) |> as.vector()
+
+
 
     #  viz2$viz[1]
     #  viz2$viz = viz2$viz[1]
@@ -736,7 +743,10 @@ server <-  function(input, output, session) {
       else{
         viz$viz[viz$viz == "scatter_plot"] = "scatter"
         viz$viz[viz$viz == "barras_agrupadas"] = "barras"
+        print( viz$viz )
+
         viz  <- unique(unlist(strsplit(viz$viz,",")))
+        viz[viz == "treeemap"] = "treemap"
         print("vizz else")
         print(viz)
 
@@ -997,6 +1007,14 @@ server <-  function(input, output, session) {
             trad <- "sum"
 
           }
+
+
+
+          if( "worldbank_gavi_vaccine_financing" %in% c(Indicador$value) ) {
+            trad <- "sum"
+            title_y_axis$value <-  i_(trad,lang=lang())
+
+          }
           if( "covid_vaccine_agreements" %in% c(Indicador$value)) {
             trad <- "sum"
           }
@@ -1248,7 +1266,11 @@ server <-  function(input, output, session) {
           group_var <- c("pais","fecha")
         }
 
+        if( "worldbank_gavi_vaccine_financing" %in% c(Indicador$value) ) {
+          print("worddddddddddddddddddddddddl")
+          title_y_axis$value <-  i_(trad,lang=lang())
 
+        }
 
 
     }
