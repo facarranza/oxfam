@@ -661,8 +661,9 @@ server <-  function(input, output, session) {
 
     slug_id <-  paste(i_("slug",lang()),"id",sep="_")
     lang_names <-  c("id",slug_id ,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad",lang()))
-    if(ncol(dta)==7)  colnames(dta) <-  lang_names
-    else colnames(dta) <- c("id",slug_id,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()))
+    lang_names_2 <-  c("id",slug_id ,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad",lang()))
+    if(ncol(dta)==9)  colnames(dta) <-  lang_names
+    else{  colnames(dta) <- c("id",slug_id,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang())) }
     # if(actual_but$active %in% c("linea","scatter"))   names(data_) = i_(c("pais","fecha", trad),lang=lang())
     # if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
     # if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
@@ -1051,32 +1052,31 @@ server <-  function(input, output, session) {
                "covid_vaccine_agreements" %in%  as.vector(Indicador$value$indicador))
               ){
 
+            print("into scaterr")
+
             trad="mean"
-            dta$fecha <-  format(as.Date(dta$fecha), "%Y-%m")
-            dta2 <- dta |> tidyr::pivot_wider(names_from=slug,values_from=valor)
-            group_var <- c("fecha")
-            title_x_axis$value <- i_(trad,lang=lang())
-            title_y_axis$value <- i_("fecha",lang=lang())
+            #dta$fecha <-  format(as.Date(dta$fecha), "%Y")
+
+            dta2 <- dta |> select("slug","fecha","valor") |> distinct()
+            #dta2 <- dta |> tidyr::pivot_wider(names_from=slug,values_from=valor)
+            group_var <- c("slug","fecha")
+            title_x_axis$value <- i_("fecha",lang=lang())
+            title_y_axis$value <- i_(trad,lang=lang())
             #  var_calc <- c(Indicador$value[1,1][1]$indicador,Indicador$value[2,1][1]$indicador)
 
 
-            data_result1 <- var_aggregation(data = dta2,
+
+            data_result  <- var_aggregation(data = dta2,
                                             # dic = dic,
                                             agg =trad,
-                                            to_agg = Indicador$value[1,1][1]$indicador,
+                                            to_agg = "valor" ,
                                             name =trad,
                                             group_var =group_var)
 
-            data_result2 <- var_aggregation(data = dta2,
-                                            # dic = dic,
-                                            agg =trad,
-                                            to_agg = Indicador$value[2,1][1]$indicador,
-                                            name =trad,
-                                            group_var =group_var)
-
-
-            data_result <-  data_result1 |> left_join(data_result2, by = c("fecha"="fecha"))
+              data_result <-  dta2
+           # data_result <-  data_result1 |> left_join(data_result2, by = c("fecha"="fecha"))
             # data_result$..labels <- ""
+            data_result
 
              }
           else {
@@ -1106,7 +1106,7 @@ server <-  function(input, output, session) {
 
         else {
 
-          if(actual_but$active  %in% c("linea")){
+          if(actual_but$active  %in% c("lineas")){ #disable temp
 
             if( ("new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) &
                  "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)) |
@@ -1121,7 +1121,9 @@ server <-  function(input, output, session) {
               dta2 <- dta |> select("fecha","slug","valor") |> distinct()
               print("dta2 |> head(1)")
               print(dta2 |> head(1))
+              write.csv(dta2, "dta2.csv")
               dta2 <- dta2 |> tidyr::pivot_wider(names_from=slug,values_from=valor)
+
               #group_var <- c("fecha")
               title_x_axis$value <- i_("valor",lang=lang())
               title_y_axis$value <- i_("fecha",lang=lang())
@@ -1158,7 +1160,7 @@ server <-  function(input, output, session) {
 
 
           }
-          if(actual_but$active  %in% c("barras")){
+          if(actual_but$active  %in% c("barras", "linea")){
 
                 trad="mean"
                 dta$fecha <-  format(as.Date(dta$fecha), "%Y-%m")
@@ -1256,7 +1258,13 @@ server <-  function(input, output, session) {
   selecting_viz_typeGraph <- function(df, type_viz, param=NULL) {
     # Vizualizaciones requeridas:Clorepethc  Line  Bar   treemap   table, se pueden dejar en un solo if las que no necesitan desagregacion
     prex <- "DatNum"
-    if(type_viz=="scatter") {  prex <-  "CatDatNum" }
+    if(type_viz=="scatter") {
+      prex <-  "CatDatNum"
+      # if(!is.null( Unidad$value )){
+      #
+      #   if( Unidad$value >=2)  prex <- "DatNumNum"
+      # }
+      }
     if(type_viz=="mapa") {  prex <- "GnmNum" }
     if(type_viz=="linea") {
       # if(ncol(df) > 2)
