@@ -44,12 +44,14 @@ ui <- panelsPage(
           class = "head-viz",
           div(class = "viz-style",
               uiOutput("viz_icons")),
+          uiOutput("idiomas"),
+          uiOutput("compartir"),
           uiOutput("downloads")
         ),
         color = "chardonnay",
         can_collapse = FALSE,
         body = div(
-          verbatimTextOutput("test_url"),
+          #verbatimTextOutput("aver"),
           uiOutput("viz_show")#,
 
         )
@@ -85,6 +87,30 @@ server <-  function(input, output, session) {
 
 
 
+  # Compartir ---------------------------------------------------------------
+
+  output$compartir <- renderUI({
+    #/*<img src="icons/vector.svg" width="8" height="8" id = "indicator">*/
+    HTML(
+      '
+      <div class="dropdown-shared">
+        <button class="dropbtn-shared">
+        <img src="icons/compartir.svg" width="15" height="15">
+        </button>
+        <div class="dropdown-shared-content">
+        <a class="needed" id="fc"><img src="icons/facebook.svg" width="15" height="15"></a>
+        <a class="needed" id="tw"><img src="icons/twitter.svg" width="15" height="15"></a>
+        <a class="needed" id="lk"><img src="icons/link.svg" width="15" height="15"></a>
+        </div>
+        </div>
+      '
+    )
+
+  })
+
+
+
+
   # Idiomas -----------------------------------------------------------------
 
   i18n <- list(
@@ -94,9 +120,34 @@ server <-  function(input, output, session) {
   lang <- callModule(langSelector,"lang", i18n = i18n, showSelector=FALSE)
 
 
+
+
   observeEvent(lang(),{
     shinyjs::delay(500, uiLangUpdate(input$shi18ny_ui_classes, lang()))
   })
+
+
+  output$idiomas <- renderUI({
+    # req(lang())
+    # selectInput("id_lang", " ",
+    #             setNames(c("es", "en", "pt"), c("Es", "En", "Pt")),
+    #             selected = lang())
+    HTML(
+      '
+      <a href="?lang=es" target="_self">Es</a>
+      <a href="?lang=en" target="_self">En</a>
+      <a href="?lang=pt" target="_self">Pt</a>
+      '
+    )
+  })
+
+
+  # lang_pred <- reactive({
+  #   req(inptu$id_lang)
+  #   inptu$id_lang
+  # })
+
+  # opciones de parmesan ----------------------------------------------------
 
   slug_opts <- reactive({
     req(lang())
@@ -286,20 +337,20 @@ server <-  function(input, output, session) {
       #                                "product_pipeline"))) {
       #   d <- ls |> bind_rows()
       # } else {
-        if (viz_select() == "line") {
-          id_valor <- grep("valor", names(ls[[1]]))
-          names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
-          id_valor <- grep("valor", names(ls[[2]]))
-          names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
-          d <- ls |> purrr::reduce(inner_join,
-                                   by = c("fecha", "pais_en", "pais_es", "pais_pt"),
-                                   multiple = "any")
-        } else {
-          d <- ls |> bind_rows() |> tidyr::drop_na(valor)
-        }
+      if (viz_select() == "line") {
+        id_valor <- grep("valor", names(ls[[1]]))
+        names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
+        id_valor <- grep("valor", names(ls[[2]]))
+        names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
+        d <- ls |> purrr::reduce(inner_join,
+                                 by = c("fecha", "pais_en", "pais_es", "pais_pt"),
+                                 multiple = "any")
+      } else {
+        d <- ls |> bind_rows() |> tidyr::drop_na(valor)
+      }
       #}
     }
-     #print(d)
+    #print(d)
     d
   })
 
@@ -962,9 +1013,9 @@ server <-  function(input, output, session) {
 
     agg <- input$id_slug_agg
     if (length(slug_selected()) == 1) {
-    if (slug_selected()[1] == "school_closures") {
-      agg <- "count"
-    }}
+      if (slug_selected()[1] == "school_closures") {
+        agg <- "count"
+      }}
 
     # print(df)
 
