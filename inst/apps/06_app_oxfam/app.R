@@ -993,6 +993,11 @@ server <-  function(input, output, session) {
             title_x_axis$value <-  i_("fecha",lang=lang())
           }
 
+          if( "immunization_campaigns" %in% c(Indicador$value) ) {
+            trad <- "sum"
+
+          }
+
 
           if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
           print("dta")
@@ -1415,6 +1420,8 @@ server <-  function(input, output, session) {
         opts$clickFunction <- htmlwidgets::JS(myFunc)
         opts$palette_colors <- "#ef4e00"
         if (actual_but$active == "linea" | actual_but$active == "scatter" ) {
+
+          if( "stringency_index" %in%  as.vector(Indicador$value))  opts$y_max=100
           #opts$marker_enabled <- FALSE
           opts$marker_radius = 0
           opts$palette_colors <- c("#47BAA6", "#151E42", "#FF4824", "#FFCF06",
