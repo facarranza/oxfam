@@ -997,6 +997,9 @@ server <-  function(input, output, session) {
             trad <- "sum"
 
           }
+          if( "covid_vaccine_agreements" %in% c(Indicador$value)) {
+            trad <- "sum"
+          }
 
 
           if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
@@ -1244,6 +1247,8 @@ server <-  function(input, output, session) {
 
           group_var <- c("pais","fecha")
         }
+
+
 
 
     }
