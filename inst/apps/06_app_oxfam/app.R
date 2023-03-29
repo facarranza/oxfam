@@ -984,7 +984,19 @@ server <-  function(input, output, session) {
           }
 
 
+
+          if( "interagency_response_plan_numinneed" %in% c(Indicador$value)) {
+
+            group_var <- c("pais","fecha")
+            trad <- "mean"
+            title_y_axis$value <-  i_(trad,lang=lang())
+            title_x_axis$value <-  i_("fecha",lang=lang())
+          }
+
+
           if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
+          print("dta")
+          print(dta |> head(1))
 
           data_result <- var_aggregation(data = dta,
                                          # dic = dic,
@@ -1222,6 +1234,12 @@ server <-  function(input, output, session) {
 
         }
 
+        if( "interagency_response_plan_numinneed" %in% c(Indicador$value)) {
+          names(data_result) = c(i_("pais", lang()), i_("fecha", lang()),i_(trad,lang()))
+
+          group_var <- c("pais","fecha")
+        }
+
 
     }
     else{
@@ -1242,7 +1260,9 @@ server <-  function(input, output, session) {
         if( actual_but$active %in% c("linea") & "new_deaths_per_million" %in%  as.vector(Indicador$value$indicador) & "new_cases_per_million" %in%  as.vector(Indicador$value$indicador)){
 
           names(data_result) = c(i_("fecha", lang()),indicador1$slug_en,indicador2$slug_en, "..labels")
-          }
+        }
+
+
 
       }
     }
@@ -1297,7 +1317,10 @@ server <-  function(input, output, session) {
       print("Indicador$value")
       print(Indicador$value)
       if(!is.null(  Indicador$value )){
-          if(nrow( Indicador$value)==1)   prex <- "CatNum"
+          if(nrow( Indicador$value)==1)  {
+              prex <- "CatNum"
+             if( "interagency_response_plan_numinneed" %in% c(Indicador$value)) prex <- "CatCatNum"
+          }
           else prex <- "CatCatNum"
           #
           if( "school_closures" %in% Indicador$value  | "product_pipeline" %in% Indicador$value ){
