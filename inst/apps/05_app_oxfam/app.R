@@ -281,11 +281,11 @@ server <-  function(input, output, session) {
       }
     } else {
       ls <- oxfam_data[[lang()]][slug_selected()]
-      if (all(slug_selected() %in% c("vaccination_approvals_trials",
-                                     "school_closures", "stringency_index",
-                                     "product_pipeline"))) {
-        d <- ls |> bind_rows()
-      } else {
+      # if (all(slug_selected() %in% c("vaccination_approvals_trials",
+      #                                "school_closures", "stringency_index",
+      #                                "product_pipeline"))) {
+      #   d <- ls |> bind_rows()
+      # } else {
         if (viz_select() == "line") {
           id_valor <- grep("valor", names(ls[[1]]))
           names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
@@ -297,8 +297,9 @@ server <-  function(input, output, session) {
         } else {
           d <- ls |> bind_rows() |> tidyr::drop_na(valor)
         }
-      }
+      #}
     }
+     #print(d)
     d
   })
 
@@ -574,12 +575,6 @@ server <-  function(input, output, session) {
     agg_extra <- agg
     if (agg == "count") agg_extra <- "sum"
 
-    print("############")
-    print(slug_selected())
-    print(var_cat)
-    print(var_num)
-
-
     if (!is.null(var_viz()$agg)) {
       data <- dsdataprep::aggregation_data(data = data,
                                            agg = agg,
@@ -658,18 +653,18 @@ server <-  function(input, output, session) {
       # } else {
       #   opts$theme$tooltip_template <- "a {a}<br/>b {b}<br/>c {c}<br/>d {d}<br/>f {f}<br/>g {g}<br/> h {h}"
       # }
-      opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} <br/>", unidad_label)
+      opts$theme$tooltip_template <- paste0("<b>{a}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
       if (lang() != "en") {
         if (!unidad) unidad_label <- "{g}"
       }
-      if (lang() == "es")  opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} <br/>", unidad_label)
+      if (lang() == "es")  opts$theme$tooltip_template <- paste0("<b>{c}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
 
-      if (lang() == "pt")  opts$theme$tooltip_template <- paste0("<b>{c}<br/> {b} <br/>", unidad_label)
+      if (lang() == "pt")  opts$theme$tooltip_template <- paste0("<b>{c}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
 
     } else {
       if (viz != "sankey") {
-        pais <- paste0("{pais_", lang(), "}")
-        valor <- paste0("{",var_viz()$label_agg, "}")
+        pais <- paste0("{pais_", lang(), "}<br/>")
+        valor <- paste0("{",var_viz()$label_agg, "}<br/>")
         unidad_label <- "{unidad}"
         if (!unidad) unidad_label <- paste0("{slug_", lang(), "}")
         fecha <- NULL
@@ -677,9 +672,9 @@ server <-  function(input, output, session) {
           opts$theme$axis_line_x_size <- 0
           if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
         }
-        tooltip <- paste0("<b>",pais, "</b><br/>",
-                          fecha,
-                          valor, "<br/>", unidad_label)
+        tooltip <- paste0("<b>",pais, "</b>",
+                          fecha, var_viz()$label_agg, ":",
+                          valor, unidad_label)
         opts$theme$tooltip_template <- tooltip
       }
     }
@@ -807,10 +802,10 @@ server <-  function(input, output, session) {
       if (!is.null(click_viz$cat)) {
         if (slug_selected()[1] != "product_pipeline") {
           pais_click <- click_viz$cat
-          cat_click <- trimws(click_viz$id)
+          cat_click <- click_viz$id
         } else {
           pais_click <- click_viz$id
-          cat_click <- trimws(click_viz$cat)
+          cat_click <- click_viz$cat
         }
         fecha_click <- NULL
       }
@@ -822,16 +817,20 @@ server <-  function(input, output, session) {
           cat_click <- click_viz$cat
         } else {
           pais_click <- click_viz$cat
-          cat_click <- trimws(click_viz$id)
+          cat_click <- click_viz$id
         }
         fecha_click <- NULL
       }
     }
 
-    if (viz_select() %in% c( "sankey")) {
-      cat_click <- trimws(click_viz$id)
-      pais_click <- click_viz$cat
-      fecha_click <- NULL
+
+    if (viz_select() == "line") {
+      req(input$id_date_format)
+      if (input$id_date_format == "anio_mes_dia") pais_click <- NULL
+      if (slug_selected()[1] == "school_closures") {
+        pais_click <- click_viz$id
+        cat_click <- NULL
+      }
     }
 
     if (length(slug_selected()) == 2) {
@@ -839,15 +838,11 @@ server <-  function(input, output, session) {
       slug_click <- click_viz$id
     }
 
-    if (viz_select() == "line") {
-      req(input$id_date_format)
-      if (input$id_date_format == "anio_mes_dia") pais_click <- NULL
-      if (slug_selected()[1] == "school_closures") {
-        pais_click <- NULL
-        cat_click <- click_viz$id
-      }
+    if (viz_select() %in% c( "sankey")) {
+      cat_click <- click_viz$id
+      pais_click <- click_viz$cat
+      fecha_click <- NULL
     }
-
 
     list(
       pais_click = pais_click,
@@ -881,7 +876,7 @@ server <-  function(input, output, session) {
 
     if (!is.null(viz_click()$cat_click)) {
       cat <- "unidad"
-      df$unidad <- gsub("<br/>", "", df$unidad)
+      df$unidad <- gsub("<br/>", " ", df$unidad)
       df <- df |> filter(!!dplyr::sym(cat) %in% viz_click()$cat_click)
     }
 
@@ -910,7 +905,7 @@ server <-  function(input, output, session) {
 
     req(data_click())
     df <- data_click()
-
+    #print(df)
     if (nrow(df) == 0) return()
     if (is.null(input$id_slug_agg)) return()
     if (!"fecha" %in% names(df)) return()
@@ -966,9 +961,10 @@ server <-  function(input, output, session) {
     }
 
     agg <- input$id_slug_agg
+    if (length(slug_selected()) == 1) {
     if (slug_selected()[1] == "school_closures") {
       agg <- "count"
-    }
+    }}
 
     # print(df)
 
@@ -1116,13 +1112,13 @@ server <-  function(input, output, session) {
     if (is.null(actual_but$active)) return()
     if (actual_but$active != "table") {
       dsmodules::downloadImageUI("download_viz",
-                                 dropdownLabel = i_("download", lang()),
+                                 dropdownLabel = icon("download"),#i_("download", lang()),
                                  formats = c("jpeg", "pdf", "png", "html"),
                                  display = "dropdown",
                                  text = i_("download", lang()))
     } else {
       dsmodules::downloadTableUI("dropdown_table",
-                                 dropdownLabel = i_("download", lang()),
+                                 dropdownLabel = icon("download"),
                                  formats = c("csv", "xlsx", "json"),
                                  display = "dropdown", text = i_("download", lang()))
     }
