@@ -12,6 +12,7 @@ library(hgchmagic)
 library(dsmodules)
 library(dsapptools)
 library(dplyr)
+library(shinyjs)
 
 ui <- panelsPage(
   tags$head(
@@ -19,6 +20,7 @@ ui <- panelsPage(
     tags$script(src="handler.js")
   ),
   useShi18ny(),
+  useShinyjs(),
   busy_start_up(
     loader = tags$img(
       src = "icons/loading_gris.gif",
@@ -51,7 +53,7 @@ ui <- panelsPage(
         color = "chardonnay",
         can_collapse = FALSE,
         body = div(
-          #verbatimTextOutput("aver"),
+          verbatimTextOutput("aver"),
           uiOutput("viz_show")#,
 
         )
@@ -80,9 +82,11 @@ server <-  function(input, output, session) {
   # url params --------------------------------------------------------------
 
   url_params <- list(slug = NULL,
+                     slug_comp = NULL,
                      pais = NULL,
-                     unidad = NULL,
-                     fecha = NULL,
+                     und = NULL,
+                     fech = NULL,
+                     fech_form = NULL,
                      agg = NULL,
                      viz = NULL)
 
@@ -98,32 +102,40 @@ server <-  function(input, output, session) {
     ls
   })
 
-  # observe({
-  #   if (is.null(save_inputs())) return()
-  #   $id_date_format
-  #   NULL
-  #
-  #   $id_slug_dates
-  #   [1] "2020-01-03" "2023-03-07"
-  #
-  #   $id_slug_countries
-  #   [1] "all"
-  #
-  #   $id_slug_agg
-  #   [1] "mean"
-  #
-  #   $id_unidad
-  #   NULL
-  #
-  #   $id_slug_comparisons
-  #   NULL
-  #
-  #   $id_slug
-  #   [1] "new_deaths_per_million"
-  # })
+  shared_link <- reactiveValues(facebook = NULL, twitter = NULL)
+
+  observe({
+    if (is.null(save_inputs())) return()
+    save_inp <- save_inputs()
+    slug = NULL
+    slug_comp = NULL
+    pais = NULL
+    und = NULL
+    fech = NULL
+    fech_form = NULL
+    agg = NULL
+    viz = NULL
+
+    if (!is.null(save_inp$id_date_format)) fech_form <- paste0("fech_form=", paste0(save_inp$id_date_format, collapse = ","), "%26")
+    if (!is.null(save_inp$id_slug_dates)) fech <- paste0("fech=", paste0(save_inp$id_slug_dates, collapse = ","), "%26")
+    if (!is.null(save_inp$id_slug_countries)) pais <- paste0("pais=", paste0(save_inp$id_slug_countries, collapse = ","), "%26")
+    if (!is.null(save_inp$id_slug_agg)) agg <- paste0("agg=", paste0(save_inp$id_slug_agg, collapse = ","), "%26")
+    if (!is.null(save_inp$id_unidad)) und <- paste0("und=", paste0(save_inp$id_unidad, collapse = ","), "%26")
+    if (!is.null(save_inp$id_slug_comparisons))  slug_comp <- paste0("slug_comp=", paste0(save_inp$id_slug_comparisons, collapse = ","), "%26")
+    if (!is.null(save_inp$id_slug)) slug <- paste0("slug=", paste0(save_inp$id_slug, collapse = ","), "%26")
+
+    shared_link$facebook <- stringi::stri_escape_unicode(paste0(slug, slug_comp, pais, agg, und, fech, fech_form))
+    shared_link$twitter <- paste0(slug, slug_comp, pais, agg, und, fech, fech_form)
+
+  })
+
+
 
   output$aver <- renderPrint({
-    save_inputs()
+    #save_inputs()
+    #print(url_par()$inputs)
+    print(input$last_click)
+    #shared$link
   })
 
   # Compartir ---------------------------------------------------------------
@@ -145,6 +157,17 @@ server <-  function(input, output, session) {
       '
     )
 
+  })
+
+  observeEvent(input$last_click, {
+    #if (is.null(input$last_click)) return()
+
+    if (input$last_click == "tw") {
+      shinyjs::runjs(sprintf("window.open('%s')", paste0("https://twitter.com/intent/tweet?text=Hola&url=https://datasketch.shinyapps.io/oxfam_app/?", shared_link$twitter)))
+    }
+    if (input$last_click == "fc") {
+      shinyjs::runjs(sprintf("window.open('%s')", paste0("http://www.facebook.com/sharer.php?t=Hola&u=https://datasketch.shinyapps.io/oxfam_app/?", shared_link$facebook)))
+    }
   })
 
 
