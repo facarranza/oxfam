@@ -136,8 +136,9 @@ server <-  function(input, output, session) {
     question <- quest_choose()
     subquestion <- quest_choose_sub()
     indicador_title$value <- NULL
-
-
+    print("vaaaal")
+    print(names(oxfam_6$en$new_vaccinations))
+   # return()
     if(lang()=="en"){
 
       indicador <- questions_dash_6 |> filter(pregunta_en %in% question & subpregunta_en %in% subquestion ) |>  select(indicador)
@@ -147,6 +148,7 @@ server <-  function(input, output, session) {
       print(indicador)
       print("indicador_title$value ")
       print(indicador_title$value)
+      print(oxfam_6$en[as.vector(indicador$indicador)])
       temp <- plyr::ldply( 1:length(indicador$indicador), function(i){
 
       t  <- as.data.frame(oxfam_6$en[as.vector(indicador$indicador[i])])
@@ -155,9 +157,9 @@ server <-  function(input, output, session) {
          colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
         }
      else{
-       if(ncol(t) == 10) {
+       if(ncol(t) == 11) {
 
-        colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad","fecha_ct")
+        colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","unidad","fecha_ct")
         }
         else  {
          colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor")
@@ -182,8 +184,8 @@ server <-  function(input, output, session) {
             colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
           else {
 
-            if(ncol(t) == 10) {
-              colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad","fecha_ct")
+            if(ncol(t) == 11) {
+              colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","unidad","fecha_ct")
 
             }
             else
@@ -210,7 +212,7 @@ server <-  function(input, output, session) {
               colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
             else{
               if(ncol(t) == 10) {
-                colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad","fecha_ct")
+                colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","unidad","fecha_ct")
 
             }
               else
@@ -1661,8 +1663,8 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
-    data_viz()
-   ## get_basic_lang_data()
+   data_viz()
+   # get_basic_lang_data()
 
   })
 
