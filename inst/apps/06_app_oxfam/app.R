@@ -1021,6 +1021,21 @@ server <-  function(input, output, session) {
             trad <- "sum"
           }
 
+          if("doses_delivered_vaccine_donations"  %in% c(Indicador$value) & actual_but$active %in% c("sankey")){
+
+            dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("unidad","vacuna"))
+
+
+
+               group_var <-c("donante","vacuna","pais")
+               dta <- dta |> select("donante","vacuna","pais","valor") |> tidyr::pivot_longer(!c("donante","vacuna","pais"),)
+          }
+
+
+          if("doses_delivered_vaccine_donations"  %in% c(Indicador$value) & actual_but$active %in% c("mapa","lineas","barras","treemap")){
+
+           trad= "sum"
+          }
 
           if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
           print("dta")
@@ -1374,7 +1389,13 @@ server <-  function(input, output, session) {
 
 
     }
+    if(type_viz=="sankey"){
+      if("doses_delivered_vaccine_donations"  %in% c(Indicador$value)){
+        prex<-CatCatCat
+      }
+    }
     print("Prex")
+
     print(prex)
     prex
   }
