@@ -647,31 +647,93 @@ server <-  function(input, output, session) {
     dta <- bind_rows(data_prep())
 
     if(lang() == "es"){
-      dta <-   dta |> select(!c(pais_en,pais_pt)) |> rename(pais = pais_es)
+      dta <-   dta |> select(!c(pais_en,pais_pt)) |> rename(pais = pais_es, slug_en=slug_es)
 
    }
     if(lang() == "en"){
       dta <-   dta |> select(!c(pais_es,pais_pt)) |> rename(pais = pais_en)
     }
     if(lang( )== "pt"){
-      dta <-   dta |> select(!c(pais_es,pais_en)) |> rename(pais = pais_pt)
-
+      dta <-   dta |> select(!c(pais_es,pais_en)) |> rename(pais = pais_pt, slug_en=slug_es)
 
     }
 
-    temp <-NULL
+    if(  "covid_vaccine_agreements"  %in% Indicador$value  & nrow(Indicador$value)==1) {
+
+      # a |> tidyr::pivot_wider(names_from=unidad)
+      slug_id <-  paste(i_("slug",lang()),"id",sep="_")
+      print(colnames(dta))
+      print("dta innnn ")
+      # print(dta)
+      # return()
+      dta <- dta |> select(id, slug, slug_en, fecha, pais, valor, unidad_id)  |> distinct() |> mutate(unidadp= paste0(unidad_id, collapse = "-")) |>
+        tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna")) |> ungroup() |> select(!unidad_id) |> distinct()
+      print(names(dta))
+      #return()
+      #|> tidyr::pivot_wider( names_from = "unidad_id", values_from="valor")# mutate(unidadp= paste0(unidad, collapse = "-")) |> tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna"))
+
+      # print(dta)
+      # return()
+        lang_names <-  c("id",slug_id ,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()),  i_("valor",lang()), i_("fabrica",lang()), i_("vacuna",lang()))
+        # print("dta innnn ") i_("fabrica",lang()), i_("vacuna",lang()))
+      # print("dta innnn ")
+      print(names(dta))
+
+
+      colnames(dta) <-  lang_names
+
+    } else {
+
+
 
     slug_id <-  paste(i_("slug",lang()),"id",sep="_")
-    lang_names <-  c("id",slug_id ,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad",lang()))
-    lang_names_2 <-  c("id",slug_id ,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad",lang()))
-    if(ncol(dta)==9)  colnames(dta) <-  lang_names
-    else{  colnames(dta) <- c("id",slug_id,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang())) }
+    lang_names <-  c("id",slug_id ,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad_id",lang()),
+                     i_("unidad",lang()), i_("fecha_ct",lang()))
+
+     lang_names_2 <-  c("id",slug_id ,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad",lang()))
+
+     if(ncol(dta)==9)  colnames(dta) <-  lang_names
+      else{
+      if(ncol(dta)==11) {
+        colnames(dta) <-  lang_names
+      }
+      else {
+        colnames(dta) <- c("id",slug_id,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()))
+      }
+
+        # print("dta taable")
+        # print(dta)
+        # print(names(dta))
+        # return()
+    # <- as.data.frame(oxfam_6$en[as.vector(indicador$indicador[i])])
+    #
+    # if(ncol(t) == 9) {
+    #
+    #   colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+    # }
+    # else{
+    #   if(ncol(t) == 11) {
+    #
+    #     colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","unidad","fecha_ct")
+    #   }
+    #   else  {
+    #     colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor")
+    #   }
+      }
+    }
     # if(actual_but$active %in% c("linea","scatter"))   names(data_) = i_(c("pais","fecha", trad),lang=lang())
     # if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
     # if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
     # if(actual_but$active %in% c("sankey")  & Indicador$value  == "doses_delivered_vaccine_donations")   names(data_result) = i_(c("pais","pais_donante", trad),lang=lang())
     # if(actual_but$active %in% c("sankey")  & Indicador$value  == "geopolitics_vaccine_donations")   names(data_result) = i_(c("pais","unidad", trad),lang=lang())
     #
+     print("DUplicate")
+
+     print(dta |> select(id) |> group_by(id) |> summarise(count_id =n()) |> arrange(desc(count_id)))
+     print(dta |> filter(id=="02d84de74fc5234771e2d160fb760f8aa38b132e"))
+    #return()
+
+
     dta
   })
 
@@ -731,14 +793,17 @@ server <-  function(input, output, session) {
 
           viz$viz <- viz$viz[1]
           viz  <- unique(unlist(strsplit(viz$viz,",")))
+          print("viz prefinal")
+          print(viz)
+          viz[viz == "scatter_plot"] <- "scatter"
+          viz[viz == "barras_agrupadas"] <- "barras"
 
-          viz[viz == "scatter_plot"] = "scatter"
-          viz[viz == "barras_agrupadas"] = "barras"
-
-          #viz$viz[viz$viz == "barras"] = "linea"
+          viz[viz == "barras"] <- "linea"
           print("viz final")
           print(viz)
 
+          viz <- unique(viz)
+          print(viz)
 
         }
 
@@ -1684,7 +1749,8 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
-   data_viz()
+  # data_viz()
+  #  data_table()
    # get_basic_lang_data()
 
   })
