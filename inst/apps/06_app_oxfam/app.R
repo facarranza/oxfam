@@ -35,7 +35,7 @@ ui <- panelsPage(
     background = "#FFF"
   ),
   langSelectorInput("lang", position = "fixed"),
-  panel(title = ui_("data_filter"),
+  panel(title = ui_("question"),
         id = "controls-style",
         collapse = FALSE,
         can_collapse = FALSE,
@@ -219,7 +219,7 @@ server <-  function(input, output, session) {
             if(ncol(t)==10)
               colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","fecha_ct")
             else{
-              if(ncol(t) == 10) {
+              if(ncol(t) == 11) {
                 colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","unidad","fecha_ct")
 
             }
@@ -1012,11 +1012,12 @@ server <-  function(input, output, session) {
 
     }
 
-#    var <- slug_translate |> filter(slug_en %in% input$Indicator)  |> select(slug)
-
+# #    var <- slug_translate |> filter(slug_en %in% input$Indicator)  |> select(slug)
+#
     if(Indicador$value  %in% c("new_cases_per_million","icu_patients_per_million","reproduction_rate","new_test_per_thousand","positive_rate",
                                "tests_per_case", "new_deaths_per_million","excess_mortality","excess_mortality_cumulative",
-                               "new_deaths_per_million",)){
+                               "new_deaths_per_million")){
+
       dta <- dta |> filter(fecha >="2020-01-01" & fecha <= "2022-12-31")
 
     }
