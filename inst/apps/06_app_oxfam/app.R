@@ -1041,9 +1041,11 @@ server <-  function(input, output, session) {
                   if(actual_but$active %in% c("sankey") & Indicador$value  == "doses_delivered_vaccine_donations")  group_var = c("pais","donante")
                   if(actual_but$active %in% c("sankey") & Indicador$value  == "geopolitics_vaccine_donations")  group_var = c("pais","unidad")
                   if(actual_but$active %in% c("barras") &  Indicador$value  == "school_closures"){
+                    print("baaaaaaaaaaaaaaaaaaaaaaaar")
                     group_var = c("unidad_id","pais")
                     trad <- "count"
                     title_y_axis$value <-  i_(trad,lang=lang())
+                    print(dta |> head(1))
                   }
                   if(actual_but$active %in% c("barras") &  Indicador$value == "product_pipeline"){
                     group_var = c("pais","unidad")
@@ -1098,7 +1100,7 @@ server <-  function(input, output, session) {
                                           "reproduction_rate", "new_test_per_thousand", "positive_rate","tests_per_case", " new_deaths_per_million", "excess_mortality_cumulative" )
 
 
-                  if(actual_but$active %in% c("linea") &  Indicador$value %in%  line_value_vector | Indicador$value %in% "school_closures" ) {
+                  if(actual_but$active %in% c("linea") &  (Indicador$value %in%  line_value_vector | Indicador$value %in% "school_closures" )) {
                     if(actual_but$active %in% c("linea") &  Indicador$value %in%  line_value_vector)  data_result <- dta |> select(fecha,valor)
                     else data_result <- dta |> select(pais,fecha,valor) |> distinct()
 
@@ -1152,7 +1154,8 @@ server <-  function(input, output, session) {
                                                    name =trad,
                                                    group_var =group_var)
 
-
+                     print("result")
+                     print(group_var)
                      print(data_result)
                     #return()
                   if(actual_but$active %in% c("barras") &  Indicador$value == "product_pipeline"){
