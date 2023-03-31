@@ -634,7 +634,7 @@ server <-  function(input, output, session) {
       dta <-   dta |> select(!c(pais_es,pais_pt)) |> rename(pais_lang = pais_en) |> mutate(pais_en = pais_lang)
     }
     if(lang( )== "pt"){
-      dta <-   dta |> select(!c(pais_en)) |> rename(pais_lang = pais_pt,pais_en = pais_en)
+      dta <-   dta |> select(!c(pais_es)) |> rename(pais_lang = pais_pt,pais_en = pais_en)
 
 
     }
@@ -921,10 +921,10 @@ server <-  function(input, output, session) {
 
   observe({
     dsmodules::downloadTableServer("dropdown_table",
-                                   element = data_table(),
+                                   element = reactive(data_table()),
                                    formats = c("csv", "xlsx", "json"))
     dsmodules::downloadImageServer("download_viz",
-                                   element = viz_down(),
+                                   element = reactive(viz_down()),
                                    lib = "highcharter",
                                    formats = c("jpeg", "pdf", "png", "html"),
                                    file_prefix = "plot")
