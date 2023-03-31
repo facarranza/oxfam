@@ -13,6 +13,7 @@ library(dsmodules)
 library(dsapptools)
 library(dplyr)
 library(shinyjs)
+library(urlshorteneR)
 
 ui <- panelsPage(
   tags$head(
@@ -26,7 +27,7 @@ ui <- panelsPage(
       src = "icons/loading_gris.gif",
       width = 100
     ),
-    mode = "auto",
+    mode = "manual",
     color = "#435b69",
     background = "#FFF"
   ),
@@ -107,6 +108,7 @@ server <-  function(input, output, session) {
   shared_link <- reactiveValues(facebook = NULL, twitter = NULL)
 
   observe({
+    if (is.null(lang())) return()
     if (is.null(save_inputs())) return()
     save_inp <- save_inputs()
     slug = NULL
@@ -130,19 +132,20 @@ server <-  function(input, output, session) {
     if (!is.null(actual_but$active)) viz <- paste0("viz=",actual_but$active, "%26")
     if (!is.null(click_viz$id)) id_click <- paste0("id_click=", click_viz$id, "%26")
     if (!is.null(click_viz$cat)) cat_click <- paste0("cat_click=",click_viz$cat, "%26")
-    shared_link$facebook <- stringi::stri_escape_unicode(paste0(viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click))
-    shared_link$twitter <- paste0(viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click)
+
+    shared_link$facebook <- stringi::stri_escape_unicode(paste0(viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang()))
+    shared_link$twitter <- paste0(viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang())
 
   })
 
 
 
   # output$aver <- renderPrint({
-  #   #save_inputs()
-  #   #print(url_par()$inputs)
-  #   # %2C
-  #   print(input$last_click)
-  #   #shared$link
+  #   bitly_auth()
+  #   bitly_create_bitlink(
+  #     long_url = shared_link$twitter,
+  #     domain = "bit.ly"
+  #   )
   # })
 
   # Compartir ---------------------------------------------------------------
@@ -388,6 +391,12 @@ server <-  function(input, output, session) {
     req(slug_selected())
     d <- oxfam_data[[lang()]][[input$id_slug]]
     d
+  })
+
+  observe({
+    if (is.null(data_filter_slug())) return()
+    Sys.sleep(3)
+    remove_start_up(timeout = 200)
   })
 
   slug_unidad_opts <- reactive({
