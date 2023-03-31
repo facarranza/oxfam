@@ -127,6 +127,12 @@ server <-  function(input, output, session) {
   title_y_axis <- reactiveValues(val= NULL)
 
 
+
+  paste_fnc <- function (x, collapse = "") {
+    paste0(trimws(unique(x)), collapse = collapse)
+  }
+
+
   #genera la data con base a las preguntas elegidas y el tipo de idioma
   get_basic_lang_data <- reactive({
     req(quest_choose())
@@ -178,7 +184,8 @@ server <-  function(input, output, session) {
         indicador_title$value <- slug_translate |> filter(slug %in% indicador$indicador) |> select(slug_es) |> rename(slug = slug_es)
         # temp <- indicador
 
-        temp <- lapply( 1:length(indicador$indicador), function(i){
+        temp <- plyr::ldply( 1:length(indicador$indicador), function(i){
+
           t  <- as.data.frame(oxfam_6$es[as.vector(indicador$indicador[i])])
           if(ncol(t)==10)
             colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","fecha_ct")
@@ -206,7 +213,8 @@ server <-  function(input, output, session) {
           print("indicador_title$value ")
           print(indicador_title$value)
 
-          temp <- lapply( 1:length(indicador$indicador), function(i){
+          temp <- plyr::ldply( 1:length(indicador$indicador), function(i){
+
            t  <- as.data.frame(oxfam_6$pt[as.vector(indicador$indicador[i])])
             if(ncol(t)==10)
               colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","fecha_ct")
@@ -227,6 +235,26 @@ server <-  function(input, output, session) {
       }
 
     }
+    temp
+
+    paste_fnc <- function (x, collapse = "") {
+      paste0(trimws(unique(x)), collapse = collapse)
+    }
+
+   #  print("class(temp******************")
+   # print(class(temp))
+   # return()
+
+    if (length(unique(temp$id)) != nrow(temp)) {
+      if(lang() == "en")   temp <- as.data.frame(bind_rows(temp))
+      df1 <-  temp  |> group_by(id) |>
+        summarise(dplyr::across(dplyr::everything(), list(paste_fnc)))
+      names(df1) <- names(temp)
+      temp  <- df1
+      temp$valor <- as.numeric(temp$valor )
+    }
+
+
     temp
   })
 
@@ -645,7 +673,8 @@ server <-  function(input, output, session) {
   data_table <- reactive({
     req(data_prep())
     dta <- bind_rows(data_prep())
-
+    print("Indicador$value  ###########################################")
+    print(Indicador$value  )
     if(lang() == "es"){
       dta <-   dta |> select(!c(pais_en,pais_pt)) |> rename(pais = pais_es, slug_en=slug_es)
 
@@ -686,6 +715,23 @@ server <-  function(input, output, session) {
 
 
 
+     if("price_per_dose" %in% Indicador$value  & nrow(Indicador$value)==1){
+#
+#        print("naaaaaaaaaaaaaaaaaaaaaames")
+#        print(names(dta))
+#
+#        dta <- dta |> select(id, slug, slug_en, fecha, pais, valor)  |> distinct() |> mutate(unidadp= paste0(unidad_id, collapse = "-")) |>
+#          tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna")) |> ungroup() |> select(!unidad_id) |> distinct()
+#
+#        #return()
+#        #|> tidyr::pivot_wider( names_from = "unidad_id", values_from="valor")# mutate(unidadp= paste0(unidad, collapse = "-")) |> tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna"))
+#
+#        # print(dta)
+#        # return()
+#        lang_names <-  c("id",slug_id ,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()),  i_("valor",lang()), i_("fabrica",lang()), i_("vacuna",lang()))
+
+    }
+     else{
     slug_id <-  paste(i_("slug",lang()),"id",sep="_")
     lang_names <-  c("id",slug_id ,i_("slug",lang()),i_("fecha",lang()), i_("pais",lang()), i_("valor",lang()), i_("unidad_id",lang()),
                      i_("unidad",lang()), i_("fecha_ct",lang()))
@@ -721,6 +767,7 @@ server <-  function(input, output, session) {
     #   }
       }
     }
+  }
     # if(actual_but$active %in% c("linea","scatter"))   names(data_) = i_(c("pais","fecha", trad),lang=lang())
     # if(actual_but$active %in% c("treemap","mapa","barras"))   names(data_result) = i_(c("pais", trad),lang=lang())
     # if(actual_but$active %in% c("sankey")  & Indicador$value  == "covid_vaccine_agreements")   names(data_result) = i_(c("pais","fabricante", trad),lang=lang())
@@ -730,7 +777,7 @@ server <-  function(input, output, session) {
      print("DUplicate")
 
      print(dta |> select(id) |> group_by(id) |> summarise(count_id =n()) |> arrange(desc(count_id)))
-     print(dta |> filter(id=="02d84de74fc5234771e2d160fb760f8aa38b132e"))
+     print(dta |> filter(id=="0efc627cb549eb90ecdd49f19c89b6b8c18631df"))
     #return()
 
 
@@ -836,7 +883,6 @@ server <-  function(input, output, session) {
     v
   })
 
-
   output$viz_icons <- renderUI({
 
     req(possible_viz())
@@ -873,10 +919,9 @@ server <-  function(input, output, session) {
   })
 
 
-
   observe({
     dsmodules::downloadTableServer("dropdown_table",
-                                   element = data_prep(),
+                                   element = data_table(),
                                    formats = c("csv", "xlsx", "json"))
     dsmodules::downloadImageServer("download_viz",
                                    element = viz_down(),
@@ -969,6 +1014,12 @@ server <-  function(input, output, session) {
 
 #    var <- slug_translate |> filter(slug_en %in% input$Indicator)  |> select(slug)
 
+    if(Indicador$value  %in% c("new_cases_per_million","icu_patients_per_million","reproduction_rate","new_test_per_thousand","positive_rate",
+                               "tests_per_case", "new_deaths_per_million","excess_mortality","excess_mortality_cumulative",
+                               "new_deaths_per_million",)){
+      dta <- dta |> filter(fecha >="2020-01-01" & fecha <= "2022-12-31")
+
+    }
 
     if(nrow( Indicador$value)==1){
 
@@ -1380,6 +1431,7 @@ server <-  function(input, output, session) {
 
       }
     }
+
 
 
     data_result
