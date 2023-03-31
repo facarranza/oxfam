@@ -137,7 +137,7 @@ server <-  function(input, output, session) {
     subquestion <- quest_choose_sub()
     indicador_title$value <- NULL
     print("vaaaal")
-    print(names(oxfam_6$en$new_vaccinations))
+   print(names(oxfam_6$en$stringency_index))
    # return()
     if(lang()=="en"){
 
@@ -152,9 +152,9 @@ server <-  function(input, output, session) {
       temp <- plyr::ldply( 1:length(indicador$indicador), function(i){
 
       t  <- as.data.frame(oxfam_6$en[as.vector(indicador$indicador[i])])
-        if(ncol(t) == 9) {
+        if(ncol(t) == 10) {
 
-         colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+         colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id", "fecha_ct")
         }
      else{
        if(ncol(t) == 11) {
@@ -180,8 +180,8 @@ server <-  function(input, output, session) {
 
         temp <- lapply( 1:length(indicador$indicador), function(i){
           t  <- as.data.frame(oxfam_6$es[as.vector(indicador$indicador[i])])
-          if(ncol(t)==9)
-            colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+          if(ncol(t)==10)
+            colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","fecha_ct")
           else {
 
             if(ncol(t) == 11) {
@@ -208,8 +208,8 @@ server <-  function(input, output, session) {
 
           temp <- lapply( 1:length(indicador$indicador), function(i){
            t  <- as.data.frame(oxfam_6$pt[as.vector(indicador$indicador[i])])
-            if(ncol(t)==9)
-              colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad")
+            if(ncol(t)==10)
+              colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","fecha_ct")
             else{
               if(ncol(t) == 10) {
                 colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","unidad","fecha_ct")
@@ -1751,7 +1751,7 @@ server <-  function(input, output, session) {
   #data_prep() |> head(1)
   # data_viz()
   #  data_table()
-   # get_basic_lang_data()
+   #get_basic_lang_data()
 
   })
 
