@@ -41,8 +41,8 @@ ui <- panelsPage(
         can_collapse = FALSE,
         width = 285,
         body = div(
-          div(id = "myDiv", style = "font-family: 'IBM Plex Sans'; font-weight: 500; font-size: 14px; line-height: 18.2px;,  background-color:#252525;" , ui_("pregunta")),
-          verbatimTextOutput("choices_print"),
+          div(id = "myDiv", style = "font-family: 'IBM Plex Sans'; font-weight: 500; font-size: 14px; line-height: 18.2px;,  background-color:#252525;" ),
+          #verbatimTextOutput("choices_print"),
           uiOutput("generalFilters")
         ),
 
