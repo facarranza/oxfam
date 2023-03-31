@@ -127,10 +127,11 @@ server <-  function(input, output, session) {
     if (!is.null(save_inp$id_unidad)) und <- paste0("und=", paste0(save_inp$id_unidad, collapse = ","), "%26")
     if (!is.null(save_inp$id_slug_comparisons))  slug_comp <- paste0("slug_comp=", paste0(save_inp$id_slug_comparisons, collapse = ","), "%26")
     if (!is.null(save_inp$id_slug)) slug <- paste0("slug=", paste0(save_inp$id_slug, collapse = ","), "%26")
+    if (!is.null(actual_but$active)) viz <- paste0("viz=",actual_but$active, "%26")
     if (!is.null(click_viz$id)) id_click <- paste0("id_click=", click_viz$id, "%26")
     if (!is.null(click_viz$cat)) cat_click <- paste0("cat_click=",click_viz$cat, "%26")
-    shared_link$facebook <- stringi::stri_escape_unicode(paste0(slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click))
-    shared_link$twitter <- paste0(slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click)
+    shared_link$facebook <- stringi::stri_escape_unicode(paste0(viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click))
+    shared_link$twitter <- paste0(viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click)
 
   })
 
@@ -254,21 +255,19 @@ server <-  function(input, output, session) {
     c(df$viz, "table")
   })
 
-  actual_but <- reactiveValues(active = NULL, url = NULL)
-
-  # observe({
-  #   if (is.null(url_par()$inputs$viz)) return()
-  #   #actual_but$active <- NULL
-  #   actual_but$url <- url_par()$inputs$viz
-  # })
-
-
+  actual_but <- reactiveValues(active = NULL)
 
   observe({
+
+    if (!is.null(url_par()$inputs$viz)) {
+      actual_but$active <- url_par()$inputs$viz
+    }
+
     req(possible_viz())
     if (is.null(input$viz_selection)) return()
     viz_rec <- possible_viz()
     if (input$viz_selection %in% viz_rec) {
+
       actual_but$active <- input$viz_selection
     } else {
       actual_but$active <- viz_rec[1]
