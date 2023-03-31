@@ -82,7 +82,8 @@ server <-  function(input, output, session) {
 
   # url params --------------------------------------------------------------
 
-  url_params <- list(slug = NULL,
+  url_params <- list(dash = NULL,
+                     slug = NULL,
                      slug_comp = NULL,
                      pais = NULL,
                      und = NULL,
@@ -207,7 +208,7 @@ server <-  function(input, output, session) {
 
 
   output$idiomas <- renderUI({
-     req(lang())
+    req(lang())
 
     available_lang <- setdiff(c("en", "es", "pt"), lang())
     available_lang <- paste0('<a href="?lang=', available_lang,
@@ -239,7 +240,18 @@ server <-  function(input, output, session) {
 
   slug_opts <- reactive({
     req(lang())
-    setNames(slug_translate$slug, slug_translate[[paste0("slug_", lang())]])
+    data_traductor <- slug_translate
+    data_slug <- slug_translate
+    if (!is.null(url_par()$inputs$dash)) {
+      dash <- url_par()$inputs$dash
+      if (dash == "one") data_slug <- slug_dash_one
+      if (dash == "two") data_slug <- slug_dash_two
+      if (dash == "three") data_slug <- slug_dash_three
+      if (dash == "four") data_slug <- slug_dash_four
+    }
+    data_slug <- data.frame(slug = data_slug$slug) |> left_join(data_traductor)
+
+    setNames(data_slug$slug, data_slug[[paste0("slug_", lang())]])
   })
 
 
@@ -1364,14 +1376,14 @@ server <-  function(input, output, session) {
                                  formats = c("jpeg", "pdf", "png", "html"),
                                  display = "dropdown", dropdownWidth = 60,
                                  text = ""#i_("download", lang())
-                                 )
+      )
     } else {
       dsmodules::downloadTableUI("dropdown_table",
                                  dropdownLabel = icon("download"),
                                  formats = c("csv", "xlsx", "json"),
                                  display = "dropdown",
                                  text = ""#i_("download", lang())
-                                 )
+      )
     }
   })
 

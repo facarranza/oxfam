@@ -2,7 +2,9 @@ library(googlesheets4)
 library(dplyr)
 library(tidyr)
 gs4_deauth()
-general_info <- read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "slug_descripcion")
+
+url_book <- "https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0"
+general_info <- read_sheet(url_book, "slug_descripcion")
 
 slug_translate <- general_info |>
   select(slug, slug_es = nombre_es, slug_en = name, slug_pt = nome)
@@ -22,21 +24,12 @@ slug_filters <- general_info |>
 usethis::use_data(slug_filters, overwrite = TRUE)
 
 
-slug_viz <- read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "matriz_visualizaciones")
+slug_viz <- read_sheet(url_book, "matriz_visualizaciones")
 slug_agg <- slug_viz |>
   select(slug, agg = mapa) |>
   filter(agg %in% c("mean", "sum,mean", "sum"))
 slug_agg$agg <- as.character(slug_agg$agg)
 usethis::use_data(slug_agg, overwrite = TRUE)
-
-
-
-# slug_viz_one <- read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "dashboard_1")
-# slug_agg_one <- slug_viz_one |>
-#   select(slug, agg = mapa) |>
-#   filter(agg %in% c("mean", "sum,mean", "sum"))
-# slug_agg_one$agg <- as.character(slug_agg_one$agg)
-# usethis::use_data(slug_agg_one, overwrite = TRUE)
 
 
 slug_viz <- slug_viz |>
@@ -51,8 +44,31 @@ slug_viz <- slug_viz |>
 usethis::use_data(slug_viz, overwrite = TRUE)
 
 
-slug_comparisons <- read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "matriz_comparaciones")
+slug_comparisons <- read_sheet(url_book, "matriz_comparaciones")
 slug_comparisons <- slug_comparisons |>
   select(indicador, slug = indicador_comparacion, notas)
 usethis::use_data(slug_comparisons, overwrite = TRUE)
+
+
+slug_viz_one <- read_sheet(url_book, "dashboard_1")
+slug_dash_one <- slug_viz_one |>
+  select(slug)
+usethis::use_data(slug_dash_one, overwrite = TRUE)
+
+slug_viz_two <- read_sheet(url_book, "dashboard_2")
+slug_dash_two <- slug_viz_two |>
+  select(slug)
+usethis::use_data(slug_dash_two, overwrite = TRUE)
+
+
+slug_viz_three <- read_sheet(url_book, "dashboard_3")
+slug_dash_three <- slug_viz_three |>
+  select(slug)
+usethis::use_data(slug_dash_three, overwrite = TRUE)
+
+
+slug_viz_four <- read_sheet(url_book, "dashboard_4")
+slug_dash_four <- slug_viz_four |>
+  select(slug)
+usethis::use_data(slug_dash_four, overwrite = TRUE)
 
