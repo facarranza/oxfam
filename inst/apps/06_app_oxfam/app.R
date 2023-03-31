@@ -1027,171 +1027,155 @@ server <-  function(input, output, session) {
 
     if(nrow( Indicador$value)==1){
 
-        if(actual_but$active %in% c("linea","scatter")){
-          group_var = c("pais","fecha")
-          title_x_axis$value <- i_("fecha",lang=lang())
+                  if(actual_but$active %in% c("linea","scatter")){
+                    group_var = c("pais","fecha")
+                    title_x_axis$value <- i_("fecha",lang=lang())
 
-        }
-        if(actual_but$active %in% c("mapa","barras","treemap"))  group_var = "pais"
-        if(actual_but$active %in% c("barras")){
-          title_y_axis$value <- i_("mean",lang=lang())
-          title_x_axis$value <- i_("pais",lang=lang())
-        }
-        if(actual_but$active %in% c("sankey") & Indicador$value  == "covid_vaccine_agreements")  group_var = c("pais","fabrica")
-        if(actual_but$active %in% c("sankey") & Indicador$value  == "doses_delivered_vaccine_donations")  group_var = c("pais","donante")
-        if(actual_but$active %in% c("sankey") & Indicador$value  == "geopolitics_vaccine_donations")  group_var = c("pais","unidad")
-        if(actual_but$active %in% c("barras") &  Indicador$value  == "school_closures"){
-          group_var = c("unidad_id","pais")
-          trad <- "count"
-          title_y_axis$value <-  i_(trad,lang=lang())
-        }
+                  }
+                  if(actual_but$active %in% c("mapa","barras","treemap"))  group_var = "pais"
+                  if(actual_but$active %in% c("barras")){
+                    title_y_axis$value <- i_("mean",lang=lang())
+                    title_x_axis$value <- i_("pais",lang=lang())
+                  }
+                  if(actual_but$active %in% c("sankey") & Indicador$value  == "covid_vaccine_agreements")  group_var = c("pais","fabrica")
+                  if(actual_but$active %in% c("sankey") & Indicador$value  == "doses_delivered_vaccine_donations")  group_var = c("pais","donante")
+                  if(actual_but$active %in% c("sankey") & Indicador$value  == "geopolitics_vaccine_donations")  group_var = c("pais","unidad")
+                  if(actual_but$active %in% c("barras") &  Indicador$value  == "school_closures"){
+                    group_var = c("unidad_id","pais")
+                    trad <- "count"
+                    title_y_axis$value <-  i_(trad,lang=lang())
+                  }
+                  if(actual_but$active %in% c("barras") &  Indicador$value == "product_pipeline"){
+                    group_var = c("pais","unidad")
+                    trad <- "count"
+                    title_y_axis$value <-  i_(trad,lang=lang())
+                  }
+                  if(actual_but$active %in% c("mapa") &  Indicador$value == "product_pipeline"){
+                    group_var = c("pais")
+                    trad <- "count"
 
-        if(actual_but$active %in% c("barras") &  Indicador$value == "product_pipeline"){
-          group_var = c("pais","unidad")
-          trad <- "count"
-          title_y_axis$value <-  i_(trad,lang=lang())
-        }
+                  }
+                  if(actual_but$active %in% c("linea") &  Indicador$value  == "school_closures") {
+                  #  group_var = c("pais","fecha")
+                    #req(input$country)
 
+                    # filtro <- input$country
+                    # if(is.null(input$country)) {
+                    #   filtro <- sel_country()[1]
+                    # }
+                    trad <- "valor"
+                    title_y_axis$value <-  i_(trad,lang=lang())
+                    # dta <-  dta |> filter(pais %in% filtro)
+                    dta$fecha <-  format(as.Date(dta$fecha), "%Y-%m")
+                    print(dta$fecha)
+                  }
+                  if( Indicador$value  == "covid_vaccine_agreements" ) {
 
-        if(actual_but$active %in% c("mapa") &  Indicador$value == "product_pipeline"){
-          group_var = c("pais")
-          trad <- "count"
-
-        }
-        if(actual_but$active %in% c("linea") &  Indicador$value  == "school_closures") {
-          group_var = c("unidad_id","fecha")
-          #req(input$country)
-
-          filtro <- input$country
-          if(is.null(input$country)) {
-            filtro <- sel_country()[1]
-          }
-          trad <- "count"
-          title_y_axis$value <-  i_(trad,lang=lang())
-          dta <-  dta |> filter(pais %in% filtro)
-          dta$fecha <-  format(as.Date(dta$fecha), "%Y-%m")
-          print(dta$fecha)
-        }
-
-
-        if( Indicador$value  == "covid_vaccine_agreements" ) {
-
-          # a |> tidyr::pivot_wider(names_from=unidad)
-          dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "-")) |> tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna"))
+                    # a |> tidyr::pivot_wider(names_from=unidad)
+                    dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "-")) |> tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna"))
 
 
-        }
+                  }
+                  if( Indicador$value  == "doses_delivered_vaccine_donations" ) {
 
-        if( Indicador$value  == "doses_delivered_vaccine_donations" ) {
-
-          dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("donante","vacuna"))
-
-
-        }
-
-        if( Indicador$value  == "geopolitics_vaccine_donations" ) {
-
-          dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("unidad","vacuna"))
+                    dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("donante","vacuna"))
 
 
-        }
+                  }
+                  if( Indicador$value  == "geopolitics_vaccine_donations" ) {
 
-        ###############################################################################################
-        ################################################################################################
-        #New section if else
-        #no agregation
-        #TODO global vector
-        line_value_vector <-  c("total_boosters_per_hundred","people_vaccinated_per_hundred","new_cases_per_million", "icu_patients_per_million",
-                                "reproduction_rate", "new_test_per_thousand", "positive_rate","tests_per_case", " new_deaths_per_million", "excess_mortality_cumulative" )
+                    dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("unidad","vacuna"))
 
 
-        if(actual_but$active %in% c("linea") &  Indicador$value %in%  line_value_vector) {
+                  }
 
-          data_result <- dta |> select(fecha,valor)
-        }
-        else{
-
-          if( Indicador$value %in%  line_value_vector) {
-            trad <- "mean"
-          }
-
-
-
-          if( "interagency_response_plan_numinneed" %in% c(Indicador$value)) {
-
-            group_var <- c("pais","fecha")
-            trad <- "mean"
-            title_y_axis$value <-  i_(trad,lang=lang())
-            title_x_axis$value <-  i_("fecha",lang=lang())
-          }
-
-          if( "immunization_campaigns" %in% c(Indicador$value) ) {
-            trad <- "sum"
-
-          }
+                  ###############################################################################################
+                  ################################################################################################
+                  #New section if else
+                  #no agregation
+                  #TODO global vector
+                  line_value_vector <-  c("total_boosters_per_hundred","people_vaccinated_per_hundred","new_cases_per_million", "icu_patients_per_million",
+                                          "reproduction_rate", "new_test_per_thousand", "positive_rate","tests_per_case", " new_deaths_per_million", "excess_mortality_cumulative" )
 
 
+                  if(actual_but$active %in% c("linea") &  Indicador$value %in%  line_value_vector | Indicador$value %in% "school_closures" ) {
+                    if(actual_but$active %in% c("linea") &  Indicador$value %in%  line_value_vector)  data_result <- dta |> select(fecha,valor)
+                    else data_result <- dta |> select(pais,fecha,valor) |> distinct()
 
-          if( "worldbank_gavi_vaccine_financing" %in% c(Indicador$value) ) {
-            trad <- "sum"
-            title_y_axis$value <-  i_(trad,lang=lang())
+                  }
+                  else{
+                    print("innnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn")
+                    if( Indicador$value %in%  line_value_vector) {
+                      trad <- "mean"
+                    }
+                    if( "interagency_response_plan_numinneed" %in% c(Indicador$value)) {
 
-          }
-          if( "covid_vaccine_agreements" %in% c(Indicador$value)) {
-            trad <- "sum"
-          }
+                  group_var <- c("pais","fecha")
+                  trad <- "mean"
+                  title_y_axis$value <-  i_(trad,lang=lang())
+                  title_x_axis$value <-  i_("fecha",lang=lang())
+                }
+                    if( "immunization_campaigns" %in% c(Indicador$value) ) {
+                  trad <- "sum"
 
-          if("doses_delivered_vaccine_donations"  %in% c(Indicador$value) & actual_but$active %in% c("sankey")){
+                }
+                    if( "worldbank_gavi_vaccine_financing" %in% c(Indicador$value) ) {
+                  trad <- "sum"
+                  title_y_axis$value <-  i_(trad,lang=lang())
 
-            dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("unidad","vacuna"))
+                }
+                    if( "covid_vaccine_agreements" %in% c(Indicador$value)) {
+                  trad <- "sum"
+                }
+                    if("doses_delivered_vaccine_donations"  %in% c(Indicador$value) & actual_but$active %in% c("sankey")){
+
+                  dta <- dta |> group_by(id, slug, slug_en, fecha, pais, valor) |> mutate(unidadp= paste0(unidad, collapse = "&")) |> tidyr::separate(unidadp,sep="&",into=c("unidad","vacuna"))
 
 
 
-               group_var <-c("donante","vacuna","pais")
-               dta <- dta |> select("donante","vacuna","pais","valor") |> tidyr::pivot_longer(!c("donante","vacuna","pais"),)
-          }
+                     group_var <-c("donante","vacuna","pais")
+                     dta <- dta |> select("donante","vacuna","pais","valor") |> tidyr::pivot_longer(!c("donante","vacuna","pais"),)
+                }
+                    if("doses_delivered_vaccine_donations"  %in% c(Indicador$value) & actual_but$active %in% c("mapa","lineas","barras","treemap")){
+
+                 trad= "sum"
+                }
+
+                    if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
+                     print("dta")
+                     print(dta |> head(1))
+                #return()
+                    data_result <- var_aggregation(data = dta,
+                                                   # dic = dic,
+                                                   agg =trad,
+                                                   to_agg = var_calc,
+                                                   name =trad,
+                                                   group_var =group_var)
 
 
-          if("doses_delivered_vaccine_donations"  %in% c(Indicador$value) & actual_but$active %in% c("mapa","lineas","barras","treemap")){
+                     print(data_result)
+                    #return()
+                  if(actual_but$active %in% c("barras") &  Indicador$value == "product_pipeline"){
+                    data_result$unidad <- as.factor( data_result$unidad )
+                    data_result$pais <- as.factor( data_result$pais )
+                  }
+                  # print("out")
+                  if(actual_but$active %in% c("mapa")){
+                    # print("in")
+                    #print(colnames(sel_country_lang()))
+                    #print()
 
-           trad= "sum"
-          }
+                    data_result <- data_result |> left_join(sel_country_lang(), by=c("pais"="pais_en"))
+                  }
 
-          if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
-          print("dta")
-          print(dta |> head(1))
-          #return()
-          data_result <- var_aggregation(data = dta,
-                                         # dic = dic,
-                                         agg =trad,
-                                         to_agg = var_calc,
-                                         name =trad,
-                                         group_var =group_var)
-
-
-          print(data_result)
-          #return()
-          if(actual_but$active %in% c("barras") &  Indicador$value == "product_pipeline"){
-            data_result$unidad <- as.factor( data_result$unidad )
-            data_result$pais <- as.factor( data_result$pais )
-          }
-          # print("out")
-          if(actual_but$active %in% c("mapa")){
-            # print("in")
-            #print(colnames(sel_country_lang()))
-            #print()
-
-            data_result <- data_result |> left_join(sel_country_lang(), by=c("pais"="pais_en"))
-          }
-
-          # if(actual_but$active %in% c("mapa")){
-          #   data_result$pais_l <- data_result_pais
-          #   if(lang( )== "es"){
-          #       paises <- unique(dta$pais_es)
-          #       paises_en <- unique(dta$paises_en)
-          #       data_result |> select(mutate case_when())
-          #
-          #      }
+                # if(actual_but$active %in% c("mapa")){
+                #   data_result$pais_l <- data_result_pais
+                #   if(lang( )== "es"){
+                #       paises <- unique(dta$pais_es)
+                #       paises_en <- unique(dta$paises_en)
+                #       data_result |> select(mutate case_when())
+                #
+                #      }
 
 
         }
@@ -1199,7 +1183,10 @@ server <-  function(input, output, session) {
 
         ################################################################################################
 
-    }
+
+
+
+     }#############################
     else{
 
       if(length(unique(dta$unidad))==1){
@@ -1391,7 +1378,7 @@ server <-  function(input, output, session) {
           names(data_result) = i_(c("unidad_id","pais",trad),lang=lang())
         }
         if(actual_but$active %in% c("linea") & Indicador$value  == "school_closures"){
-          names(data_result) = i_(c("unidad_id","fecha",trad),lang=lang())
+          names(data_result) = i_(c("pais","fecha",trad),lang=lang())
         }
         if(actual_but$active %in% c("mapa","barras") &  Indicador$value == "product_pipeline"){
           names(data_result) = i_(c("pais","unidad",trad),lang=lang())
@@ -1459,7 +1446,7 @@ server <-  function(input, output, session) {
     if(type_viz=="mapa") {  prex <- "GnmNum" }
     if(type_viz=="linea") {
       # if(ncol(df) > 2)
-      print("linnnnnnnnnnnnnnnnnnnn")
+      print("linnnnwxccxcxnnnnnnnnnnnnnnnn")
       prex <- "CatDatNum"
       print("uni")
       print(Unidad$value)
@@ -1475,6 +1462,8 @@ server <-  function(input, output, session) {
             if( Indicador$value %in% line_value_vector ) {
               prex <-  "DatNum"
             }
+
+
       }
       # if(Indicador$value  == "school_closures"){
       #   prex <- "CatCatNum"
