@@ -88,7 +88,9 @@ server <-  function(input, output, session) {
                      fech = NULL,
                      fech_form = NULL,
                      agg = NULL,
-                     viz = NULL)
+                     viz = NULL,
+                     id_click = NULL,
+                     cat_click = NULL)
 
   url_par <- reactive({
     shinyinvoer::url_params(url_params, session)
@@ -115,6 +117,8 @@ server <-  function(input, output, session) {
     fech_form = NULL
     agg = NULL
     viz = NULL
+    id_click = NULL
+    cat_click = NULL
 
     if (!is.null(save_inp$id_date_format)) fech_form <- paste0("fech_form=", paste0(save_inp$id_date_format, collapse = ","), "%26")
     if (!is.null(save_inp$id_slug_dates)) fech <- paste0("fech=", paste0(save_inp$id_slug_dates, collapse = ","), "%26")
@@ -123,20 +127,22 @@ server <-  function(input, output, session) {
     if (!is.null(save_inp$id_unidad)) und <- paste0("und=", paste0(save_inp$id_unidad, collapse = ","), "%26")
     if (!is.null(save_inp$id_slug_comparisons))  slug_comp <- paste0("slug_comp=", paste0(save_inp$id_slug_comparisons, collapse = ","), "%26")
     if (!is.null(save_inp$id_slug)) slug <- paste0("slug=", paste0(save_inp$id_slug, collapse = ","), "%26")
-
-    shared_link$facebook <- stringi::stri_escape_unicode(paste0(slug, slug_comp, pais, agg, und, fech, fech_form))
-    shared_link$twitter <- paste0(slug, slug_comp, pais, agg, und, fech, fech_form)
+    if (!is.null(click_viz$id)) id_click <- paste0("id_click=", click_viz$id, "%26")
+    if (!is.null(click_viz$cat)) cat_click <- paste0("cat_click=",click_viz$cat, "%26")
+    shared_link$facebook <- stringi::stri_escape_unicode(paste0(slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click))
+    shared_link$twitter <- paste0(slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click)
 
   })
 
 
 
-  output$aver <- renderPrint({
-    #save_inputs()
-    #print(url_par()$inputs)
-    print(input$last_click)
-    #shared$link
-  })
+  # output$aver <- renderPrint({
+  #   #save_inputs()
+  #   #print(url_par()$inputs)
+  #   # %2C
+  #   print(input$last_click)
+  #   #shared$link
+  # })
 
   # Compartir ---------------------------------------------------------------
 
@@ -159,13 +165,20 @@ server <-  function(input, output, session) {
 
   })
 
-  observeEvent(input$last_click, {
-    #if (is.null(input$last_click)) return()
+  shared_red <- reactiveValues(id = NULL)
 
-    if (input$last_click == "tw") {
+  observe({
+    if (is.null(input$last_click)) return()
+    shared_red$id <- input$last_click
+  })
+
+
+
+  observeEvent(shared_red$id, {
+    if (shared_red$id == "tw") {
       shinyjs::runjs(sprintf("window.open('%s')", paste0("https://twitter.com/intent/tweet?text=Hola&url=https://datasketch.shinyapps.io/oxfam_app/?", shared_link$twitter)))
     }
-    if (input$last_click == "fc") {
+    if (shared_red$id == "fc") {
       shinyjs::runjs(sprintf("window.open('%s')", paste0("http://www.facebook.com/sharer.php?t=Hola&u=https://datasketch.shinyapps.io/oxfam_app/?", shared_link$facebook)))
     }
   })
@@ -226,13 +239,30 @@ server <-  function(input, output, session) {
   })
 
 
+  slug_select <- reactive({
+    req(slug_opts())
+    slug <- slug_translate$slug[1]
+    if (!is.null(url_par()$inputs$slug)) slug <- url_par()$inputs$slug
+    slug
+  })
+
+
+
   possible_viz <- reactive({
     if (is.null(input$id_slug)) return()
     df <- slug_viz |> filter(slug %in% input$id_slug)
     c(df$viz, "table")
   })
 
-  actual_but <- reactiveValues(active = NULL)
+  actual_but <- reactiveValues(active = NULL, url = NULL)
+
+  # observe({
+  #   if (is.null(url_par()$inputs$viz)) return()
+  #   #actual_but$active <- NULL
+  #   actual_but$url <- url_par()$inputs$viz
+  # })
+
+
 
   observe({
     req(possible_viz())
@@ -243,7 +273,14 @@ server <-  function(input, output, session) {
     } else {
       actual_but$active <- viz_rec[1]
     }
+
   })
+
+  # observeEvent(input$viz_selection, {
+  #
+  # })
+  #
+
 
   output$viz_icons <- renderUI({
     req(lang())
@@ -283,6 +320,12 @@ server <-  function(input, output, session) {
       left_join(slug_translate, by = c("slug" = "slug"))
     setNames(table_ind$slug, table_ind[[paste0("slug_", lang())]])
   })
+
+  slug_comparisons_select <- reactive({
+    if (is.null(url_par()$inputs$slug_comp)) return()
+    url_par()$inputs$slug_comp
+  })
+
 
 
   slug_comparation <- reactiveValues(id = NULL)
@@ -335,6 +378,11 @@ server <-  function(input, output, session) {
     setNames(agg_opts, i_(agg_opts, lang()))
   })
 
+  slug_agg_select <- reactive({
+    req(slug_agg_opts())
+    if (is.null(url_par()$inputs$agg)) return()
+    url_par()$inputs$agg
+  })
 
   data_filter_slug <- reactive({
     req(lang())
@@ -346,7 +394,7 @@ server <-  function(input, output, session) {
   slug_unidad_opts <- reactive({
     req(data_filter_slug())
     if (!"unidad" %in% names(data_filter_slug())) return()
-    setNames(c("all", unique(data_filter_slug()$unidad_id)),
+    setNames(c("all", gsub("[[:space:]]", "_",unique(data_filter_slug()$unidad_id))),
              c(i_("all", lang()), unique(data_filter_slug()$unidad_id))
     )
   })
@@ -358,6 +406,16 @@ server <-  function(input, output, session) {
       show <- length(unique(data_filter_slug()$unidad)) > 1
     }
     show
+  })
+
+  slug_unidad_select <- reactive({
+    if (is.null(show_unidad())) return()
+    if (!show_unidad()) return()
+    sel <- "all"
+    if (!is.null(url_par()$inputs$und)) {
+      sel <- strsplit(url_par()$inputs$und, ",") |> unlist()
+    }
+    sel
   })
 
 
@@ -398,7 +456,8 @@ server <-  function(input, output, session) {
       if (show_unidad()) {
         req(input$id_unidad)
         if (!"all" %in% input$id_unidad) {
-          d <- d |> filter(unidad_id %in% input$id_unidad)
+          f_u <- gsub("_", " ",input$id_unidad)
+          d <- d |> filter(unidad_id %in% f_u)
         }
       }
     } else {
@@ -431,6 +490,16 @@ server <-  function(input, output, session) {
     pais <- paste0("pais_", lang())
     setNames(c("all", sort(unique(data_slug()[[pais]]))),
              c(i_("all", lang()), sort(unique(data_slug()[[pais]]))))
+  })
+
+
+  slug_countries_sel <- reactive({
+    sel <- "all"
+    if (!is.null(url_par()$inputs$pais)) {
+      sel <- strsplit(url_par()$inputs$pais, ",") |> unlist()
+    }
+    print(sel)
+    sel
   })
 
   observe({
@@ -511,6 +580,25 @@ server <-  function(input, output, session) {
     max(df$fecha, na.rm = TRUE)
   })
 
+  min_date_sel <- reactive({
+    req(min_date())
+    sel <- min_date()
+    if (!is.null(url_par()$inputs$fech)) {
+      sel <- strsplit(url_par()$inputs$fech, ",") |> unlist()
+      sel <- sel[1]
+    }
+    sel
+  })
+
+  max_date_sel <- reactive({
+    req(max_date())
+    sel <- max_date()
+    if (!is.null(url_par()$inputs$fech)) {
+      sel <- strsplit(url_par()$inputs$fech, ",") |> unlist()
+      sel <- sel[length(sel)]
+    }
+    sel
+  })
 
 
   date_format_opts <- reactive({
@@ -521,6 +609,12 @@ server <-  function(input, output, session) {
     setNames(c("anio", "anio_mes", "anio_mes_dia"),
              i_(c("anio", "anio_mes", "anio_mes_dia"), lang())
     )
+  })
+
+  date_format_sel <- reactive({
+    req(date_format_opts())
+    if (is.null(url_par()$inputs$fech_form)) return()
+    url_par()$inputs$fech_form
   })
 
   # Renderizar inputs con parmesan ------------------------------------------
@@ -886,14 +980,38 @@ server <-  function(input, output, session) {
   })
 
 
+  click_url <- reactiveValues(id = NULL, cat = NULL)
+  observe({
+    if (!is.null(url_par()$inputs$id_click)) {
+      click_url$id <- url_par()$inputs$id_click
+    }
+    if (!is.null(url_par()$inputs$cat_click)) {
+      click_url$cat <- url_par()$inputs$cat_click
+    }
+  })
+
   click_viz <- reactiveValues(id = NULL, cat = NULL)
 
   observe({
-    if (is.null(input$hcClicked)) return()
-    click_viz$id <- gsub("<br/>", " ", input$hcClicked$id)
-    if ("cat" %in% names(input$hcClicked)) {
-      click_viz$cat <- gsub("<br/>", " ", input$hcClicked$cat)
+    print(click_url$id)
+    if (!is.null(click_url$id)) {
+      click_viz$id <- click_url$id
+      print(click_viz$id)
+      print(click_viz$cat)
+    } else {
+      if (is.null(input$hcClicked)) return()
+      click_viz$id <- gsub("<br/>", " ", input$hcClicked$id)
+      if ("cat" %in% names(input$hcClicked)) {
+        click_viz$cat <- gsub("<br/>", " ", input$hcClicked$cat)
+      }
     }
+
+  })
+
+
+  observeEvent(input$hcClicked, {
+    click_url$id <- NULL
+    click_url$cat <- NULL
   })
 
   observeEvent(input$id_slug, {
@@ -916,6 +1034,7 @@ server <-  function(input, output, session) {
     req(viz_select())
     req(slug_selected())
     pais_click <- click_viz$id
+
     fecha_click <- click_viz$cat
     cat_click <- NULL
     slug_click <- NULL

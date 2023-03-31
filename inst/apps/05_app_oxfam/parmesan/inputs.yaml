@@ -1,10 +1,11 @@
 ---
 id_slug:
   show: true
-  input_type: selectizeInput
+  input_type: selectInput
   input_params:
     label: slug_title
     choices: slug_opts()
+    selected: slug_select()
 id_slug_comparisons:
   show: true
   show_if:
@@ -14,7 +15,7 @@ id_slug_comparisons:
   input_params:
     label: slug_comparisons
     choices: slug_comparisons_opts()
-    selected: null
+    selected: slug_comparisons_select()
     multiple: true
     options:
       maxItems: 1
@@ -30,7 +31,7 @@ id_unidad:
   input_params:
     label: slug_unidad
     choices: slug_unidad_opts()
-    selected: all
+    selected: slug_unidad_select()
     multiple: true
     options:
       plugins:
@@ -45,13 +46,14 @@ id_slug_agg:
   input_params:
     label: slug_agg
     choices: slug_agg_opts()
+    selected: slug_agg_select()
 id_slug_countries:
   show: true
   input_type: selectizeInput
   input_params:
     label: slug_countries
     choices: slug_countries_opts()
-    selected: all
+    selected: slug_countries_sel()
     multiple: true
     options:
       plugins:
@@ -66,8 +68,8 @@ id_slug_dates:
   input_params:
     min: min_date()
     max: max_date()
-    start: min_date()
-    end: max_date()
+    start: min_date_sel()
+    end: max_date_sel()
     startLabel: date_start()
     endLabel: date_end()
     locale: lang()
@@ -82,6 +84,7 @@ id_date_format:
   input_params:
     label: date_format_label
     choices: date_format_opts()
+    selected: date_format_sel()
 
 
 
