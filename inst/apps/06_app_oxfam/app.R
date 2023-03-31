@@ -168,7 +168,7 @@ server <-  function(input, output, session) {
         colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","unidad","fecha_ct")
         }
         else  {
-         colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor")
+         colnames(t) <-  c("id", "slug", "slug_en","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","fecha_ct")
         }
       }
 
@@ -196,7 +196,8 @@ server <-  function(input, output, session) {
 
             }
             else
-            colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor")
+            colnames(t) <-  c("id", "slug", "slug_es","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","fecha_ct")
+
           }
           temp <- rbind(temp,t)
         })
@@ -217,14 +218,14 @@ server <-  function(input, output, session) {
 
            t  <- as.data.frame(oxfam_6$pt[as.vector(indicador$indicador[i])])
             if(ncol(t)==10)
-              colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","fecha_ct")
+              colnames(t) <-  c("id", "slug","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","fecha_ct")
             else{
               if(ncol(t) == 11) {
                 colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","unidad","fecha_ct")
 
             }
               else
-              colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor")
+              colnames(t) <-  c("id", "slug", "slug_pt","fecha", "pais_es", "pais_en", "pais_pt","valor","unidad_id","fecha_ct")
             }
             temp <- rbind(temp,t)
 
@@ -957,6 +958,8 @@ server <-  function(input, output, session) {
     req(data_prep())
     req(actual_but$active)
     dta <- data_prep()
+    print(dta |> head(1))
+    #return()
     Unidad$value <-NULL
     title_x_axis$value <- NULL
     title_y_axis$value <- NULL
@@ -1038,7 +1041,7 @@ server <-  function(input, output, session) {
         if(actual_but$active %in% c("sankey") & Indicador$value  == "doses_delivered_vaccine_donations")  group_var = c("pais","donante")
         if(actual_but$active %in% c("sankey") & Indicador$value  == "geopolitics_vaccine_donations")  group_var = c("pais","unidad")
         if(actual_but$active %in% c("barras") &  Indicador$value  == "school_closures"){
-          group_var = c("unidad","pais")
+          group_var = c("unidad_id","pais")
           trad <- "count"
           title_y_axis$value <-  i_(trad,lang=lang())
         }
@@ -1056,7 +1059,7 @@ server <-  function(input, output, session) {
 
         }
         if(actual_but$active %in% c("linea") &  Indicador$value  == "school_closures") {
-          group_var = c("unidad","fecha")
+          group_var = c("unidad_id","fecha")
           #req(input$country)
 
           filtro <- input$country
@@ -1157,7 +1160,7 @@ server <-  function(input, output, session) {
           if(ncol(dta)>8) dta <- dta |> select(!unidad) |> distinct()
           print("dta")
           print(dta |> head(1))
-
+          #return()
           data_result <- var_aggregation(data = dta,
                                          # dic = dic,
                                          agg =trad,
@@ -1166,7 +1169,8 @@ server <-  function(input, output, session) {
                                          group_var =group_var)
 
 
-
+          print(data_result)
+          #return()
           if(actual_but$active %in% c("barras") &  Indicador$value == "product_pipeline"){
             data_result$unidad <- as.factor( data_result$unidad )
             data_result$pais <- as.factor( data_result$pais )
@@ -1384,10 +1388,10 @@ server <-  function(input, output, session) {
         if(actual_but$active %in% c("mapa"))   names(data_result) = i_(c("pais", trad,"pais_lang"),lang=lang())
 
         if(actual_but$active %in% c("barras") & Indicador$value  == "school_closures"){
-          names(data_result) = i_(c("unidad","pais",trad),lang=lang())
+          names(data_result) = i_(c("unidad_id","pais",trad),lang=lang())
         }
         if(actual_but$active %in% c("linea") & Indicador$value  == "school_closures"){
-          names(data_result) = i_(c("unidad","fecha",trad),lang=lang())
+          names(data_result) = i_(c("unidad_id","fecha",trad),lang=lang())
         }
         if(actual_but$active %in% c("mapa","barras") &  Indicador$value == "product_pipeline"){
           names(data_result) = i_(c("pais","unidad",trad),lang=lang())
@@ -1397,7 +1401,7 @@ server <-  function(input, output, session) {
         if( "interagency_response_plan_numinneed" %in% c(Indicador$value)) {
           names(data_result) = c(i_("pais", lang()), i_("fecha", lang()),i_(trad,lang()))
 
-          group_var <- c("pais","fecha")
+          #group_var <- c("pais","fecha")
         }
 
         if( "worldbank_gavi_vaccine_financing" %in% c(Indicador$value) ) {
@@ -1433,8 +1437,8 @@ server <-  function(input, output, session) {
       }
     }
 
-
-
+  print( data_result)
+  #return()
     data_result
   })
   ###############calendar pending
@@ -1802,7 +1806,7 @@ server <-  function(input, output, session) {
     # input$last_click
     # quest_choose()
   #data_prep() |> head(1)
-  # data_viz()
+  data_viz()
   #  data_table()
    #get_basic_lang_data()
 
