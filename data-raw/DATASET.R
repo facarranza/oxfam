@@ -100,6 +100,10 @@ oxfam_data <- list(
 usethis::use_data(oxfam_data, overwrite = TRUE)
 
 dash_6 <- read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "dashboard_6")
+ind_q <- dash_6 |> group_by(pregunta) |> group_indices()
+dash_6$ind_pregunta <- paste0("q_", ind_q)
+ind_sq <- dash_6 |> group_by(subpergunta) |> group_indices()
+dash_6$ind_subpregunta <- paste0("q_", ind_q, "_", ind_sq)
 dash_6$visualizacion <- gsub("\\s*(\\([^()]*(?:(?1)[^()]*)*\\))", "", dash_6$visualizacion, perl=TRUE)
 dash_6 <- dash_6 |> separate_rows(indicador, sep = ",")
 ind_6 <- unique(dash_6$indicador)
@@ -126,7 +130,7 @@ oxfam_6 <- list(
 
 usethis::use_data(oxfam_6, overwrite = TRUE)
 
-questions_dash_6 <- dash_6 |> select(pregunta_es = pregunta, subpergunta_es = subpregunta,
+questions_dash_6 <- dash_6 |> select(ind_pregunta, ind_subpregunta,pregunta_es = pregunta, subpergunta_es = subpregunta,
                                      pregunta_en = question, subpregunta_en = subquestion,
                                      pregunta_pt = pergunta, subpregunta_pt = subpergunta,
                                      indicador, viz = visualizacion)
