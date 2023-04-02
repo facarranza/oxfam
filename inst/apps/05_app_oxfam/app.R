@@ -290,11 +290,6 @@ server <-  function(input, output, session) {
 
   })
 
-  # observeEvent(input$viz_selection, {
-  #
-  # })
-  #
-
 
   output$viz_icons <- renderUI({
     req(lang())
@@ -397,6 +392,19 @@ server <-  function(input, output, session) {
     if (is.null(url_par()$inputs$agg)) return()
     url_par()$inputs$agg
   })
+
+
+  value_agg <- reactiveValues(id = NULL)
+
+  observe({
+    if (is.null(slug_agg_show())) return()
+    if (!is.null(input$id_slug_agg)) {
+      value_agg$id <- input$id_slug_agg
+      if (!slug_agg_show()) value_agg$id <- NULL
+    }
+  })
+
+
 
   data_filter_slug <- reactive({
     req(lang())
@@ -654,7 +662,7 @@ server <-  function(input, output, session) {
     req(data_countries())
     req(viz_select())
     if (is.null(have_date())) return()
-    agg <- input$id_slug_agg
+    agg <- value_agg$id
     if (is.null(slug_agg_show())) agg <- NULL
     df <- data_countries()
     if (have_date()) {
@@ -709,10 +717,14 @@ server <-  function(input, output, session) {
     var_num <- "valor"
     var_cat_viz <- var_cat
     if (viz == "map") var_cat_viz <- "pais_en"
-    agg <- input$id_slug_agg
+    agg <- value_agg$id
     if (!is.null(agg)) {
       label_agg <- i_(agg, lang())
+    } else {
+      agg <- "sum"
+      label_agg <- i_("valor", lang())
     }
+
     var <- list(
       agg = agg,
       cat = c(var_cat, var_date),
@@ -721,12 +733,6 @@ server <-  function(input, output, session) {
       var_viz = var_cat_viz,
       var_viz_date = var_date
     )
-
-    # if (slug_selected()[1] %in% c(#"product_pipeline",
-    #   "doses_delivered_vaccine_donations", "immunization_campaigns",
-    #   "covid_vaccine_agreements","geopolitics_vaccine_donations")) {
-    #   print("PENDIENTE")
-    # }
 
     if (slug_selected()[1] %in% "product_pipeline") {
       if (viz != "map") {
@@ -790,6 +796,10 @@ server <-  function(input, output, session) {
       var <- modifyList(var, var_sankey)
     }
 
+
+    print("##########")
+    print(var)
+
     var
   })
 
@@ -805,12 +815,13 @@ server <-  function(input, output, session) {
     var_cat <- var_viz()$cat
     if (is.null(var_cat)) var_cat <- var_viz()$var_viz_date
     var_num <- var_viz()$num
-    label_agg <- var_viz()$label_agg
-    agg <- var_viz()$agg
-    agg_extra <- agg
-    if (agg == "count") agg_extra <- "sum"
+
 
     if (!is.null(var_viz()$agg)) {
+      label_agg <- var_viz()$label_agg
+      agg <- var_viz()$agg
+      agg_extra <- agg
+      if (agg == "count") agg_extra <- "sum"
       data <- dsdataprep::aggregation_data(data = data,
                                            agg = agg,
                                            agg_name = label_agg,
@@ -1167,7 +1178,7 @@ server <-  function(input, output, session) {
     df <- data_click()
     #print(df)
     if (nrow(df) == 0) return()
-    if (is.null(input$id_slug_agg)) return()
+    if (is.null(value_agg$id)) return()
     if (!"fecha" %in% names(df)) return()
     if (length(slug_selected()) == 1) {
       if (viz_select() == "scatter") return()
@@ -1200,7 +1211,7 @@ server <-  function(input, output, session) {
 
 
     var_num <- "valor"
-    label_agg <- i_(input$id_slug_agg, lang())
+    label_agg <- i_(value_agg$id, lang())
     if ("valor" %in% names(df)) var_num <- "valor"
     theme <- viz_theme()
     theme$theme$tooltip_template <- paste0("{fecha} <br/> ",
@@ -1220,7 +1231,7 @@ server <-  function(input, output, session) {
       }
     }
 
-    agg <- input$id_slug_agg
+    agg <- value_agg$id
     if (length(slug_selected()) == 1) {
       if (slug_selected()[1] == "school_closures") {
         agg <- "count"
