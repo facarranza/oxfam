@@ -1,0 +1,33 @@
+data_filter: Filtros
+data_viz: Visualización
+data_dtail: Detalle
+slug_title: Seleccione un indicador
+slug_comparisons: Selecciona un indicador a comparar
+map: Mapa
+line: Línea
+bar: Barras
+treemap: Treemap
+scatter: Dispersión
+table: Tabla
+placeholder: Da click
+slug_countries: País
+all: Todos
+date_start: Desde
+date_end: Hasta
+slug_agg: Variable numérica
+sum: Total
+mean: Promedio
+click: Da clic sobre la visualización para ver más información.
+book_id: Lee mas libros
+pais: País
+fecha: Fecha
+pregunta: Pregunta
+subpregunta: Subpregunta
+download: Descargar
+fabricante: Fabricante
+pais_donante: Pais donante
+unidad: Unidad
+valor: Valor
+slug: Indicador
+slug_en: Indicador
+count: Conteo
