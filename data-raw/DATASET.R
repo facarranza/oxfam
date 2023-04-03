@@ -135,5 +135,10 @@ questions_dash_6 <- dash_6 |> select(ind_pregunta, ind_subpregunta,pregunta_es =
                                      pregunta_pt = pergunta, subpregunta_pt = subpergunta,
                                      indicador, viz = visualizacion)
 
+questions_dash_6$viz <- gsub("linea", "line", questions_dash_6$viz)
+questions_dash_6$viz <- gsub("mapa", "map", questions_dash_6$viz)
+questions_dash_6$viz <- gsub("scatter_plot", "scatter", questions_dash_6$viz)
+questions_dash_6$viz <- gsub("barras|barras_agrupadas", "bar", questions_dash_6$viz)
+
 usethis::use_data(questions_dash_6, overwrite = TRUE)
 #https://jsfiddle.net/gh/get/library/pure/highcharts/highcharts/tree/master/samples/highcharts/demo/combo-multi-axes
