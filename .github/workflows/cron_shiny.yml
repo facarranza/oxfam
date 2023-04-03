@@ -16,7 +16,7 @@ jobs:
         with:
           cache-version: 2
           extra-packages: |
-            any::pkgload, any::rcmdcheck, any::XML, any::devtools
+            any::pkgload, any::rcmdcheck, any::devtools
       - name: Execute Script
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
