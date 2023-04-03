@@ -130,7 +130,7 @@ oxfam_6 <- list(
 
 usethis::use_data(oxfam_6, overwrite = TRUE)
 
-questions_dash_6 <- dash_6 |> select(ind_pregunta, ind_subpregunta,pregunta_es = pregunta, subpergunta_es = subpregunta,
+questions_dash_6 <- dash_6 |> select(ind_pregunta, ind_subpregunta, pregunta_es = pregunta, subpregunta_es = subpregunta,
                                      pregunta_en = question, subpregunta_en = subquestion,
                                      pregunta_pt = pergunta, subpregunta_pt = subpergunta,
                                      indicador, viz = visualizacion)
