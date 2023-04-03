@@ -22,6 +22,13 @@ jobs:
           sudo apt install -y libcurl4-openssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libssl-dev libmagick++-dev libv8-dev  libnode-dev libudunits2-dev libgdal-dev libprotobuf-dev libjq-dev protobuf-compiler libprotobuf-dev libprotoc-dev libpoppler-cpp-dev libarchive-dev
           Rscript -e "install.packages('usethis', dependencies=TRUE)"
           Rscript -e "install.packages('rsconnect')"
+          Rscript -e  "devtools::install_github('datasketch/shinyinvoer', ref = 'c0fc3d121ababa454ca55786fe855d1bc5f5a7e7')"
+          Rscript -e  "devtools::install_github('datasketch/shi18ny', ref = '37f276f1081f1f0a4c99f42f4f8038dbe999ba9a')"
+          Rscript -e  "devtools::install_github('datasketch/parmensan', ref = 'd361f2047a6bb366a0adc271f0e264b62bd1e6e8')"
+          Rscript -e  "devtools::install_github('datasketch/hgchmaps', ref = 'c55d8909afa8f824b1fda907576c2689c542eb11')"
+          Rscript -e  "devtools::install_github('datasketch/dsmodules', ref = 'e32ed68e187b98856b973b36198d80cd5af9b14b')"
+          Rscript -e  "devtools::install_github('datasketch/dsdataprep', ref = '05188ef757bb25bcb336494c12cc0c17ce637f0d')"
+          Rscript -e  "devtools::install_github('datasketch/dsapptools', ref = 'e564e3499524db1884f9ea57d60cff65ab00cbc5')"
           Rscript -e  "devtools::install_github('datasketch/dsvizopts', ref = 'b5dad23f6b449a7a013e7e730d30056d81f41cf8')"
           Rscript -e  "remotes::install_github('datasketch/hgchmagic', ref = '0fa4d6b72bc253690e3d29daf7e3a3d080899479')"
           Rscript -e  "devtools::install_github('datasketch/oxfam', ref = '007a0db77452c29b5cb7c1500162972deb92ff12', auth_token = NULL)"
