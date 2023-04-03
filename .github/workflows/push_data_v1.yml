@@ -11,6 +11,9 @@ jobs:
           use-public-rspm: true
           r-version: '4.2.2'
       - name: Execute Script
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
         run: |
           sudo apt install -y libcurl4-openssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libssl-dev libmagick++-dev libv8-dev  libnode-dev libudunits2-dev libgdal-dev libprotobuf-dev libjq-dev protobuf-compiler libprotobuf-dev libprotoc-dev libpoppler-cpp-dev libarchive-dev
           Rscript -e "install.packages('usethis', dependencies=TRUE)"
@@ -23,7 +26,7 @@ jobs:
           Rscript -e "install.packages('DBI')"
           Rscript -e "install.packages('googlesheets4')"
           Rscript -e "install.packages('devtools',dependencies=TRUE)"
-          Rscript -e  "devtools::install_github('datasketch/oxfam', ref = '007a0db77452c29b5cb7c1500162972deb92ff12')"
+          Rscript -e  "devtools::install_github('datasketch/oxfam', ref = '007a0db77452c29b5cb7c1500162972deb92ff12', auth_token = NULL)"
           Rscript "data-raw/DATADRIVE.R"
           Rscript "data-raw/DATASET.R"
       - name: Commit files

@@ -26,7 +26,7 @@ jobs:
           Rscript -e "install.packages('rsconnect')"
           Rscript -e  "devtools::install_github('datasketch/dsvizopts', ref = 'b5dad23f6b449a7a013e7e730d30056d81f41cf8')"
           Rscript -e  "devtools::install_github('datasketch/hgchmagic', ref = '0fa4d6b72bc253690e3d29daf7e3a3d080899479')"
-          Rscript -e  "devtools::install_github('datasketch/oxfam', ref = '007a0db77452c29b5cb7c1500162972deb92ff12')"
+          Rscript -e  "devtools::install_github('datasketch/oxfam', ref = '007a0db77452c29b5cb7c1500162972deb92ff12', auth_token = NULL)"
 
 
       - name: Execute Directory
