@@ -1,0 +1,45 @@
+name: update_shiny_push_v1_git_v0
+on:  push
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: fregante/setup-git-user@v1
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+          r-version: '4.2.1'
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 2
+          extra-packages: |
+            any::pkgload, any::rcmdcheck, any::XML
+      - name: Execute Script
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sudo apt install -y libcurl4-openssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libssl-dev libmagick++-dev libv8-dev  libnode-dev libudunits2-dev libgdal-dev libprotobuf-dev libjq-dev protobuf-compiler libprotobuf-dev libprotoc-dev libpoppler-cpp-dev libarchive-dev
+          Rscript -e "install.packages('usethis', dependencies=TRUE)"
+          Rscript -e "install.packages('rsconnect')"
+          Rscript -e "install.packages('devtools',dependencies=TRUE)"
+          Rscript -e  "devtools::install_github('datasketch/dsvizopts', ref = 'b5dad23f6b449a7a013e7e730d30056d81f41cf8')"
+          Rscript -e  "devtools::install_github('datasketch/hgchmagic', ref = '0fa4d6b72bc253690e3d29daf7e3a3d080899479',dependencies=TRUE)"
+          Rscript -e  "devtools::install_github('datasketch/oxfam', ref = '007a0db77452c29b5cb7c1500162972deb92ff12')"
+
+      - name: Execute Directory
+        run: |
+          pwd
+          cd inst
+          cd apps
+          cd 05_app_oxfam
+          pwd
+
+      - name: Deploy to shinyapps.io
+        # Continuous deployment only for pushes to the main / master branch
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        env:
+          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
+          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
+        run: Rscript deploy.R
