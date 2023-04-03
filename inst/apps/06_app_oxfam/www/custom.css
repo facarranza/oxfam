@@ -1,17 +1,62 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@200;300;500&display=swap');
 
 html, body {
- font-family: 'IBM Plex Sans',  normal;
+ font-family: 'IBM Plex Sans', sans-serif;
 }
 
 .layout-panels {
   background: #FFF;
 }
 
-.panel, .controls-style_body{
+.panel {
   border: 1px solid #252525;
   font-family: 'IBM Plex Sans';
-  box-shadow:0px !important;
+}
+
+.panel-body {
+  flex-grow: 1;
+  margin-top: -2rem;
+  padding: 0 1rem;
+}
+
+.head-viz {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+
+#viz-style_body {
+  margin-top: 0rem !important;
+}
+
+
+
+.panel-header-title {
+ font-family: 'IBM Plex Sans';
+ font-weight: 500;
+ letter-spacing: 0.09em;
+ color: #252525;
+ text-align: left;
+ text-transform: capitalize;
+ font-size: 16px;
+ line-height: 21px;
+}
+
+.panel-header {
+  align-items: start;
+  border-top: 1px solid #252525;
+  padding: 1rem 1rem 1rem 1rem;
+}
+
+
+.top-malibu {
+  border-top: 0px;
+}
+
+
+.top-chardonnay {
+  border-top: 0px;
 }
 
 .needed, .needed_sub{
@@ -37,63 +82,6 @@ html, body {
  margin-top: 15px !important;
 }
 
-
-#viz-style_body {
-  margin-top: 0rem !important;
-}
-#viz-style {
-  style: flex-grow !important;
-}
-
-.panel-header_right{
-  width: 1000px !important;
-
-
-}
-
-.head-viz{
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  height: 40px !important;
-  padding-left: 20px  !important;
-
-}
-
-
-#viz_icons{
-  margin-top: 0px important;
-}
-
-.panel-header-title {
- font-family: 'IBM Plex Sans';
- font-weight: 500;
- letter-spacing: 0.09em;
- color: #252525;
- text-align: left;
- text-transform: capitalize;
- font-size: 16px;
- line-height: 21px;
- font-size: 16px;
-}
-
-.panel-header {
-  align-items: start;
-  border-top: 1px solid #252525;
-  padding: 1rem 1rem 1rem 1rem;
-
-}
-
-
-.top-malibu {
-  border-top: 10px !important;
-  /*border: 2px !important;*/
-}
-
-
-.top-chardonnay {
-  border-top: 10px;
-}
 
 .basic_active {
   color: #FFFFFF !important;
@@ -192,17 +180,27 @@ html, body {
   color: #FAFAFA !important;
 }
 
+.buttons-group .button-style:hover {
+  background-color:#ffffff !important;
+}
+
+
 .buttons-group .button-style {
   width: 30px !important;
   background-color: #252525 !important;
 }
 
+.buttons-group .button-style.active-btn {
+ background-color: #47BAA6 !important;
+}
 
 .basic_active_sub:hover{
   background-color: #252525 !important;
   color:#FAFAFA;
 
 }
+
+
 
 
 .btn .btn-default .action-button {
@@ -263,20 +261,21 @@ html, body {
 
 
 .dropdown-action-trigger {
-  font-family: 'IBM Plex Sans',  normal !important;
-  background-color: #FFF !important;
-  border: 1px solid #252525 !important;
-  border-radius: 20px !important;
-  color: #252525 !important;
-  padding: 0.5rem 0.5rem !important;
-  /*margin-left: 500px !important;*/
+  background-color: #FF5A32 !important;
+  font-family: inherit !important;
+  border: 1px solid #FF5A32 !important;
+  border-radius: 4px !important;
+  color: #FFFFFF !important;
+  font-size: 20px !important;
+  padding: 0rem !important;
+  height: 35px;
 }
 
-.dropdown-action-item {
-    font-family: 'IBM Plex Sans',  normal !important;
-    letter-spacing: -0.2px !important;
-    color: #212121 !important;
+
+.dropdown-action-list.is-open {
+  width: max-content !important;
 }
+
 
 .dropdown-toggle{
 border: 1px solid #1B365D;
@@ -287,10 +286,3 @@ border-radius: 11px;
   width: max-content !important;
 }
 
-#downMap,#downTree,#downBar {
-  float: right;
-}
-
-#download_map-dropdown,#download_tree-dropdown,#download_bar-dropdown {
-    width: 50px !important;
-}
