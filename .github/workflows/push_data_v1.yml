@@ -25,6 +25,7 @@ jobs:
           Rscript -e "install.packages('readr')"
           Rscript -e "install.packages('DBI')"
           Rscript -e "install.packages('googlesheets4')"
+          Rscript -e "install.packages('RPostgres')"
           Rscript -e "install.packages('devtools',dependencies=TRUE)"
           Rscript -e  "devtools::install_github('datasketch/oxfam', ref = '007a0db77452c29b5cb7c1500162972deb92ff12', auth_token = NULL)"
           Rscript "data-raw/DATADRIVE.R"
