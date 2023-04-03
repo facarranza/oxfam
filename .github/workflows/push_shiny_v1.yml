@@ -24,7 +24,7 @@ jobs:
           Rscript -e "install.packages('rsconnect')"
           Rscript -e  "devtools::install_github('datasketch/shinyinvoer', ref = 'c0fc3d121ababa454ca55786fe855d1bc5f5a7e7')"
           Rscript -e  "devtools::install_github('datasketch/shi18ny', ref = '37f276f1081f1f0a4c99f42f4f8038dbe999ba9a')"
-          Rscript -e  "devtools::install_github('datasketch/parmensan', ref = 'd361f2047a6bb366a0adc271f0e264b62bd1e6e8')"
+          Rscript -e  "devtools::install_github('datasketch/parmesan', ref = 'd361f2047a6bb366a0adc271f0e264b62bd1e6e8')"
           Rscript -e  "devtools::install_github('datasketch/hgchmaps', ref = 'c55d8909afa8f824b1fda907576c2689c542eb11')"
           Rscript -e  "devtools::install_github('datasketch/dsmodules', ref = 'e32ed68e187b98856b973b36198d80cd5af9b14b')"
           Rscript -e  "devtools::install_github('datasketch/dsdataprep', ref = '05188ef757bb25bcb336494c12cc0c17ce637f0d')"
