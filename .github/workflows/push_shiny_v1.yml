@@ -19,9 +19,14 @@ jobs:
         env:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sudo apt install -y libcurl4-openssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libssl-dev libmagick++-dev libv8-dev  libnode-dev libudunits2-dev libgdal-dev libprotobuf-dev libjq-dev protobuf-compiler libprotobuf-dev libprotoc-dev libpoppler-cpp-dev libarchive-dev
+          sudo apt install -y libcurl4-openssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libssl-dev libmagick++-dev libv8-dev  libnode-dev libudunits2-dev libgdal-dev libprotobuf-dev libjq-dev protobuf-compiler libprotobuf-dev libprotoc-dev libpoppler-cpp-dev libarchive-dev libglpk-dev
           Rscript -e "install.packages('usethis', dependencies=TRUE)"
+          Rscript -e "install.packages('urlshorteneR', dependencies=TRUE)"
+          Rscript -e "install.packages('shinyjs', dependencies=TRUE)"
+          Rscript -e "install.packages('dplyr', dependencies=TRUE)"
+          Rscript -e "install.packages('shiny', dependencies=TRUE)"
           Rscript -e "install.packages('rsconnect')"
+          Rscript -e  "devtools::install_github('datasketch/paletero', ref = '2e25920b6c71651f153684e669913196e9a8a79a')"
           Rscript -e  "devtools::install_github('datasketch/makeup', ref = 'c94b29d21665ef8778fba4489cbc4b9634421308')"
           Rscript -e  "devtools::install_github('datasketch/dstools', ref = '6bd2143a13185cc0acf9552b4858db1526ebe831')"
           Rscript -e  "devtools::install_github('datasketch/dsdataprep', ref = '05188ef757bb25bcb336494c12cc0c17ce637f0d')"
