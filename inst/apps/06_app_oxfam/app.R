@@ -37,7 +37,7 @@ ui <- panelsPage(
         id = "controls-style",
         collapse = FALSE,
         can_collapse = FALSE,
-        width = 285,
+        width = 300,
         body = div(
           #div(id = "myDiv", style = "font-family: 'IBM Plex Sans'; font-weight: 500; font-size: 14px; line-height: 18.2px;,  background-color:#252525;" ),
           uiOutput("button_questions")
@@ -52,7 +52,7 @@ ui <- panelsPage(
         id = "controls-style2",
         
         can_collapse = FALSE,
-        width = 285,
+        width = 300,
         body = div(
           
           #shinycustomloader::withLoader(
@@ -252,29 +252,34 @@ server <-  function(input, output, session) {
   
   
   data_slug <- reactive({
-    req(questions_select())
-    req(viz_select())
-    slug <- unique(questions_select()$indicador)
-    if (length(slug) == 1) {
-      d <- oxfam_6[[lang()]][[slug]]
-    } else {
-      ls <- oxfam_6[[lang()]][slug]
-      if (viz_select() == "line") {
-        id_valor <- grep("valor", names(ls[[1]]))
-        names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
-        id_valor <- grep("valor", names(ls[[2]]))
-        names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
-        d <- ls |> purrr::reduce(inner_join,
-                                 by = c("fecha", "pais_en", "pais_es", "pais_pt"),
-                                 multiple = "any")
+    tryCatch({
+      req(questions_select())
+      req(viz_select())
+      slug <- unique(questions_select()$indicador)
+      if (length(slug) == 1) {
+        d <- oxfam_6[[lang()]][[slug]]
       } else {
-        d <- ls |> bind_rows()
-        if ("valor" %in% names(d)) {
-          d <- d |> tidyr::drop_na(valor)
+        ls <- oxfam_6[[lang()]][slug]
+        if (viz_select() %in% c("line", "bar")) {
+          id_valor <- grep("valor", names(ls[[1]]))
+          names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
+          id_valor <- grep("valor", names(ls[[2]]))
+          names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
+          d <- ls |> purrr::reduce(inner_join,
+                                   by = c("fecha", "pais_en", "pais_es", "pais_pt"),
+                                   multiple = "any")
+        } else {
+          d <- ls |> bind_rows()
+          if ("valor" %in% names(d)) {
+            d <- d |> tidyr::drop_na(valor)
+          }
         }
       }
-    }
-    d
+      d
+    },
+    error = function(cond) {
+      return()
+    })
   })
   
   
@@ -283,7 +288,7 @@ server <-  function(input, output, session) {
     req(viz_select())
     slug <- unique(questions_select()$indicador)
     
-    if(viz_select() %in% c("bar","line") &  "school_closures" %in% slug) {
+    if(viz_select() %in% c("bar","line") & "school_closures" %in% slug) {
       sel_country <- unique(data_slug()[[paste0("pais_", lang())]])
       shiny::selectizeInput("country",
                             label= i_("pais",lang()), 
@@ -292,24 +297,65 @@ server <-  function(input, output, session) {
                             multiple =TRUE,
                             options = list(
                               placeholder = "All",
-                              plugins=list("remove_button","drag_drop"))
+                              plugins = list("remove_button","drag_drop"))
       )
     }
-  
+    
   })
   
   
   
+  # Filtro y duplicados -----------------------------------------------------
   
   
+  data_filter <- reactive({
+    req(data_slug())
+    df <- req(data_slug())
+    slug <- unique(questions_select()$indicador)
+    paste_fnc <- function (x, collapse = "") {
+      paste0(trimws(unique(x)), collapse = collapse)
+    }
+    
+    if(viz_select() %in% c("bar","line") & "school_closures" %in% slug) {
+      if (!is.null(input$country)) {
+        pais <- paste0("pais_", lang())
+        df <- df |> filter(!!sym(pais) %in% input$country)
+      }
+    }
+    
+    if ("id" %in% names(df)) {
+      if (length(unique(df$id)) != nrow(df)) {
+        df1 <- df |> group_by(id) |>
+          summarise(dplyr::across(dplyr::everything(), list(paste_fnc)))
+        names(df1) <- names(df)
+        df <- df1
+        df$valor <- as.numeric(df$valor)
+      }
+    }
+    
+    df
+  })
   
+
+  # Variables a visualizar --------------------------------------------------
+  
+  
+  var_viz <- reactive({
+    req(viz_select())
+    req(data_filter())
+    slug <- unique(questions_select()$indicador)
+
+    viz <- viz_select()
+    viz
+  })
+  
+
   output$debug <- renderPrint({
     list(
-      ques_sel(),
-      subques_sel$id,
-      data_slug()
+      var_viz()
     )
   })
+
   
   
   
