@@ -310,6 +310,8 @@ server <-  function(input, output, session) {
   
   data_filter <- reactive({
     req(data_slug())
+    req(viz_select())
+    viz <- viz_select()
     df <- req(data_slug())
     slug <- unique(questions_select()$indicador)
     paste_fnc <- function (x, collapse = "") {
@@ -333,29 +335,251 @@ server <-  function(input, output, session) {
       }
     }
     
+    if (length(slug) == 2) {
+      if (viz == "bar") {
+        df$fecha <- format(df$fecha, "%Y-%m")
+      }
+    }
+    
     df
   })
   
-
-  # Variables a visualizar --------------------------------------------------
   
+  
+  
+  # traductor de slugs ------------------------------------------------------
+  
+  slug_trans <- reactive({
+    req(questions_select())
+    slug_id <- unique(questions_select()$indicador)
+    slug_df <- slug_translate |> filter(slug %in% slug_id)
+    slug_df[[paste0("slug_", lang())]]
+  })
+  
+  
+  # Variables a visualizar --------------------------------------------------
   
   var_viz <- reactive({
     req(viz_select())
+    viz <- viz_select() 
+    if (viz == "table") return()
+    req(slug_trans())
     req(data_filter())
+    df <- data_filter()
+    
     slug <- unique(questions_select()$indicador)
-
-    viz <- viz_select()
-    viz
+    pais <- paste0("pais_", lang())
+    if (viz == "map") pais <- "pais_en"
+    var_viz <- c(pais, "fecha", "valor")
+    type_viz <- "CatDatNum"
+    if (length(slug) == 1) {
+      if (length(unique(df$fecha)) == 1 | 
+          viz %in% c("map", "bar", "treemap", "sankey")) {
+        var_viz <- setdiff(var_viz, "fecha")
+        type_viz <- "CatNum"
+      }
+      # if (length(unique(df$unidad)) > 1) {
+      #   var_viz <- gsub("valor", "unidad", var_viz)
+      # }
+    } else {
+      if (viz != "scatter") {
+        type_viz <- "DatNumNum"
+        if (viz == "bar") type_viz <- "CatNumNum"
+        var_viz <- c("fecha", slug_trans())
+      }
+    }
+    
+    list(
+      var_viz = var_viz,
+      type_viz = type_viz
+    )
+    
   })
   
-
-  output$debug <- renderPrint({
-    list(
-      var_viz()
-    )
+  
+  
+  # Tipo de viz -------------------------------------------------------------
+  
+  
+  viz_func <- reactive({
+    req(viz_select())
+    req(var_viz())
+    
+    if (viz_select() == "table") return()
+    viz <- NULL
+    if (viz_select() == "map") {
+      viz <- "hgch_choropleth_GnmNum"
+    } else {
+      viz <- paste0("hgch_", viz_select(), "_", var_viz()$type_viz)
+    }
+    
+    viz
+    
   })
-
+  
+  
+  # data para graficar ------------------------------------------------------
+  
+  data_viz <- reactive({
+    req(data_filter())
+    req(var_viz())
+    
+    data <- data_filter()
+    id_ct <- grep("fecha_ct", names(data))
+    data <- data[,-id_ct]
+    
+    var <- var_viz()$var_viz
+    if (length(unique(questions_select()$indicador)) == 2) {
+      data <- data |> select({{ var }})
+    } else {
+      data <- data |> select({{ var }}, everything())
+    }
+    
+    data
+    
+  })
+  
+  
+  viz_theme <- reactive({
+    req(viz_select())
+    req(slug_trans())
+    viz <- viz_select()
+    title <- paste0(slug_trans(), collapse = " vs ")
+    opts <- list(
+      theme = list(
+        title = title,
+        title_align = "center",
+        tiltle_size = 15,
+        marker_radius = 0,
+        text_family = "Barlow",
+        legend_family = "Barlow",
+        text_color = "#0F1116",
+        background_color = "#FFFFFF",
+        grid_x_width = 0,
+        label_wrap = 70,
+        format_sample_num = "1,234.56",
+        axis_line_y_size = 1,
+        axis_line_x_size = 1,
+        axis_line_color = "#CECECE",
+        palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
+      )
+    )
+    
+   
+    if (viz == "map") {
+      opts$map_name <- "latamcaribbean_countries"
+      opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
+      opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} <br/>")
+    } 
+    opts
+    
+  })
+  
+  
+  
+  hgch_viz <- reactive({
+    req(viz_func())
+    req(data_viz())
+    req(viz_theme())
+    
+    do.call(viz_func(), list(
+      data = data_viz(),
+      opts = viz_theme()
+    ))
+  })
+  
+  output$viz_hgch <- renderHighchart({
+    req(hgch_viz())
+    hgch_viz()
+  })
+  
+  data_down <- reactive({
+    req(data_filter())
+    df <- data_filter()
+    var_select <- c(c("id", paste0("slug_", lang()),
+                      paste0("pais_", lang())), "fecha", "valor")
+    
+    if ("unidad" %in% names(df)) {
+      var_select <- c(var_select, "unidad")
+    }
+    df <- df[,var_select]
+    names_tr <- i_(names(df), lang = lang())
+    names(df) <- names_tr
+    df
+  })
+  
+  output$dt_viz <- DT::renderDataTable({
+    req(viz_select())
+    if (viz_select() != "table") return()
+    req(data_down())
+    df <- data_down()
+    df <- dplyr::as_tibble(data_down())
+    dtable <- DT::datatable(df,
+                            rownames = F,
+                            selection = 'none',
+                            escape = FALSE,
+                            options = list(
+                              scrollX = T,
+                              fixedColumns = TRUE,
+                              fixedHeader = TRUE,
+                              autoWidth = TRUE,
+                              scrollY = "500px")
+    )
+    dtable
+  })
+  
+  output$viz_view <- renderUI({
+    req(viz_select())
+    height_viz <- 650
+    if(!is.null(input$dimension)) height_viz <- input$dimension[2] - 150
+    
+    if (viz_select() == "table") {
+      DT::dataTableOutput("dt_viz", height = height_viz, width = "100%")
+    } else {
+      withLoader(
+        highchartOutput("viz_hgch", height = height_viz),
+        type = "image", loader = "loading_gris.gif")
+    }
+    
+  })
+  
+  
+  output$downloads <- renderUI({
+    if (is.null(actual_but$active)) return()
+    if (actual_but$active != "table") {
+      dsmodules::downloadImageUI("download_viz",
+                                 dropdownLabel = icon("download"),#i_("download", lang()),
+                                 formats = c("jpeg", "pdf", "png", "html"),
+                                 display = "dropdown", dropdownWidth = 60,
+                                 text = ""#i_("download", lang())
+      )
+    } else {
+      dsmodules::downloadTableUI("dropdown_table",
+                                 dropdownLabel = icon("download"),
+                                 formats = c("csv", "xlsx", "json"),
+                                 display = "dropdown",
+                                 text = ""#i_("download", lang())
+      )
+    }
+  })
+  
+  observe({
+    dsmodules::downloadTableServer("dropdown_table",
+                                   element = reactive(data_down()),
+                                   formats = c("csv", "xlsx", "json"))
+    dsmodules::downloadImageServer("download_viz",
+                                   element = reactive(hgch_viz()),
+                                   lib = "highcharter",
+                                   formats = c("jpeg", "pdf", "png", "html"),
+                                   file_prefix = "plot")
+  })
+  
+  # output$debug <- renderPrint({
+  #   list(
+  #     data_viz()
+  #   )
+  # })
+  
   
   
   
