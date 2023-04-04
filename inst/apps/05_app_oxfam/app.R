@@ -703,9 +703,18 @@ server <-  function(input, output, session) {
   })
 
 
+
+  slug_trans <- reactive({
+    req(slug_selected())
+    slug_id <- slug_selected()
+    slug_df <- slug_translate |> filter(slug %in% slug_id)
+    slug_df[[paste0("slug_", lang())]]
+  })
+
   var_viz <- reactive({
     req(viz_select())
     req(slug_selected())
+    req(slug_trans())
     if (is.null(have_date())) return()
 
     viz <- viz_select()
@@ -770,8 +779,7 @@ server <-  function(input, output, session) {
         var_double <- list(
           var_viz = NULL,
           cat = "fecha",
-          num = setdiff(c(unique(data[[paste0("slug_", lang(), ".x")]]),
-                          unique(data[[paste0("slug_", lang(), ".y")]])), NA)
+          num = slug_trans()
         )
         var_double$label_agg <- var_double$num
         var <- modifyList(var, var_double)
@@ -864,9 +872,15 @@ server <-  function(input, output, session) {
 
   viz_theme <- reactive({
     req(viz_select())
+    req(slug_trans())
     viz <- viz_select()
+    title <- paste0(slug_trans(), collapse = " vs ")
     opts <- list(
       theme = list(
+        title = title,
+        title_align = "center",
+        title_size = 17,
+        title_weight = 500,
         marker_radius = 0,
         text_family = "Barlow",
         legend_family = "Barlow",
