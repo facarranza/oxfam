@@ -136,6 +136,7 @@ questions_dash_6 <- dash_6 |> select(ind_pregunta, ind_subpregunta, pregunta_es 
                                      indicador, viz = visualizacion)
 
 questions_dash_6$viz <- gsub("linea", "line", questions_dash_6$viz)
+questions_dash_6$viz <- gsub("treeemap", "treemap", questions_dash_6$viz)
 questions_dash_6$viz <- gsub("mapa", "map", questions_dash_6$viz)
 questions_dash_6$viz <- gsub("scatter_plot", "scatter", questions_dash_6$viz)
 questions_dash_6$viz <- gsub("barras|barras_agrupadas", "bar", questions_dash_6$viz)
