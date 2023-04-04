@@ -45,7 +45,8 @@ ui <- panelsPage(
         
         footer = tags$a(
           href="https://www.datasketch.co", target="blank",
-          img(src= 'logos_es.svg', style = "border-top: 1px solid #252525;",
+          img(src= 'logos_es.svg',
+              style = "border-top: 1px solid #252525;padding: 5px 0px;",
               align = "left", width = 300, height = 80))
   ),
   panel(title = ui_("subpregunta"),
@@ -106,6 +107,35 @@ server <-  function(input, output, session) {
   observeEvent(lang(),{
     shinyjs::delay(500, uiLangUpdate(input$shi18ny_ui_classes, lang()))
   })
+  
+  
+  output$idiomas <- renderUI({
+    req(lang())
+    
+    available_lang <- setdiff(c("en", "es", "pt"), lang())
+    available_lang <- paste0('<a href="?lang=', available_lang,
+                             '" target="_self">',
+                             stringr::str_to_title(available_lang), "</a>", collapse = "")
+    
+    
+    HTML(
+      paste0(
+        '
+         <div class="dropdown-shared">
+        <button class="dropbtn-shared">',
+        lang(),
+        '</button>
+        <div class="dropdown-shared-content">',
+        available_lang,
+        '</div>
+        </div>
+        '
+        
+      )
+    )
+    
+  })
+  
   
   # url params --------------------------------------------------------------
   
