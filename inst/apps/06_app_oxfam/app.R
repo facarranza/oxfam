@@ -457,16 +457,6 @@ server <-  function(input, output, session) {
 
   })
 
-
-  ########## Pendiente de crear e  implenetar -   Seleccionar variables para agrupar,
-
-  # selecting_group_var <- function(question_group,tipo_grafica="line"){
-  #   group <- NULL
-  #    write.csv(agg_dash_6,"agg_dash_6.csv")
-  #   if(tipo_grafica == "line")  group <- ("fecha","")
-  #
-  # }
-
   # data para graficar ------------------------------------------------------
 
   data_viz <- reactive({
@@ -474,13 +464,8 @@ server <-  function(input, output, session) {
     req(var_viz())
 
     data <- data_filter()
-
-
     id_ct <- grep("fecha_ct", names(data))
     data <- data[,-id_ct]
-    print(data |> head(4))
-    print("##########")
-
     var <- var_viz()$var_viz
     if (length(unique(questions_select()$indicador)) == 2) {
       data <- data |> select({{ var }})
@@ -490,16 +475,22 @@ server <-  function(input, output, session) {
 
       ###########################################################
       #AGR  SECTION , only if required
-      temp <- agg_dash_6 |> filter( ind_pregunta ==  questions_select()$ind_pregunta &  ind_subpregunta == questions_select()$ind_subpregunta  & indicador == questions_select()$indicador & !is.na(agg)) |>
-              select( viz, agg)
+       temp <- agg_dash_6 |> filter( ind_pregunta ==  questions_select()$ind_pregunta &
+                                       ind_subpregunta == questions_select()$ind_subpregunta  &
+                                       indicador == questions_select()$indicador & !is.na(agg) &
+                                       viz == viz_select())  |>
+                            select( viz, agg)
 
-       if(nrow(temp) > 0){
-        temp <- temp |> filter(viz == viz_select() )
-        trad <- temp$agg
-        if(ncol(temp) > 1 ){
-          group_var <- unique(names(data[c(1, var_viz()$num_viz-1)  ]))
-        }
-        else  group_var <- unique(names(data[1]))
+       temp <- temp |> filter(viz == viz_select() )
+       if(nrow(temp) > 0) {
+          temp <- temp |> filter(viz == viz_select() )
+          trad <- temp$agg
+          var_calc <- unique(names(data[var_viz()$num_viz]))
+          if(ncol(temp) > 1 ) {
+            group_var <- unique(names(data[c(1, var_viz()$num_viz-1)  ]))
+
+          }
+          else  group_var <- unique(names(data[1]))
 
         data <- var_aggregation(data = data,
                                        # dic = dic,
@@ -510,9 +501,18 @@ server <-  function(input, output, session) {
 
 
        }
-      ###########################################################
+
+       ###########################################################
+
+        # Apply lang to colnames
+        vector_names <- lapply( 1:ncol(data), function(i){
+         colnames(data)[i]  <- i_(colnames(data)[i], lang())
+        })
+
+        names(data) <- (vector_names)
 
     }
+
     data
 
   })
