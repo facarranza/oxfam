@@ -42,7 +42,7 @@ ui <- panelsPage(
           #div(id = "myDiv", style = "font-family: 'IBM Plex Sans'; font-weight: 500; font-size: 14px; line-height: 18.2px;,  background-color:#252525;" ),
           uiOutput("button_questions")
         ),
-        
+
         footer = tags$a(
           href="https://www.datasketch.co", target="blank",
           img(src= 'logos_es.svg',
@@ -51,16 +51,16 @@ ui <- panelsPage(
   ),
   panel(title = ui_("subpregunta"),
         id = "controls-style2",
-        
+
         can_collapse = FALSE,
         width = 300,
         body = div(
-          
+
           #shinycustomloader::withLoader(
           uiOutput("button_subquestions")
           # type = "html", loader = "loader4"
           #)
-          
+
         )
   ),
   panel(title = ui_("data_viz"),
@@ -76,48 +76,48 @@ ui <- panelsPage(
         color = "chardonnay",
         can_collapse = FALSE,
         body = div(
-          
+
           verbatimTextOutput("debug"),
-          
+
           #  shinycustomloader::withLoader(
           uiOutput("country"),
           uiOutput("viz_view")
           #   type = "html", loader = "loader4"
           #   )
-          
+
         )
   )
-  
+
 )
 
 
 
 server <-  function(input, output, session) {
-  
+
   # Idiomas -----------------------------------------------------------------
-  
+
   i18n <- list(
     defaultLang = "en",
-    
+
     availableLangs = c("es","en", "pt")
   )
   lang <- callModule(langSelector,"lang", i18n = i18n, showSelector=FALSE)
-  
-  
+
+
   observeEvent(lang(),{
     shinyjs::delay(500, uiLangUpdate(input$shi18ny_ui_classes, lang()))
   })
-  
-  
+
+
   output$idiomas <- renderUI({
     req(lang())
-    
+
     available_lang <- setdiff(c("en", "es", "pt"), lang())
     available_lang <- paste0('<a href="?lang=', available_lang,
                              '" target="_self">',
                              stringr::str_to_title(available_lang), "</a>", collapse = "")
-    
-    
+
+
     HTML(
       paste0(
         '
@@ -130,25 +130,25 @@ server <-  function(input, output, session) {
         '</div>
         </div>
         '
-        
+
       )
     )
-    
+
   })
-  
-  
+
+
   # url params --------------------------------------------------------------
-  
+
   url_params <- list(question = NULL, subquestion = NULL, viz = NULL)
-  
+
   url_par <- reactive({
     shinyinvoer::url_params(url_params, session)
   })
-  
-  
+
+
   # Preguntas y subpreguntas ------------------------------------------------
-  
-  
+
+
   data_questions <- reactive({
     req(lang())
     dash_ques <- questions_dash_6
@@ -157,25 +157,25 @@ server <-  function(input, output, session) {
                   paste0("subpregunta_", lang()),
                   "viz", "indicador")]
   })
-  
+
   output$button_questions <- renderUI({
     req(data_questions())
     df_b <- unique(data_questions()$ind_pregunta)[1]
-    
-    buttons <- dsapptools:::make_buttons(ids = unique(data_questions()$ind_pregunta), 
-                                         labels = unique(data_questions()[[paste0("pregunta_", lang())]]), 
+
+    buttons <- dsapptools:::make_buttons(ids = unique(data_questions()$ind_pregunta),
+                                         labels = unique(data_questions()[[paste0("pregunta_", lang())]]),
                                          default_active = df_b
     )
     buttons
   })
-  
-  
+
+
   ques_sel <- reactive({
     qs <- input$last_click
     if (is.null(qs)) qs <- "q_4"
     qs
   })
-  
+
   data_subquestions <- reactive({
     req(data_questions())
     req(ques_sel())
@@ -183,64 +183,64 @@ server <-  function(input, output, session) {
     df <- df |> filter(ind_pregunta %in% ques_sel())
     df
   })
-  
+
   output$button_subquestions <- renderUI({
     req(data_subquestions())
     df_b <- unique(data_subquestions()$ind_subpregunta)[1]
     buttons <- dsapptools:::make_buttons(ids = unique(data_subquestions()$ind_subpregunta),
                                          labels = unique(data_subquestions()[[paste0("subpregunta_", lang())]]),
                                          default_active = df_b,
-                                         class="needed_sub", 
+                                         class="needed_sub",
                                          class_active = "basic_active_sub")
     buttons
   })
-  
-  
+
+
   subques_sel <- reactiveValues(id = NULL)
-  
+
   observe({
     sq <- input$last_click_sub
     subques_sel$id <- sq
     if (is.null(sq)) subques_sel$id <- "q_4_31"
   })
-  
+
   observeEvent(input$last_click, {
     req(data_subquestions())
     subques_sel$id <- unique(data_subquestions()$ind_subpregunta)[1]
   })
-  
-  
+
+
   questions_select <- reactive({
     req(subques_sel$id)
     req(data_subquestions())
     data_subquestions() |> filter(ind_subpregunta %in% subques_sel$id)
   })
-  
-  
-  
+
+
+
   # Visualizaciones disponibles ---------------------------------------------
-  
-  
-  
+
+
+
   possible_viz <- reactive({
     if (is.null(questions_select())) return()
     if (nrow(questions_select()) == 0) return()
     viz <- unique(
-      strsplit(questions_select()$viz, split = ",") |> 
+      strsplit(questions_select()$viz, split = ",") |>
         unlist()
     )
     viz <- gsub("treeemap", "treemap", viz)
     c(viz, "table")
   })
-  
+
   actual_but <- reactiveValues(active = NULL)
-  
+
   observe({
-    
+
     if (!is.null(url_par()$inputs$viz)) {
       actual_but$active <- url_par()$inputs$viz
     }
-    
+
     req(possible_viz())
     if (is.null(input$viz_selection)) return()
     viz_rec <- possible_viz()
@@ -249,15 +249,15 @@ server <-  function(input, output, session) {
     } else {
       actual_but$active <- viz_rec[1]
     }
-    
+
   })
-  
+
   output$viz_icons <- renderUI({
     req(lang())
     req(possible_viz())
     viz <- possible_viz()
     viz_label <- i_(possible_viz(), lang())
-    
+
     suppressWarnings(
       shinyinvoer::buttonImageInput("viz_selection",
                                     " ",
@@ -272,15 +272,15 @@ server <-  function(input, output, session) {
       )
     )
   })
-  
-  
-  
+
+
+
   viz_select <- reactive({
     req(actual_but$active)
     actual_but$active
   })
-  
-  
+
+
   data_slug <- reactive({
     tryCatch({
       req(questions_select())
@@ -311,33 +311,33 @@ server <-  function(input, output, session) {
       return()
     })
   })
-  
-  
+
+
   output$country <- renderUI({
     req(data_slug())
     req(viz_select())
     slug <- unique(questions_select()$indicador)
-    
+
     if(viz_select() %in% c("bar","line") & "school_closures" %in% slug) {
       sel_country <- unique(data_slug()[[paste0("pais_", lang())]])
       shiny::selectizeInput("country",
-                            label= i_("pais",lang()), 
+                            label= i_("pais",lang()),
                             choices=  sel_country,
-                            selected= sel_country[1], 
+                            selected= sel_country[1],
                             multiple =TRUE,
                             options = list(
                               placeholder = "All",
                               plugins = list("remove_button","drag_drop"))
       )
     }
-    
+
   })
-  
-  
-  
+
+
+
   # Filtro y duplicados -----------------------------------------------------
-  
-  
+
+
   data_filter <- reactive({
     req(data_slug())
     req(viz_select())
@@ -347,14 +347,14 @@ server <-  function(input, output, session) {
     paste_fnc <- function (x, collapse = "") {
       paste0(trimws(unique(x)), collapse = collapse)
     }
-    
+
     if(viz_select() %in% c("bar","line") & "school_closures" %in% slug) {
       if (!is.null(input$country)) {
         pais <- paste0("pais_", lang())
         df <- df |> filter(!!sym(pais) %in% input$country)
-      }
+    s  }
     }
-    
+
     if ("id" %in% names(df)) {
       if (length(unique(df$id)) != nrow(df)) {
         df1 <- df |> group_by(id) |>
@@ -364,49 +364,54 @@ server <-  function(input, output, session) {
         df$valor <- as.numeric(df$valor)
       }
     }
-    
+
     if (length(slug) == 2) {
       if (viz == "bar") {
         df$fecha <- format(df$fecha, "%Y-%m")
       }
     }
-    
+
+
+
     df
   })
-  
-  
-  
-  
+
+
+
+
   # traductor de slugs ------------------------------------------------------
-  
+
   slug_trans <- reactive({
     req(questions_select())
     slug_id <- unique(questions_select()$indicador)
     slug_df <- slug_translate |> filter(slug %in% slug_id)
     slug_df[[paste0("slug_", lang())]]
   })
-  
-  
+
+
   # Variables a visualizar --------------------------------------------------
-  
+
   var_viz <- reactive({
     req(viz_select())
-    viz <- viz_select() 
+    viz <- viz_select()
     if (viz == "table") return()
     req(slug_trans())
     req(data_filter())
     df <- data_filter()
-    
+
     slug <- unique(questions_select()$indicador)
     pais <- paste0("pais_", lang())
     if (viz == "map") pais <- "pais_en"
     var_viz <- c(pais, "fecha", "valor")
     type_viz <- "CatDatNum"
+    num_viz  <- 3
+
     if (length(slug) == 1) {
-      if (length(unique(df$fecha)) == 1 | 
+      if (length(unique(df$fecha)) == 1 |
           viz %in% c("map", "bar", "treemap", "sankey")) {
         var_viz <- setdiff(var_viz, "fecha")
         type_viz <- "CatNum"
+        num_viz  <- 2
       }
       # if (length(unique(df$unidad)) > 1) {
       #   var_viz <- gsub("valor", "unidad", var_viz)
@@ -414,27 +419,32 @@ server <-  function(input, output, session) {
     } else {
       if (viz != "scatter") {
         type_viz <- "DatNumNum"
-        if (viz == "bar") type_viz <- "CatNumNum"
+        num_viz  <- 3
+        if (viz == "bar"){
+          type_viz <- "CatNumNum"
+          num_viz  <- 3
+        }
         var_viz <- c("fecha", slug_trans())
       }
     }
-    
+
     list(
       var_viz = var_viz,
-      type_viz = type_viz
+      type_viz = type_viz,
+      num_viz  = num_viz
     )
-    
+
   })
-  
-  
-  
+
+
+
   # Tipo de viz -------------------------------------------------------------
-  
-  
+
+
   viz_func <- reactive({
     req(viz_select())
     req(var_viz())
-    
+
     if (viz_select() == "table") return()
     viz <- NULL
     if (viz_select() == "map") {
@@ -442,34 +452,72 @@ server <-  function(input, output, session) {
     } else {
       viz <- paste0("hgch_", viz_select(), "_", var_viz()$type_viz)
     }
-    
+
     viz
-    
+
   })
-  
-  
+
+
+  ########## Pendiente de crear e  implenetar -   Seleccionar variables para agrupar,
+
+  # selecting_group_var <- function(question_group,tipo_grafica="line"){
+  #   group <- NULL
+  #    write.csv(agg_dash_6,"agg_dash_6.csv")
+  #   if(tipo_grafica == "line")  group <- ("fecha","")
+  #
+  # }
+
   # data para graficar ------------------------------------------------------
-  
+
   data_viz <- reactive({
     req(data_filter())
     req(var_viz())
-    
+
     data <- data_filter()
+
+
     id_ct <- grep("fecha_ct", names(data))
     data <- data[,-id_ct]
-    
+    print(data |> head(4))
+    print("##########")
+
     var <- var_viz()$var_viz
     if (length(unique(questions_select()$indicador)) == 2) {
       data <- data |> select({{ var }})
     } else {
       data <- data |> select({{ var }}, everything())
+
+
+      ###########################################################
+      #AGR  SECTION , only if required
+      temp <- agg_dash_6 |> filter( ind_pregunta ==  questions_select()$ind_pregunta &  ind_subpregunta == questions_select()$ind_subpregunta  & indicador == questions_select()$indicador & !is.na(agg)) |>
+              select( viz, agg)
+
+       if(nrow(temp) > 0){
+        temp <- temp |> filter(viz == viz_select() )
+        trad <- temp$agg
+        if(ncol(temp) > 1 ){
+          group_var <- unique(names(data[c(1, var_viz()$num_viz-1)  ]))
+        }
+        else  group_var <- unique(names(data[1]))
+
+        data <- var_aggregation(data = data,
+                                       # dic = dic,
+                                       agg =trad,
+                                       to_agg = var_calc,
+                                       name =trad,
+                                       group_var =group_var)
+
+
+       }
+      ###########################################################
+
     }
-    
     data
-    
+
   })
-  
-  
+
+
   viz_theme <- reactive({
     req(viz_select())
     req(slug_trans())
@@ -491,44 +539,46 @@ server <-  function(input, output, session) {
         axis_line_y_size = 1,
         axis_line_x_size = 1,
         axis_line_color = "#CECECE",
+        title_size = 17,
+        title_weight = 500,
         palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
       )
     )
-    
-   
+
+
     if (viz == "map") {
       opts$map_name <- "latamcaribbean_countries"
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
       opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} <br/>")
-    } 
+    }
     opts
-    
+
   })
-  
-  
-  
+
+
+
   hgch_viz <- reactive({
     req(viz_func())
     req(data_viz())
     req(viz_theme())
-    
+
     do.call(viz_func(), list(
       data = data_viz(),
       opts = viz_theme()
     ))
   })
-  
+
   output$viz_hgch <- renderHighchart({
     req(hgch_viz())
     hgch_viz()
   })
-  
+
   data_down <- reactive({
     req(data_filter())
     df <- data_filter()
     var_select <- c(c("id", paste0("slug_", lang()),
                       paste0("pais_", lang())), "fecha", "valor")
-    
+
     if ("unidad" %in% names(df)) {
       var_select <- c(var_select, "unidad")
     }
@@ -537,7 +587,7 @@ server <-  function(input, output, session) {
     names(df) <- names_tr
     df
   })
-  
+
   output$dt_viz <- DT::renderDataTable({
     req(viz_select())
     if (viz_select() != "table") return()
@@ -557,12 +607,12 @@ server <-  function(input, output, session) {
     )
     dtable
   })
-  
+
   output$viz_view <- renderUI({
     req(viz_select())
     height_viz <- 650
     if(!is.null(input$dimension)) height_viz <- input$dimension[2] - 150
-    
+
     if (viz_select() == "table") {
       DT::dataTableOutput("dt_viz", height = height_viz, width = "100%")
     } else {
@@ -570,10 +620,10 @@ server <-  function(input, output, session) {
         highchartOutput("viz_hgch", height = height_viz),
         type = "image", loader = "loading_gris.gif")
     }
-    
+
   })
-  
-  
+
+
   output$downloads <- renderUI({
     if (is.null(actual_but$active)) return()
     if (actual_but$active != "table") {
@@ -592,7 +642,7 @@ server <-  function(input, output, session) {
       )
     }
   })
-  
+
   observe({
     dsmodules::downloadTableServer("dropdown_table",
                                    element = reactive(data_down()),
@@ -603,16 +653,20 @@ server <-  function(input, output, session) {
                                    formats = c("jpeg", "pdf", "png", "html"),
                                    file_prefix = "plot")
   })
-  
-  # output$debug <- renderPrint({
-  #   list(
-  #     data_viz()
-  #   )
-  # })
-  
-  
-  
-  
+
+
+output$debug <- renderPrint({
+  list(
+   data_viz(),
+    #data_questions()$ind_pregunta
+    #questions_select()
+    names( questions_select())
+  )
+})
+
+
+
+
 }
 
 shinyApp(ui, server)
