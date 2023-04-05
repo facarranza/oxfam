@@ -29,5 +29,6 @@ pais_donante: Pais donante
 unidad: Unidad
 valor: Valor
 slug: Indicador
-slug_en: Indicador
+slug_en: Indicador_en
 count: Conteo
+pais_es: País
