@@ -342,9 +342,11 @@ server <-  function(input, output, session) {
       }
       ##################################
       #SPECIAL CASES - DATE
-      if(viz_select() %in% c("new_cases_per_million","icu_patients_per_million","reproduction_rate","new_test_per_thousand","positive_rate",
-                                 "tests_per_case", "new_deaths_per_million","excess_mortality","excess_mortality_cumulative",
-                                 "new_deaths_per_million")){
+      if(viz_select() %in% c("new_cases_per_million","icu_patients_per_million",
+                             "reproduction_rate","new_test_per_thousand",
+                             "positive_rate","tests_per_case", "new_deaths_per_million",
+                             "excess_mortality","excess_mortality_cumulative",
+                             "new_deaths_per_million")){
 
         d <- d |> filter(fecha >="2020-01-01" & fecha <= "2022-12-31")
 
