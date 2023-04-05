@@ -401,7 +401,7 @@ server <-  function(input, output, session) {
       if (!is.null(input$country)) {
         pais <- paste0("pais_", lang())
         df <- df |> filter(!!sym(pais) %in% input$country)
-    s  }
+      }
     }
 
     if ("id" %in% names(df)) {
@@ -420,9 +420,8 @@ server <-  function(input, output, session) {
       }
     }
 
-
-
     df
+
   })
 
 
@@ -481,11 +480,8 @@ server <-  function(input, output, session) {
             type_viz <- "CatCatNum"
             num_viz  <- 3
           }
-
-
         }
         #############################################
-
         #############################################
         #BAR SPECIAL CASES
         if( viz %in% c("bar")) {
