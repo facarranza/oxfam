@@ -286,6 +286,7 @@ server <-  function(input, output, session) {
       req(questions_select())
       req(viz_select())
       slug <- unique(questions_select()$indicador)
+
       if (length(slug) == 1) {
         d <- oxfam_6[[lang()]][[slug]]
 
@@ -325,9 +326,12 @@ server <-  function(input, output, session) {
         ls <- oxfam_6[[lang()]][slug]
         if (viz_select() %in% c("line", "bar")) {
           id_valor <- grep("valor", names(ls[[1]]))
+
           names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
+          unique(print(ls$fecha))
           id_valor <- grep("valor", names(ls[[2]]))
           names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
+          unique(print(ls$fecha))
           d <- ls |> purrr::reduce(inner_join,
                                    by = c("fecha", "pais_en", "pais_es", "pais_pt"),
                                    multiple = "any")
@@ -746,8 +750,8 @@ server <-  function(input, output, session) {
 
 output$debug <- renderPrint({
   list(
-   data_viz(),
-   #data_slug(),
+   #data_viz(),
+   data_slug(),
     #data_questions()$ind_pregunta
     #questions_select()
     names( questions_select())
