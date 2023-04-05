@@ -542,7 +542,9 @@ server <-  function(input, output, session) {
       )
     )
 
-
+    if(viz=="line" & questions_select()$indicador == "stringency_index"){
+      opts$y_max <- 100
+    }
     if (viz == "map") {
       opts$map_name <- "latamcaribbean_countries"
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
