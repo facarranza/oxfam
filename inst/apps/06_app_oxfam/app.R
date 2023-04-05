@@ -288,6 +288,30 @@ server <-  function(input, output, session) {
       slug <- unique(questions_select()$indicador)
       if (length(slug) == 1) {
         d <- oxfam_6[[lang()]][[slug]]
+
+        #################################################
+        #SANKEY SPECIAL SECTION - TODO: optimize in one if
+        if(viz_select() %in% ("sankey")){
+
+            if( slug  == "covid_vaccine_agreements" ) {
+              d <- d |>
+                  select(!unidad_id) |>
+                  group_by(id, unidad) |>
+                  mutate(unidadp= paste0(unidad, collapse = "-")) |>
+                  tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna")) |>
+                  distinct()
+            }
+            if( slug  == "doses_delivered_vaccine_donations" ) {
+              d <- d |>
+              select(!unidad_id) |>
+                group_by(id,unidad) |>
+                mutate(unidadp= paste0(unidad, collapse = "-")) |>
+                tidyr::separate(unidadp,sep="-",into=c("donante","vacuna")) |>
+                distinct()
+              }
+
+        }
+        #################################################
       } else {
         ls <- oxfam_6[[lang()]][slug]
         if (viz_select() %in% c("line", "bar")) {
@@ -305,7 +329,9 @@ server <-  function(input, output, session) {
           }
         }
       }
+
       d
+
     },
     error = function(cond) {
       return()
@@ -399,6 +425,7 @@ server <-  function(input, output, session) {
     req(data_filter())
     df <- data_filter()
 
+
     slug <- unique(questions_select()$indicador)
     pais <- paste0("pais_", lang())
     if (viz == "map") pais <- "pais_en"
@@ -412,6 +439,24 @@ server <-  function(input, output, session) {
         var_viz <- setdiff(var_viz, "fecha")
         type_viz <- "CatNum"
         num_viz  <- 2
+
+        #############################################
+        #SANKEY SPECIAL CASES
+        if( viz %in% c("sankey")) {
+          if( slug  == "covid_vaccine_agreements" ) {
+            var_viz <- c("fabrica", "vacuna","valor")
+          }
+          if( slug  == "doses_delivered_vaccine_donations" ) {
+            var_viz <- c("donante", "vacuna","valor")
+          }
+          if( slug  == "geopolitics_vaccine_donations" ) {
+            var_viz <- c("unidad", pais,"valor")
+          }
+          type_viz <- "CatCatNum"
+
+        }
+        #############################################
+
       }
       # if (length(unique(df$unidad)) > 1) {
       #   var_viz <- gsub("valor", "unidad", var_viz)
@@ -471,6 +516,7 @@ server <-  function(input, output, session) {
       data <- data |> select({{ var }})
     }
     else {
+
       data <- data |> select({{ var }}, everything())
 
 
@@ -484,7 +530,9 @@ server <-  function(input, output, session) {
                    select(viz, agg) |>
                    filter(viz == viz_select() )
 
-
+       print("var")
+       print(var)
+       print(viz_agg)
        if(nrow(viz_agg) > 0) {
           agg <- viz_agg$agg
           var_calc <- unique(names(data[var_viz()$num_viz]))
@@ -656,7 +704,8 @@ server <-  function(input, output, session) {
 
 output$debug <- renderPrint({
   list(
-   data_viz(),
+   #data_viz(),
+   data_slug(),
     #data_questions()$ind_pregunta
     #questions_select()
     names( questions_select())
