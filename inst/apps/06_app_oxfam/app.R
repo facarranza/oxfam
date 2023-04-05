@@ -229,7 +229,7 @@ server <-  function(input, output, session) {
       strsplit(questions_select()$viz, split = ",") |>
         unlist()
     )
-    viz <- gsub("treeemap", "treemap", viz)
+
     c(viz, "table")
   })
 
@@ -476,32 +476,30 @@ server <-  function(input, output, session) {
 
       ###########################################################
       #AGR  SECTION , only if required
-       temp <- agg_dash_6 |> filter( ind_pregunta ==  questions_select()$ind_pregunta &
-                                       ind_subpregunta == questions_select()$ind_subpregunta  &
-                                       indicador == questions_select()$indicador & !is.na(agg) &
-                                       viz == viz_select())  |>
-                            select( viz, agg)
+       viz_agg <- agg_dash_6 |>
+                  filter( ind_pregunta ==  questions_select()$ind_pregunta &
+                          ind_subpregunta == questions_select()$ind_subpregunta  &
+                          indicador == questions_select()$indicador & !is.na(agg) &
+                          viz == viz_select() ) |>
+                   select(viz, agg) |>
+                   filter(viz == viz_select() )
 
-       temp <- temp |> filter(viz == viz_select() )
-       if(nrow(temp) > 0) {
-          temp <- temp |> filter(viz == viz_select() )
-          trad <- temp$agg
+
+       if(nrow(viz_agg) > 0) {
+          agg <- viz_agg$agg
           var_calc <- unique(names(data[var_viz()$num_viz]))
-          if(ncol(temp) > 1 ) {
+          if(ncol(viz_agg) > 1 ) {
             group_var <- unique(names(data[c(1, var_viz()$num_viz-1)  ]))
 
           }
           else  group_var <- unique(names(data[1]))
 
-        data <- var_aggregation(data = data,
+          data <- var_aggregation(data = data,
                                        # dic = dic,
-                                       agg =trad,
+                                       agg =agg,
                                        to_agg = var_calc,
-                                       name =trad,
+                                       name =agg,
                                        group_var =group_var)
-
-
-
 
        }
 
@@ -509,9 +507,8 @@ server <-  function(input, output, session) {
 
     }
 
-    vector_names <- lapply( 1:ncol(data), function(i){
+     vector_names <- lapply( 1:ncol(data), function(i){
       colnames(data)[i]  <- i_(colnames(data)[i], lang())
-      print( colnames(data)[i])
     })
       names(data) <- (vector_names)
     data
