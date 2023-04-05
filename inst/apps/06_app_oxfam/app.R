@@ -469,7 +469,8 @@ server <-  function(input, output, session) {
     var <- var_viz()$var_viz
     if (length(unique(questions_select()$indicador)) == 2) {
       data <- data |> select({{ var }})
-    } else {
+    }
+    else {
       data <- data |> select({{ var }}, everything())
 
 
@@ -500,19 +501,19 @@ server <-  function(input, output, session) {
                                        group_var =group_var)
 
 
+
+
        }
 
        ###########################################################
 
-        # Apply lang to colnames
-        vector_names <- lapply( 1:ncol(data), function(i){
-         colnames(data)[i]  <- i_(colnames(data)[i], lang())
-        })
-
-        names(data) <- (vector_names)
-
     }
 
+    vector_names <- lapply( 1:ncol(data), function(i){
+      colnames(data)[i]  <- i_(colnames(data)[i], lang())
+      print( colnames(data)[i])
+    })
+      names(data) <- (vector_names)
     data
 
   })
