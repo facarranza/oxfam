@@ -111,6 +111,7 @@ server <-  function(input, output, session) {
   observe({
     if (is.null(lang())) return()
     if (is.null(save_inputs())) return()
+    dash <- NULL
     save_inp <- save_inputs()
     slug = NULL
     slug_comp = NULL
@@ -123,6 +124,7 @@ server <-  function(input, output, session) {
     id_click = NULL
     cat_click = NULL
 
+    if (!is.null(url_par()$inputs$dash)) dash <- paste0("dash=", url_par()$inputs$dash, "%26")
     if (!is.null(save_inp$id_date_format)) fech_form <- paste0("fech_form=", paste0(save_inp$id_date_format, collapse = ","), "%26")
     if (!is.null(save_inp$id_slug_dates)) fech <- paste0("fech=", paste0(save_inp$id_slug_dates, collapse = ","), "%26")
     if (!is.null(save_inp$id_slug_countries)) pais <- paste0("pais=", paste0(save_inp$id_slug_countries, collapse = ","), "%26")
@@ -134,8 +136,8 @@ server <-  function(input, output, session) {
     if (!is.null(click_viz$id)) id_click <- paste0("id_click=", click_viz$id, "%26")
     if (!is.null(click_viz$cat)) cat_click <- paste0("cat_click=",click_viz$cat, "%26")
 
-    shared_link$facebook <- stringi::stri_escape_unicode(paste0(viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang()))
-    shared_link$twitter <- paste0(viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang())
+    shared_link$facebook <- stringi::stri_escape_unicode(paste0(dash, viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang()))
+    shared_link$twitter <- paste0(dash, viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang())
 
   })
 
@@ -210,8 +212,10 @@ server <-  function(input, output, session) {
   output$idiomas <- renderUI({
     req(lang())
 
+    dash <- url_par()$inputs$dash
+    if (!is.null(dash)) dash <- paste0("&", "dash=", dash)
     available_lang <- setdiff(c("en", "es", "pt"), lang())
-    available_lang <- paste0('<a href="?lang=', available_lang,
+    available_lang <- paste0('<a href="?lang=', available_lang, dash,
                              '" target="_self">',
                              stringr::str_to_title(available_lang), "</a>", collapse = "")
 
@@ -804,10 +808,6 @@ server <-  function(input, output, session) {
       var <- modifyList(var, var_sankey)
     }
 
-
-    print("##########")
-    print(var)
-
     var
   })
 
@@ -818,6 +818,8 @@ server <-  function(input, output, session) {
     req(slug_selected())
 
     data <- data_load()
+
+
     id_ct <- grep("fecha_ct", names(data))
     data <- data[,-id_ct]
     var_cat <- var_viz()$cat
@@ -845,11 +847,11 @@ server <-  function(input, output, session) {
         data <- data |> select({{ var }})
         data$..labels <- " "
       } else {
-        data <- data |> select({{ var }}, everything())
+        data <- data |>
+          select({{ var }}, everything()) |>
+          select(-valor)
       }
     }
-
-
 
     data
   })
@@ -1265,6 +1267,7 @@ server <-  function(input, output, session) {
     if (length(slug_selected()) == 2) {
       theme$theme$tooltip_template <- NULL
     }
+    theme$theme$title <- " "
 
     if (viz_line) {
       viz <- hgch_line(df_dates, var_dat = var_cat, var_num =  var_num, opts = theme)
