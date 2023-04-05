@@ -313,7 +313,7 @@ server <-  function(input, output, session) {
         }
         #################################################
 
-        #############################################
+        ################################################
         #BAR SPECIAL CASES
         if( viz_select() %in% c("bar")) {
           if( slug  == "interagency_response_plan_numinneed" ) {
@@ -336,6 +336,8 @@ server <-  function(input, output, session) {
           if ("valor" %in% names(d)) {
             d <- d |> tidyr::drop_na(valor)
           }
+
+
         }
       }
 
@@ -496,6 +498,15 @@ server <-  function(input, output, session) {
           num_viz  <- 3
         }
         var_viz <- c("fecha", slug_trans())
+      } else{
+        ################e
+        # #SCATTER SPECIAL CASE
+        # if( "stringency_index" %in%  slug  & "ghs_index" %in% slug ) {
+        #   var_viz <- c("slug", "fecha", "valor")
+        #   type_viz <- "CatDatNum"
+        # }
+        # #################
+
       }
     }
 
@@ -613,7 +624,7 @@ server <-  function(input, output, session) {
       )
     )
 
-    if(viz=="line" & questions_select()$indicador == "stringency_index"){
+    if(viz=="line" & "stringency_index" %in% questions_select()$indicador){
       opts$y_max <- 100
     }
     if (viz == "map") {
@@ -727,8 +738,8 @@ server <-  function(input, output, session) {
 
 output$debug <- renderPrint({
   list(
-   #data_viz(),
-   data_slug(),
+   data_viz(),
+   #data_slug(),
     #data_questions()$ind_pregunta
     #questions_select()
     names( questions_select())
