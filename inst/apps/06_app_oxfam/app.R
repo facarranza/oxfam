@@ -507,10 +507,9 @@ server <-  function(input, output, session) {
 
     }
 
-     vector_names <- lapply( 1:ncol(data), function(i){
-      colnames(data)[i]  <- i_(colnames(data)[i], lang())
-    })
-      names(data) <- (vector_names)
+
+    colnames(data)  <- i_(colnames(data), lang())
+
     data
 
   })
