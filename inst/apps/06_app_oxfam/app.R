@@ -291,7 +291,7 @@ server <-  function(input, output, session) {
 
         #################################################
         #SANKEY SPECIAL SECTION - TODO: optimize in one if
-        if(viz_select() %in% ("sankey")){
+        if( viz_select() %in% ("sankey")){
 
             if( slug  == "covid_vaccine_agreements" ) {
               d <- d |>
@@ -312,6 +312,15 @@ server <-  function(input, output, session) {
 
         }
         #################################################
+
+        #############################################
+        #BAR SPECIAL CASES
+        if( viz_select() %in% c("bar")) {
+          if( slug  == "interagency_response_plan_numinneed" ) {
+            d$fecha <- as.factor(d$fecha)
+          }
+        }
+        #############################################
       } else {
         ls <- oxfam_6[[lang()]][slug]
         if (viz_select() %in% c("line", "bar")) {
@@ -445,15 +454,32 @@ server <-  function(input, output, session) {
         if( viz %in% c("sankey")) {
           if( slug  == "covid_vaccine_agreements" ) {
             var_viz <- c("fabrica", "vacuna","valor")
+            type_viz <- "CatCatNum"
+            num_viz  <- 3
           }
           if( slug  == "doses_delivered_vaccine_donations" ) {
             var_viz <- c("donante", "vacuna","valor")
+            type_viz <- "CatCatNum"
+            num_viz  <- 3
           }
           if( slug  == "geopolitics_vaccine_donations" ) {
             var_viz <- c("unidad", pais,"valor")
+            type_viz <- "CatCatNum"
+            num_viz  <- 3
           }
-          type_viz <- "CatCatNum"
 
+
+        }
+        #############################################
+
+        #############################################
+        #BAR SPECIAL CASES
+        if( viz %in% c("bar")) {
+          if( slug  == "interagency_response_plan_numinneed" ) {
+            var_viz <- c("fecha", pais,"valor")
+            type_viz <- "CatCatNum"
+            num_viz  <- 3
+          }
         }
         #############################################
 
@@ -530,10 +556,7 @@ server <-  function(input, output, session) {
                    select(viz, agg) |>
                    filter(viz == viz_select() )
 
-       print("var")
-       print(var)
-       print(viz_agg)
-       if(nrow(viz_agg) > 0) {
+        if(nrow(viz_agg) > 0) {
           agg <- viz_agg$agg
           var_calc <- unique(names(data[var_viz()$num_viz]))
           if(ncol(viz_agg) > 1 ) {
