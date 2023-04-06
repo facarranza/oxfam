@@ -510,16 +510,8 @@ server <-  function(input, output, session) {
           num_viz  <- 3
         }
         var_viz <- c("fecha", slug_trans())
-      } else{
-        ################e
-        # #SCATTER SPECIAL CASE  it maybe will be use insted of actual country column, slug needs lang
-        # if( "stringency_index" %in%  slug  & "ghs_index" %in% slug ) {
-        #   var_viz <- c("slug", "fecha", "valor")
-        #   type_viz <- "CatDatNum"
-        # }
-        # #################
-
       }
+
     }
 
     list(
