@@ -286,15 +286,52 @@ server <-  function(input, output, session) {
       req(questions_select())
       req(viz_select())
       slug <- unique(questions_select()$indicador)
+
       if (length(slug) == 1) {
         d <- oxfam_6[[lang()]][[slug]]
+
+        #################################################
+        #SANKEY SPECIAL SECTION - TODO: optimize in one if
+        if( viz_select() %in% ("sankey")){
+
+            if( slug  == "covid_vaccine_agreements" ) {
+              d <- d |>
+                  select(!unidad_id) |>
+                  group_by(id, unidad) |>
+                  mutate(unidadp= paste0(unidad, collapse = "-")) |>
+                  tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna")) |>
+                  distinct()
+            }
+            if( slug  == "doses_delivered_vaccine_donations" ) {
+              d <- d |>
+              select(!unidad_id) |>
+                group_by(id,unidad) |>
+                mutate(unidadp= paste0(unidad, collapse = "-")) |>
+                tidyr::separate(unidadp,sep="-",into=c("donante","vacuna")) |>
+                distinct()
+              }
+
+        }
+        #################################################
+
+        ################################################
+        #BAR SPECIAL CASES
+        if( viz_select() %in% c("bar")) {
+          if( slug  == "interagency_response_plan_numinneed" ) {
+            d$fecha <- as.factor(d$fecha)
+          }
+        }
+        #############################################
       } else {
         ls <- oxfam_6[[lang()]][slug]
         if (viz_select() %in% c("line", "bar")) {
           id_valor <- grep("valor", names(ls[[1]]))
+
           names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
+          unique(print(ls$fecha))
           id_valor <- grep("valor", names(ls[[2]]))
           names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
+          unique(print(ls$fecha))
           d <- ls |> purrr::reduce(inner_join,
                                    by = c("fecha", "pais_en", "pais_es", "pais_pt"),
                                    multiple = "any")
@@ -303,9 +340,25 @@ server <-  function(input, output, session) {
           if ("valor" %in% names(d)) {
             d <- d |> tidyr::drop_na(valor)
           }
+
+
         }
       }
+      ##################################
+      #SPECIAL CASES - DATE
+      if(viz_select() %in% c("new_cases_per_million","icu_patients_per_million",
+                             "reproduction_rate","new_test_per_thousand",
+                             "positive_rate","tests_per_case", "new_deaths_per_million",
+                             "excess_mortality","excess_mortality_cumulative",
+                             "new_deaths_per_million")){
+
+        d <- d |> filter(fecha >="2020-01-01" & fecha <= "2022-12-31")
+
+      }
+      ####################################
+
       d
+
     },
     error = function(cond) {
       return()
@@ -352,7 +405,7 @@ server <-  function(input, output, session) {
       if (!is.null(input$country)) {
         pais <- paste0("pais_", lang())
         df <- df |> filter(!!sym(pais) %in% input$country)
-    s  }
+      }
     }
 
     if ("id" %in% names(df)) {
@@ -371,9 +424,8 @@ server <-  function(input, output, session) {
       }
     }
 
-
-
     df
+
   })
 
 
@@ -399,6 +451,7 @@ server <-  function(input, output, session) {
     req(data_filter())
     df <- data_filter()
 
+
     slug <- unique(questions_select()$indicador)
     pais <- paste0("pais_", lang())
     if (viz == "map") pais <- "pais_en"
@@ -412,6 +465,38 @@ server <-  function(input, output, session) {
         var_viz <- setdiff(var_viz, "fecha")
         type_viz <- "CatNum"
         num_viz  <- 2
+
+        #############################################
+        #SANKEY SPECIAL CASES
+        if( viz %in% c("sankey")) {
+          if( slug  == "covid_vaccine_agreements" ) {
+            var_viz <- c("fabrica", "vacuna","valor")
+            type_viz <- "CatCatNum"
+            num_viz  <- 3
+          }
+          if( slug  == "doses_delivered_vaccine_donations" ) {
+            var_viz <- c("donante", "vacuna","valor")
+            type_viz <- "CatCatNum"
+            num_viz  <- 3
+          }
+          if( slug  == "geopolitics_vaccine_donations" ) {
+            var_viz <- c("unidad", pais,"valor")
+            type_viz <- "CatCatNum"
+            num_viz  <- 3
+          }
+        }
+        #############################################
+        #############################################
+        #BAR SPECIAL CASES
+        if( viz %in% c("bar")) {
+          if( slug  == "interagency_response_plan_numinneed" ) {
+            var_viz <- c("fecha", pais,"valor")
+            type_viz <- "CatCatNum"
+            num_viz  <- 3
+          }
+        }
+        #############################################
+
       }
       # if (length(unique(df$unidad)) > 1) {
       #   var_viz <- gsub("valor", "unidad", var_viz)
@@ -425,6 +510,15 @@ server <-  function(input, output, session) {
           num_viz  <- 3
         }
         var_viz <- c("fecha", slug_trans())
+      } else{
+        ################e
+        # #SCATTER SPECIAL CASE  it maybe will be use insted of actual country column, slug needs lang
+        # if( "stringency_index" %in%  slug  & "ghs_index" %in% slug ) {
+        #   var_viz <- c("slug", "fecha", "valor")
+        #   type_viz <- "CatDatNum"
+        # }
+        # #################
+
       }
     }
 
@@ -471,6 +565,7 @@ server <-  function(input, output, session) {
       data <- data |> select({{ var }})
     }
     else {
+
       data <- data |> select({{ var }}, everything())
 
 
@@ -484,8 +579,7 @@ server <-  function(input, output, session) {
                    select(viz, agg) |>
                    filter(viz == viz_select() )
 
-
-       if(nrow(viz_agg) > 0) {
+        if(nrow(viz_agg) > 0) {
           agg <- viz_agg$agg
           var_calc <- unique(names(data[var_viz()$num_viz]))
           if(ncol(viz_agg) > 1 ) {
@@ -542,7 +636,9 @@ server <-  function(input, output, session) {
       )
     )
 
-
+    if(viz=="line" & "stringency_index" %in% questions_select()$indicador){
+      opts$y_max <- 100
+    }
     if (viz == "map") {
       opts$map_name <- "latamcaribbean_countries"
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
@@ -654,7 +750,8 @@ server <-  function(input, output, session) {
 
 output$debug <- renderPrint({
   list(
-   data_viz(),
+   #data_viz(),
+   data_slug(),
     #data_questions()$ind_pregunta
     #questions_select()
     names( questions_select())
