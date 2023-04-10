@@ -33,7 +33,7 @@ ui <- panelsPage(
     background = "#FFF"
   ),
   langSelectorInput("lang", position = "fixed"),
-  panel(title = ui_("question"),
+  panel(title = ui_("pregunta"),
         id = "controls-style",
         collapse = FALSE,
         can_collapse = FALSE,
