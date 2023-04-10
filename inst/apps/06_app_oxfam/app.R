@@ -77,7 +77,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-          verbatimTextOutput("debug"),
+         # verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -510,16 +510,8 @@ server <-  function(input, output, session) {
           num_viz  <- 3
         }
         var_viz <- c("fecha", slug_trans())
-      } else{
-        ################e
-        # #SCATTER SPECIAL CASE  it maybe will be use insted of actual country column, slug needs lang
-        # if( "stringency_index" %in%  slug  & "ghs_index" %in% slug ) {
-        #   var_viz <- c("slug", "fecha", "valor")
-        #   type_viz <- "CatDatNum"
-        # }
-        # #################
-
       }
+
     }
 
     list(
@@ -751,10 +743,10 @@ server <-  function(input, output, session) {
 output$debug <- renderPrint({
   list(
    #data_viz(),
-   data_slug(),
+   #data_slug(),
     #data_questions()$ind_pregunta
     #questions_select()
-    names( questions_select())
+  #  names( questions_select())
   )
 })
 
