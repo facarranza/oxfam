@@ -28,8 +28,7 @@ fabricante: Manufacturer
 pais_donante: Donor country
 unidad: Unit
 valor: Value
-slug: Indicator
-slug_en: Indicator_en
+slug_en: Indicator
 count: Count
 pais_en: Country
 question: Question

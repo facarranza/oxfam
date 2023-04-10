@@ -679,6 +679,7 @@ server <-  function(input, output, session) {
     req(data_down())
     df <- data_down()
     df <- dplyr::as_tibble(data_down())
+    df$id <- stringr::str_trim(df$id)
     dtable <- DT::datatable(df,
                             rownames = F,
                             selection = 'none',
@@ -686,7 +687,7 @@ server <-  function(input, output, session) {
                             options = list(
                               scrollX = T,
                               fixedColumns = TRUE,
-                              fixedHeader = TRUE,
+                              fixedHeader = FALSE,
                               autoWidth = TRUE,
                               scrollY = "500px")
     )

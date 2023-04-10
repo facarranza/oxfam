@@ -28,7 +28,7 @@ fabricante: Fabricante
 pais_donante: Pais doador
 unidad: Unidades
 valor: Valor
-slug: Indicador
-slug_en: Indicador_en
+slug_en: Indicador
+slug_pt: Indicador
 count: Contar
 pais_pt: País
