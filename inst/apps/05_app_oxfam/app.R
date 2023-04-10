@@ -13,12 +13,43 @@ library(dsmodules)
 library(dsapptools)
 library(dplyr)
 library(shinyjs)
-library(urlshorteneR)
+library(httr)
+library(jsonlite)
+
+# funcion para crear bitly link
+shorten_url <- function(long_url, access_token) {
+  api_url <- "https://api-ssl.bitly.com/v4/shorten"
+  headers <- add_headers(
+    "Content-Type" = "application/json",
+    "Authorization" = paste("Bearer", access_token)
+  )
+  body <- toJSON(list(long_url = long_url), auto_unbox = TRUE)
+  response <- POST(api_url, headers, body = body)
+  content(response, "parsed", "application/json")$link
+}
 
 ui <- panelsPage(
   tags$head(
     tags$link(rel="stylesheet", type="text/css", href="custom.css"),
-    tags$script(src="handler.js")
+    tags$script(src="handler.js"),
+    tags$script(src = "clipboard.min.js"),
+    tags$script(HTML("
+      $(document).ready(function() {
+        var clipboard = new ClipboardJS('.btn-clipboard');
+
+        clipboard.on('success', function(e) {
+          console.info('Accion:', e.action);
+          console.info('Texto:', e.text);
+          console.info('Disparador:', e.trigger);
+          e.clearSelection();
+        });
+
+        clipboard.on('error', function(e) {
+          console.error('Accion:', e.action);
+          console.error('Disparador:', e.trigger);
+        });
+      });
+    "))
   ),
   useShi18ny(),
   useShinyjs(),
@@ -32,6 +63,13 @@ ui <- panelsPage(
     background = "#FFF"
   ),
   langSelectorInput("lang", position = "fixed"),
+  shinypanels::modal(id = 'shared_bitly',
+                     title = uiOutput("bitly_title"),
+                     div(class = "modal-link",
+                         uiOutput("bitly_link"),
+                         uiOutput("copy_button")
+                     )
+  ),
   panel(title = ui_("data_filter"),
         id = "controls-style",
         collapse = FALSE,
@@ -106,7 +144,7 @@ server <-  function(input, output, session) {
     ls
   })
 
-  shared_link <- reactiveValues(facebook = NULL, twitter = NULL)
+  shared_link <- reactiveValues(short_url = NULL)
 
   observe({
     if (is.null(lang())) return()
@@ -136,20 +174,14 @@ server <-  function(input, output, session) {
     if (!is.null(click_viz$id)) id_click <- paste0("id_click=", click_viz$id, "%26")
     if (!is.null(click_viz$cat)) cat_click <- paste0("cat_click=",click_viz$cat, "%26")
 
-    shared_link$facebook <- stringi::stri_escape_unicode(paste0(dash, viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang()))
-    shared_link$twitter <- paste0(dash, viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang())
-
+    # shared_link$facebook <- stringi::stri_escape_unicode(paste0(dash, viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang()))
+    # shared_link$twitter <- paste0(dash, viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang())
+    long_url <- paste0("https://datasketch.shinyapps.io/oxfam_app/?", gsub("%26", "&",
+                                                                           paste0(dash, viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang())))
+    shared_link$short_url <- shorten_url(long_url, "1ded0052e90265f03473cd1b597f0c45bb83d578")
   })
 
 
-
-  # output$aver <- renderPrint({
-  #   bitly_auth()
-  #   bitly_create_bitlink(
-  #     long_url = shared_link$twitter,
-  #     domain = "bit.ly"
-  #   )
-  # })
 
   # Compartir ---------------------------------------------------------------
 
@@ -180,16 +212,33 @@ server <-  function(input, output, session) {
   })
 
 
-
-  observeEvent(shared_red$id, {
-    if (shared_red$id == "tw") {
-      shinyjs::runjs(sprintf("window.open('%s')", paste0("https://twitter.com/intent/tweet?text=Hola&url=https://datasketch.shinyapps.io/oxfam_app/?", shared_link$twitter)))
-    }
-    if (shared_red$id == "fc") {
-      shinyjs::runjs(sprintf("window.open('%s')", paste0("http://www.facebook.com/sharer.php?t=Hola&u=https://datasketch.shinyapps.io/oxfam_app/?", shared_link$facebook)))
-    }
+  output$bitly_title <- renderUI({
+    i_("bitly_desc", lang())
   })
 
+  output$copy_button <- renderUI({
+    tags$button(
+      id = "copy_button",
+      class = "btn btn-default btn-clipboard",
+      icon("copy"),
+      `data-clipboard-action` = "copy",
+      `data-clipboard-target` = "#bitly_link"
+    )
+  })
+
+  output$bitly_link <- renderUI({
+    req(shared_link$short_url)
+    shared_link$short_url
+  })
+
+  observeEvent(shared_red$id, {
+    if (shared_red$id %in% c("tw", "fc")) {
+      shinyjs::runjs(sprintf("window.open('%s')", paste0("https://twitter.com/intent/tweet?text=Hola&url=", shared_link$short_url)))
+    }
+    if (shared_red$id %in% "lk") {
+      shinypanels::showModal("shared_bitly")
+    }
+  })
 
 
 
