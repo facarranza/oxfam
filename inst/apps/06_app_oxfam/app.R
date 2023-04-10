@@ -77,7 +77,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-          verbatimTextOutput("debug"),
+         # verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -743,10 +743,10 @@ server <-  function(input, output, session) {
 output$debug <- renderPrint({
   list(
    #data_viz(),
-   data_slug(),
+   #data_slug(),
     #data_questions()$ind_pregunta
     #questions_select()
-    names( questions_select())
+  #  names( questions_select())
   )
 })
 
