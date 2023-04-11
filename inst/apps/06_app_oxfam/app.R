@@ -77,7 +77,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-         # verbatimTextOutput("debug"),
+         verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -234,6 +234,7 @@ server <-  function(input, output, session) {
   })
 
   actual_but <- reactiveValues(active = NULL)
+  tooltip_info <- reactiveValues(agg = NULL)
 
   observe({
 
@@ -454,7 +455,7 @@ server <-  function(input, output, session) {
 
     slug <- unique(questions_select()$indicador)
     pais <- paste0("pais_", lang())
-    if (viz == "map") pais <- "pais_en"
+    #if (viz == "map") pais <- "pais_en"
     var_viz <- c(pais, "fecha", "valor")
     type_viz <- "CatDatNum"
     num_viz  <- 3
@@ -573,6 +574,7 @@ server <-  function(input, output, session) {
 
         if(nrow(viz_agg) > 0) {
           agg <- viz_agg$agg
+          tooltip_info$agg <- agg
           var_calc <- unique(names(data[var_viz()$num_viz]))
           if(ncol(viz_agg) > 1 ) {
             group_var <- unique(names(data[c(1, var_viz()$num_viz-1)  ]))
@@ -632,9 +634,23 @@ server <-  function(input, output, session) {
       opts$y_max <- 100
     }
     if (viz == "map") {
-      opts$map_name <- "latamcaribbean_countries"
+      opts$map_name <- "world_countries_latin_america_caribbean"
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
-      opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} <br/>")
+      #opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} <br/>")
+      pais_bold <- paste0("<B>",i_("pais",lang()), ": </B>")
+      pais_detail <-  paste0("{",i_("pais",lang()), "}")
+      value_bold  <-   paste0("<B>",i_(tooltip_info$agg,lang()), ": </B>")
+      value_detail <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
+      tooltip <- paste0(pais_bold,  pais_detail, "<BR>", value_bold ,  value_detail)
+      print(tooltip)
+      opts$theme$tooltip_template <- tooltip
+     # if (lang() != "en") {
+      #   if (!unidad) unidad_label <- "{g}"
+      # }
+      # if (lang() == "es")  opts$theme$tooltip_template <- paste0("<b>{c}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
+      #
+      # if (lang() == "pt")  opts$theme$tooltip_template <- paste0("<b>{c}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
+
     }
     opts
 
@@ -679,7 +695,15 @@ server <-  function(input, output, session) {
     req(data_down())
     df <- data_down()
     df <- dplyr::as_tibble(data_down())
-    df$id <- stringr::str_trim(df$id)
+    ####################
+    #data preparation: remove unidad, html symbols
+    # if(i_("unidad",lang()) %in% names(data_down())) {
+    #    print(data_down()[i_("unidad",lang())])
+    #    stringr::str_remove(data_down()[i_("unidad",lang())], i_("unidad",lang()))
+    # }
+
+
+    ###################
     dtable <- DT::datatable(df,
                             rownames = F,
                             selection = 'none',
@@ -743,7 +767,7 @@ server <-  function(input, output, session) {
 
 output$debug <- renderPrint({
   list(
-   #data_viz(),
+   data_viz()
    #data_slug(),
     #data_questions()$ind_pregunta
     #questions_select()
