@@ -31,6 +31,7 @@ slug_es: Indicador
 pais_es: País
 fecha: Fecha
 unidad: Unidad
+unidad_id: Unidad
 valor: Valor
 bitly_desc: Compartir link
 

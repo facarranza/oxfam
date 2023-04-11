@@ -911,7 +911,7 @@ server <-  function(input, output, session) {
     if (viz_select() == "table") return()
     viz <- NULL
     if (viz_select() == "map") {
-      viz <- "hgch_choropleth_GnmNum"
+      viz <- "hgch_choropleth"
     } else {
       viz <- paste0("hgch_", viz_select())
     }
@@ -954,40 +954,24 @@ server <-  function(input, output, session) {
     if ("unidad" %in% names(data_viz())) unidad <- TRUE
 
     if (viz == "map") {
-      unidad_label <- "{i}"
-      if (!unidad) unidad_label <- NULL#"{e}"
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
-      # print("*************")
-      # print(unidad)
-      # if (unidad) {
-      # opts$theme$tooltip_template <- "a {a}<br/>b {b}<br/>c {c}<br/>d {d}<br/> e {e} <br/> f {f}<br/>g {g}" #paste0("<b>{a}<br/> {b} ", unidad_label)
-      # } else {
-      #   opts$theme$tooltip_template <- "a {a}<br/>b {b}<br/>c {c}<br/>d {d}<br/>f {f}<br/>g {g}<br/> h {h}"
-      # }
-      opts$theme$tooltip_template <- paste0("<b>{a}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
-      if (lang() != "en") {
-        if (!unidad) unidad_label <- "{g}"
-      }
-      if (lang() == "es")  opts$theme$tooltip_template <- paste0("<b>{c}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
+      opts$theme$map_name <- "world_countries_latin_america_caribbean"
+    }
 
-      if (lang() == "pt")  opts$theme$tooltip_template <- paste0("<b>{c}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
-
-    } else {
-      if (viz != "sankey") {
-        pais <- paste0("{pais_", lang(), "}<br/>")
-        valor <- paste0("{",var_viz()$label_agg, "}<br/>")
-        unidad_label <- "{unidad}"
-        if (!unidad) unidad_label <- paste0("{slug_", lang(), "}")
-        fecha <- NULL
-        if (viz %in% c("line", "scatter")) {
-          opts$theme$axis_line_x_size <- 0
-          if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
-        }
-        tooltip <- paste0("<b>",pais, "</b>",
-                          fecha, var_viz()$label_agg, ":",
-                          valor, unidad_label)
-        opts$theme$tooltip_template <- tooltip
+    if (viz != "sankey") {
+      pais <- paste0("{pais_", lang(), "}<br/>")
+      valor <- paste0("{",var_viz()$label_agg, "}<br/>")
+      unidad_label <- "{unidad}"
+      if (!unidad) unidad_label <- paste0("{slug_", lang(), "}")
+      fecha <- NULL
+      if (viz %in% c("line", "scatter")) {
+        opts$theme$axis_line_x_size <- 0
+        if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
       }
+      tooltip <- paste0("<b>",pais, "</b>",
+                        fecha, var_viz()$label_agg, ":",
+                        valor, unidad_label)
+      opts$theme$tooltip_template <- tooltip
     }
 
     opts
@@ -1008,12 +992,13 @@ server <-  function(input, output, session) {
       var_cat <- NULL
     }
 
+
     do.call(viz_func(), list(
       data = data_viz(),
+      var_gnm = var_cat,
       var_cat = var_cat,
       var_dat = var_date,
       var_num = var_num,
-      map_name = "latamcaribbean_countries",
       opts = viz_theme()
     ))
   })
@@ -1024,7 +1009,7 @@ server <-  function(input, output, session) {
   })
 
 
-  data_down <- reactive({
+  data_show <- reactive({
     req(data_load())
     df <- data_load()
     #print(df)
@@ -1043,9 +1028,9 @@ server <-  function(input, output, session) {
   output$dt_viz <- DT::renderDataTable({
     req(viz_select())
     if (viz_select() != "table") return()
-    req(data_down())
-    df <- data_down()
-    df <- dplyr::as_tibble(data_down())
+    req(data_show())
+    df <- data_show()
+    df <- dplyr::as_tibble(data_show())
     dtable <- DT::datatable(df,
                             rownames = F,
                             selection = 'none',
@@ -1443,7 +1428,21 @@ server <-  function(input, output, session) {
   # #input$hcClicked
   #  # text_click()
   # })
+  data_down <- reactive({
+    req(data_load())
+    df <- data_load()
+    #print(df)
+    var_select <- c(c("id", paste0("slug_", lang()),
+                      paste0("pais_", lang())), "fecha", "valor")
 
+    if ("unidad" %in% names(df)) {
+      var_select <- c(var_select, "unidad_id")
+    }
+    df <- df[,var_select]
+    names_tr <- i_(names(df), lang = lang())
+    names(df) <- names_tr
+    df
+  })
 
   output$downloads <- renderUI({
     if (is.null(actual_but$active)) return()

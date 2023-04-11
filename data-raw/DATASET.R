@@ -23,9 +23,9 @@ indicadores <- dplyr::tbl(con, "indicadores") |> dplyr::collect()
 
 available_slug <- unique(indicadores$slug)
 unit_info <-  read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "filtros_detalle_unidades")
-unit_info$unidad_es <- paste0("<b>",unit_info$filtro_es, ": </b>", unit_info$unidad_es, "<br/>")
-unit_info$unidad_en <- paste0("<b>",unit_info$filtro_en, ": </b>", unit_info$unidad_en, "<br/>")
-unit_info$unidad_pt <- paste0("<b>",unit_info$filtro_pt, ": </b>", unit_info$unidade_pt, "<br/>")
+unit_info$unidad_es <- paste0(unit_info$filtro_es, ": ", unit_info$unidad_es, "<br/>")
+unit_info$unidad_en <- paste0(unit_info$filtro_en, ": ", unit_info$unidad_en, "<br/>")
+unit_info$unidad_pt <- paste0(unit_info$filtro_pt, ": ", unit_info$unidade_pt, "<br/>")
 
 unit_translate <- unit_info |>
   select(slug, unidad, unidad_es, unidad_en, unidade_pt) |>
