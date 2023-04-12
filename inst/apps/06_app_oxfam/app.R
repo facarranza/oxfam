@@ -378,7 +378,8 @@ server <-  function(input, output, session) {
 
           #################### SPECIAL CASES  TEMPORAL TRANSLATE TO: VAR, IND1, IND2 WITHOUT UNIT TYPE
           if((unique(ls[[1]][[paste0("slug")]]) == "doses_delivered_vaccine_donations" &  unique(ls[[2]][[paste0("slug")]]) == "covid_vaccine_agreements") |
-             (unique(ls[[1]][[paste0("slug")]]) == "new_deaths_per_million" &  unique(ls[[2]][[paste0("slug")]]) == "new_cases_per_million")) {
+             (unique(ls[[1]][[paste0("slug")]]) == "new_deaths_per_million" &  unique(ls[[2]][[paste0("slug")]]) == "new_cases_per_million") |
+             (unique(ls[[1]][[paste0("slug")]]) == "people_fully_vaccinated" &  unique(ls[[2]][[paste0("slug")]]) == "people_vaccinated")) {
             #NOT DATE
             #by_types <-  c("pais_en", "pais_es", "pais_pt")
             ls[[1]] <- ls[[1]] |>
@@ -624,7 +625,8 @@ server <-  function(input, output, session) {
         #BAR SPECIAL CASES
        if( viz %in% c("bar")) {
           if( ("doses_delivered_vaccine_donations" %in% slug &   "covid_vaccine_agreements"  %in% slug) |
-              ("new_deaths_per_million" %in% slug & "new_cases_per_million" %in% slug )) {
+              ("new_deaths_per_million" %in% slug & "new_cases_per_million" %in% slug ) |
+              ("people_fully_vaccinated" %in% slug & "people_vaccinated" %in% slug )) {
             #NOT DATE
             var_viz <- c(pais,slug_trans())
             num_viz  <- 3
@@ -686,42 +688,42 @@ server <-  function(input, output, session) {
     var <- var_viz()$var_viz
     tooltip_info$agg <- NULL
 
-
-    ###########################################################
-    #AGR  SECTION , only if required
-    print(questions_select())
-    print(viz_select() )
-
-
-    ###########################################################
-
-
     if (length(unique(questions_select()$indicador)) == 2) {
 
       data <- data |> select({{ var }})
 
       ################################################### SPECIAL CASES, group indicators by agg for scatter and bars
-      viz_agg <- agg_dash_6 |>
-        filter( ind_pregunta %in%  questions_select()$ind_pregunta &
-                  ind_subpregunta %in% questions_select()$ind_subpregunta
-                   & !is.na(agg) &
-                  viz %in% viz_select() ) |>
-        select(viz, agg) |>
-        filter(viz %in%  viz_select() )
+          viz_agg <- agg_dash_6 |>
+            filter( ind_pregunta %in%  questions_select()$ind_pregunta &
+                      ind_subpregunta %in% questions_select()$ind_subpregunta
+                       & !is.na(agg) &
+                      viz %in% viz_select() ) |>
+            select(viz, agg) |>
+            filter(viz %in%  viz_select() )
 
-      if(nrow(viz_agg) > 0) {
-        agg <- viz_agg$agg
+          if(nrow(viz_agg) > 0) {  #TEST IF NEEDS AGG  OPERATION
+            agg <- viz_agg$agg
+            print("agggggggg")
+            print(agg)
+            group_var <- (unique(names(data[c(1, var_viz()$num_viz-2)  ])))
+            var_calc <- unique(names(data[c(2,3)])) ### DATA ESTATICA
 
-        group_var <- (unique(names(data[c(1, var_viz()$num_viz-2)  ])))
-        var_calc <- unique(names(data[c(2,3)])) ### DATA ESTATICA
+            ### TODO  UPDATE WITH DSAAPPTOOLS
+             if(agg=="mean"){
+              data <- data |>
+                group_by(!!sym(group_var)) |>
+                summarise(x = mean(!!sym(var_calc[1]), na.rm = T), y = mean(!!sym(var_calc[2]), na.rm = T))
+             }
+             else{
+                  if(agg=="mean") {
+                    data <- data |>
+                      group_by(!!sym(group_var)) |>
+                      summarise(x = sum(!!sym(var_calc[1]), na.rm = T), y = sum(!!sym(var_calc[2]), na.rm = T))
+                    }
 
-         if(agg=="mean"){
-          data <- data |>
-            group_by(!!sym(group_var)) |>
-            summarise(x = mean(!!sym(var_calc[1]), na.rm = T), y = mean(!!sym(var_calc[2]), na.rm = T))
-        }
-        names(data) <- c(agg, var_calc[1],var_calc[2])
-      }
+            }
+            names(data) <- c(agg, var_calc[1],var_calc[2])
+          }
 
       ###############################################################
     }
@@ -735,11 +737,9 @@ server <-  function(input, output, session) {
         select(viz, agg) |>
         filter(viz %in%  viz_select() )
 
-
-
       data <- data |> select({{ var }}, everything())
 
-      if(nrow(viz_agg) > 0) {
+      if(nrow(viz_agg) > 0) { #TEST IF NEEDS AGG  OPERATION
         agg <- viz_agg$agg
         tooltip_info$agg <- agg
         var_calc <- unique(names(data[var_viz()$num_viz]))
@@ -758,13 +758,7 @@ server <-  function(input, output, session) {
 
       }
 
-
-
-       ###########################################################
-
     }
-
-
     colnames(data)  <- i_(colnames(data), lang())
 
     data
