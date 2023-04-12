@@ -77,7 +77,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-        # verbatimTextOutput("debug"),
+        verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -160,7 +160,14 @@ server <-  function(input, output, session) {
 
   output$button_questions <- renderUI({
     req(data_questions())
-    df_b <- unique(data_questions()$ind_pregunta)[1]
+    if(!is.null(url_par()$inputs$question)) {
+      if(url_par()$inputs$question %in% data_questions()$ind_pregunta)
+        df_b <- url_par()$inputs$question
+      else   df_b <- unique(data_questions()$ind_pregunta)[1]
+    }
+
+    else df_b <- unique(data_questions()$ind_pregunta)[1]
+
 
     buttons <- dsapptools:::make_buttons(ids = unique(data_questions()$ind_pregunta),
                                          labels = unique(data_questions()[[paste0("pregunta_", lang())]]),
@@ -171,9 +178,17 @@ server <-  function(input, output, session) {
 
 
   ques_sel <- reactive({
-    qs <- input$last_click
-    if (is.null(qs)) qs <- "q_4"
-    qs
+
+    if(!is.null(url_par()$inputs$question)) {
+      if(url_par()$inputs$question %in% data_questions()$ind_pregunta)
+        df_b <- url_par()$inputs$question
+      else   df_b <- unique(data_questions()$ind_pregunta)[1]
+    }
+    else{
+      qs <- input$last_click
+      if (is.null(qs)) qs <- "q_4"
+      qs
+    }
   })
 
   data_subquestions <- reactive({
@@ -184,10 +199,20 @@ server <-  function(input, output, session) {
     df
   })
 
+
   output$button_subquestions <- renderUI({
     req(data_subquestions())
-    df_b <- unique(data_subquestions()$ind_subpregunta)[1]
-    buttons <- dsapptools:::make_buttons(ids = unique(data_subquestions()$ind_subpregunta),
+
+    if(!is.null(url_par()$inputs$subquestion)) {
+      if(url_par()$inputs$subquestion %in% data_subquestions()$ind_subpregunta ) {
+         df_b <- url_par()$inputs$subquestion
+        subques_sel$id  <- url_par()$inputs$subquestion
+      }
+      else   df_b <- unique(data_subquestions()$ind_subpregunta)[1]
+    }
+    else df_b <- unique(data_subquestions()$ind_subpregunta)[1]
+
+     buttons <- dsapptools:::make_buttons(ids = unique(data_subquestions()$ind_subpregunta),
                                          labels = unique(data_subquestions()[[paste0("subpregunta_", lang())]]),
                                          default_active = df_b,
                                          class="needed_sub",
@@ -201,11 +226,24 @@ server <-  function(input, output, session) {
   observe({
     sq <- input$last_click_sub
     subques_sel$id <- sq
-    if (is.null(sq)) subques_sel$id <- "q_4_31"
+
+    if (is.null(sq)){
+      if(!is.null(url_par()$inputs$subquestion)) {
+
+        if(url_par()$inputs$subquestion %in% data_subquestions()$ind_subpregunta ) {
+
+          subques_sel$id  <- url_par()$inputs$subquestion
+        }
+        else   subques_sel$id <-  "q_4_31"
+      }
+      else subques_sel$id <- "q_4_31"
+
+    }
   })
 
   observeEvent(input$last_click, {
     req(data_subquestions())
+
     subques_sel$id <- unique(data_subquestions()$ind_subpregunta)[1]
   })
 
@@ -237,6 +275,7 @@ server <-  function(input, output, session) {
   tooltip_info <- reactiveValues(agg = NULL)
 
   observe({
+
 
     if (!is.null(url_par()$inputs$viz)) {
       actual_but$active <- url_par()$inputs$viz
@@ -326,32 +365,65 @@ server <-  function(input, output, session) {
       } else {
         ls <- oxfam_6[[lang()]][slug]
         if (viz_select() %in% c("line", "bar")) {
+
           id_valor <- grep("valor", names(ls[[1]]))
-
           names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
-
           id_valor <- grep("valor", names(ls[[2]]))
           names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
-          #################### SPECIAL CASES
           by_types <- c("fecha","pais_en", "pais_es", "pais_pt")
 
+          #################### SPECIAL CASES
           if(unique(ls[[1]][[paste0("slug")]]) == "doses_delivered_vaccine_donations" &  unique(ls[[2]][[paste0("slug")]]) == "covid_vaccine_agreements") {
              #NOT DATE
             by_types <-  c("pais_en", "pais_es", "pais_pt")
 
-           }
+          }
+
+
+          ####################
 
           d <- ls |> purrr::reduce(inner_join,
                                    by = by_types,
                                    multiple = "any")
 
-          ######################
+
         } else {
+        ################################### SPECIAL CASE -  ON DEV
+
+          #if(unique(ls[[1]][[paste0("slug")]]) == "stringency_index" &  unique(ls[[2]][[paste0("slug")]]) == "ghs_index") {
+            # #NOT DATE #
+            #
+            # print("############")
+            # by_types <- c("pais_en", "pais_es", "pais_pt")
+            # agg <- "mean"
+            # ls[[1]] <-  ls[[1]] |> select(!fecha)
+            # ls[[2]] <-  ls[[2]] |> select(!fecha)
+            # ls[[1]] <- var_aggregation(data = ls[[1]],
+            #                         # dic = dic,
+            #                         agg =agg,
+            #                         to_agg = "valor",
+            #                         name =agg,
+            #                         group_var = by_types )
+            #
+            # id_valor <- grep("mean", names(ls[[1]]))
+            # names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
+            # id_valor <- grep("valor", names(ls[[2]]))
+            # names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
+            #
+            #
+            # d2 <- ls |> purrr::reduce(inner_join,
+            #                          by = by_types,
+            #                          multiple = "any")
+            # print(d2)
+
+
+          #}
+          ###################################
+
           d <- ls |> bind_rows()
           if ("valor" %in% names(d)) {
             d <- d |> tidyr::drop_na(valor)
           }
-
 
         }
       }
@@ -802,7 +874,7 @@ server <-  function(input, output, session) {
 output$debug <- renderPrint({
   list(
   #data_filter()
-   #data_viz()
+   data_viz()
     #data_questions()$ind_pregunta
     #questions_select()
   #  names( questions_select())
