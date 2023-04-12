@@ -77,7 +77,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-         verbatimTextOutput("debug"),
+        # verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -554,13 +554,13 @@ server <-  function(input, output, session) {
     id_ct <- grep("fecha_ct", names(data))
     data <- data[,-id_ct]
     var <- var_viz()$var_viz
+    tooltip_info$agg <- NULL
     if (length(unique(questions_select()$indicador)) == 2) {
       data <- data |> select({{ var }})
     }
     else {
 
       data <- data |> select({{ var }}, everything())
-
 
       ###########################################################
       #AGR  SECTION , only if required
@@ -636,20 +636,19 @@ server <-  function(input, output, session) {
     if (viz == "map") {
       opts$map_name <- "world_countries_latin_america_caribbean"
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
-      #opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} <br/>")
       pais_bold <- paste0("<B>",i_("pais",lang()), ": </B>")
       pais_detail <-  paste0("{",i_("pais",lang()), "}")
-      value_bold  <-   paste0("<B>",i_(tooltip_info$agg,lang()), ": </B>")
-      value_detail <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
+      if(!is.null(tooltip_info$agg)) {
+        value_bold  <-   paste0("<B>",i_(tooltip_info$agg,lang()), ": </B>")
+        value_detail <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
+      }
+      else{
+        value_bold  <-   paste0("<B>",i_("valor",lang()), ": </B>")
+        value_detail <-  paste0("{",i_("valor",lang()), "}")
+      }
       tooltip <- paste0(pais_bold,  pais_detail, "<BR>", value_bold ,  value_detail)
       print(tooltip)
       opts$theme$tooltip_template <- tooltip
-     # if (lang() != "en") {
-      #   if (!unidad) unidad_label <- "{g}"
-      # }
-      # if (lang() == "es")  opts$theme$tooltip_template <- paste0("<b>{c}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
-      #
-      # if (lang() == "pt")  opts$theme$tooltip_template <- paste0("<b>{c}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
 
     }
     opts
@@ -681,7 +680,7 @@ server <-  function(input, output, session) {
                       paste0("pais_", lang())), "fecha", "valor")
 
     if ("unidad" %in% names(df)) {
-      var_select <- c(var_select, "unidad")
+      var_select <- c(var_select, "unidad_id")
     }
     df <- df[,var_select]
     names_tr <- i_(names(df), lang = lang())
@@ -689,21 +688,34 @@ server <-  function(input, output, session) {
     df
   })
 
+ # TODO:
+  data_down_table <- reactive({
+    req(data_filter())
+    df <- data_filter()
+    var_select <- c(c("id", paste0("slug_", lang()),
+                      paste0("pais_", lang())), "fecha", "valor")
+
+    if ("unidad" %in% names(df)) {
+      var_select <- c(var_select, "unidad_id")
+    }
+    df <- df[,var_select]
+    names_tr <- i_(names(df), lang = lang())
+    names(df) <- names_tr
+
+    if ("unidad_id" %in% names(df)) {
+      df |> rename(unidad = unidad_id)
+    }
+
+    df
+  })
+
+
   output$dt_viz <- DT::renderDataTable({
     req(viz_select())
     if (viz_select() != "table") return()
-    req(data_down())
-    df <- data_down()
-    df <- dplyr::as_tibble(data_down())
-    ####################
-    #data preparation: remove unidad, html symbols
-    # if(i_("unidad",lang()) %in% names(data_down())) {
-    #    print(data_down()[i_("unidad",lang())])
-    #    stringr::str_remove(data_down()[i_("unidad",lang())], i_("unidad",lang()))
-    # }
+    req(data_down_table())
+    df <- dplyr::as_tibble(data_down_table())
 
-
-    ###################
     dtable <- DT::datatable(df,
                             rownames = F,
                             selection = 'none',
@@ -755,7 +767,7 @@ server <-  function(input, output, session) {
 
   observe({
     dsmodules::downloadTableServer("dropdown_table",
-                                   element = reactive(data_down()),
+                                   element = reactive(data_down_table()),
                                    formats = c("csv", "xlsx", "json"))
     dsmodules::downloadImageServer("download_viz",
                                    element = reactive(hgch_viz()),
@@ -767,7 +779,7 @@ server <-  function(input, output, session) {
 
 output$debug <- renderPrint({
   list(
-   data_viz()
+  # data_viz()
    #data_slug(),
     #data_questions()$ind_pregunta
     #questions_select()
