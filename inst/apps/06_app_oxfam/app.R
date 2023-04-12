@@ -283,7 +283,7 @@ server <-  function(input, output, session) {
 
 
   data_slug <- reactive({
-    tryCatch({
+   # tryCatch({
       req(questions_select())
       req(viz_select())
       slug <- unique(questions_select()$indicador)
@@ -329,13 +329,23 @@ server <-  function(input, output, session) {
           id_valor <- grep("valor", names(ls[[1]]))
 
           names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
-          unique(print(ls$fecha))
+
           id_valor <- grep("valor", names(ls[[2]]))
           names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
-          unique(print(ls$fecha))
+          #################### SPECIAL CASES
+          by_types <- c("fecha","pais_en", "pais_es", "pais_pt")
+
+          if(unique(ls[[1]][[paste0("slug")]]) == "doses_delivered_vaccine_donations" &  unique(ls[[2]][[paste0("slug")]]) == "covid_vaccine_agreements") {
+             #NOT DATE
+            by_types <-  c("pais_en", "pais_es", "pais_pt")
+
+           }
+
           d <- ls |> purrr::reduce(inner_join,
-                                   by = c("fecha", "pais_en", "pais_es", "pais_pt"),
+                                   by = by_types,
                                    multiple = "any")
+
+          ######################
         } else {
           d <- ls |> bind_rows()
           if ("valor" %in% names(d)) {
@@ -360,10 +370,10 @@ server <-  function(input, output, session) {
 
       d
 
-    },
-    error = function(cond) {
-      return()
-    })
+    # },
+    # error = function(cond) {
+    #   return()
+    # })
   })
 
 
@@ -495,6 +505,7 @@ server <-  function(input, output, session) {
             type_viz <- "CatCatNum"
             num_viz  <- 3
           }
+
         }
         #############################################
 
@@ -511,7 +522,18 @@ server <-  function(input, output, session) {
           num_viz  <- 3
         }
         var_viz <- c("fecha", slug_trans())
+
+        #############################################
+        #BAR SPECIAL CASES
+        if( viz %in% c("bar")) {
+          if( "doses_delivered_vaccine_donations" %in% slug &   "covid_vaccine_agreements"  %in% slug){
+            var_viz <- c(pais,slug_trans())
+
+          }
+        }
+        #############################################
       }
+
 
     }
 
@@ -779,8 +801,8 @@ server <-  function(input, output, session) {
 
 output$debug <- renderPrint({
   list(
-  # data_viz()
-   #data_slug(),
+  #data_filter()
+   #data_viz()
     #data_questions()$ind_pregunta
     #questions_select()
   #  names( questions_select())
