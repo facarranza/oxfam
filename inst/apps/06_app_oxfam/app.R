@@ -77,7 +77,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-        verbatimTextOutput("debug"),
+       # verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -793,12 +793,15 @@ server <-  function(input, output, session) {
       var_select <- c(var_select, "unidad_id")
     }
     df <- df[,var_select]
+
+    if ("unidad_id" %in% names(df)) {
+
+      df <-  df |> rename(unidad = unidad_id)
+    }
+
     names_tr <- i_(names(df), lang = lang())
     names(df) <- names_tr
 
-    if ("unidad_id" %in% names(df)) {
-      df |> rename(unidad = unidad_id)
-    }
 
     df
   })
@@ -874,7 +877,7 @@ server <-  function(input, output, session) {
 output$debug <- renderPrint({
   list(
   #data_filter()
-   data_viz()
+  # data_viz()
     #data_questions()$ind_pregunta
     #questions_select()
   #  names( questions_select())
