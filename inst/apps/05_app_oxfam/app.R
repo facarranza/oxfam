@@ -953,6 +953,10 @@ server <-  function(input, output, session) {
     unidad <- FALSE
     if ("unidad" %in% names(data_viz())) unidad <- TRUE
 
+    if ("price_per_dose" %in% slug_selected()) {
+      unidad <- FALSE
+    }
+
     if (viz == "map") {
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
       opts$theme$map_name <- "world_countries_latin_america_caribbean"
@@ -972,6 +976,14 @@ server <-  function(input, output, session) {
                         fecha, var_viz()$label_agg, ":",
                         valor, unidad_label)
       opts$theme$tooltip_template <- tooltip
+      if(slug_selected() %in% c("stringency_index", "ghs_index")){
+        opts$y_max <- 100
+        opts$suffix_num <- "/100"
+      }
+    }
+
+    if ("excess_mortality" %in% slug_selected()) {
+      opts$suffix_num <- "%"
     }
 
     opts
@@ -991,7 +1003,6 @@ server <-  function(input, output, session) {
       var_date <- 'fecha'
       var_cat <- NULL
     }
-
 
     do.call(viz_func(), list(
       data = data_viz(),
