@@ -553,6 +553,11 @@ server <-  function(input, output, session) {
     var_viz <- c(pais, "fecha", "valor")
     type_viz <- "CatDatNum"
     num_viz  <- 3
+    print("##############")
+    print(length(slug))
+    print(length(unique(df$fecha)))
+    print(viz)
+    print(slug)
 
     if (length(slug) == 1) {
       if (length(unique(df$fecha)) == 1 |
@@ -591,6 +596,14 @@ server <-  function(input, output, session) {
             var_viz <- c("fecha", pais,"valor")
             type_viz <- "CatCatNum"
             num_viz  <- 3
+          }
+
+          if( slug  == "vaccination_approvals_trials" ) {
+
+            var_viz <- c("valor",pais)
+            type_viz <- "CatCatNum"
+            num_viz  <- 2
+
           }
 
         }
@@ -727,6 +740,7 @@ server <-  function(input, output, session) {
 
       if(nrow(viz_agg) > 0) {  #TEST IF NEEDS AGG  OPERATION
         agg <- viz_agg$agg
+        tooltip_info$agg <- agg
         group_var <- (unique(names(data[c(1, var_viz()$num_viz-2)  ])))
         var_calc <- unique(names(data[c(2,3)])) ### DATA ESTATICA
 
@@ -758,9 +772,8 @@ server <-  function(input, output, session) {
                   viz %in% viz_select() ) |>
         select(viz, agg) |>
         filter(viz %in%  viz_select() )
-
+     print(data)
       data <- data |> select({{ var }}, everything())
-
       if(nrow(viz_agg) > 0) { #TEST IF NEEDS AGG  OPERATION
         agg <- viz_agg$agg
         tooltip_info$agg <- agg
@@ -771,18 +784,49 @@ server <-  function(input, output, session) {
         }
         else  group_var <- unique(names(data[1]))
 
-        data <- var_aggregation(data = data,
+
+        if("vaccination_approvals_trials" %in% questions_select()$indicador){
+
+          group_var <-  unique(names(data[c(1,2)  ]))
+          data$valor <- as.character(data$valor)
+
+
+
+        }
+
+        data_temp1 <- var_aggregation(data = data,
                                 # dic = dic,
                                 agg = agg,
                                 to_agg = var_calc,
                                 name = agg,
                                 group_var = group_var)
 
-      }
+        #REQUIRED MIN MAX -  STEP PROGRESS
+        unidad <- NULL
+        if(!is.null(data$unidad)) unidad <- unique(data$unidad_id)
+        data_temp2 <- data |> group_by(across(sym(group_var))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
+        data_temp2$min_date <- as.character(data_temp2$min_date)
+        data_temp2$max_date <- as.character(data_temp2$max_date)
+        data <-  data_temp1 |> left_join( data_temp2)
+
+        if(!is.null(unidad)) {
+          print("unnnnnnnnnnn")
+          print(length(unidad))
+          if(length(unidad) == 1) data$unidad <- unidad
+        }
+
+
+
+
+
+       }
+      #
+
+
 
     }
     colnames(data)  <- i_(colnames(data), lang())
-
+    print(data)
     data
 
   })
@@ -791,6 +835,7 @@ server <-  function(input, output, session) {
   viz_theme <- reactive({
     req(viz_select())
     req(slug_trans())
+
     viz <- viz_select()
     title <- paste0(slug_trans(), collapse = " vs ")
     opts <- list(
@@ -812,27 +857,32 @@ server <-  function(input, output, session) {
         title_size = 17,
         title_weight = 500,
         palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
+
       )
     )
-
+    if(!is.null(tooltip_info$agg)) opts$collapse_rows = T
     if(viz=="line" & "stringency_index" %in% questions_select()$indicador){
       opts$y_max <- 100
     }
     if (viz == "map") {
       opts$map_name <- "world_countries_latin_america_caribbean"
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
-      pais_bold <- paste0("<B>",i_("pais",lang()), ": </B>")
+      pais_bold <- paste0("<b>",i_("pais",lang()), ": </b>")
       pais_detail <-  paste0("{",i_("pais",lang()), "}")
       if(!is.null(tooltip_info$agg)) {
-        value_bold  <-   paste0("<B>",i_(tooltip_info$agg,lang()), ": </B>")
+        value_bold  <-   paste0("<b>",i_(tooltip_info$agg,lang()), ": </b>")
         value_detail <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
       }
       else{
-        value_bold  <-   paste0("<B>",i_("valor",lang()), ": </B>")
+        value_bold  <-   paste0("<b>",i_("valor",lang()), ": </b>")
         value_detail <-  paste0("{",i_("valor",lang()), "}")
       }
-      tooltip <- paste0(pais_bold,  pais_detail, "<BR>", value_bold ,  value_detail)
-      opts$theme$tooltip_template <- tooltip
+      fecha_min_bold <- paste0("<b>",i_("min_date",lang()), ": </b>")
+      fecha_min_detail <-  paste0("{","mindate", "}")
+      tooltip <- paste0(pais_bold,  pais_detail, "<br>", value_bold ,  value_detail,"<br>")
+      #tooltip <- paste0("{demo}")
+      print(tooltip)
+      opts$theme$tooltip_template <- {tooltip}
 
     }
 
@@ -912,7 +962,7 @@ server <-  function(input, output, session) {
     names(df) <- names_tr
 
 
-    df
+    df[,-1]
   })
 
 
@@ -921,7 +971,7 @@ server <-  function(input, output, session) {
     if (viz_select() != "table") return()
     req(data_down_table())
     df <- dplyr::as_tibble(data_down_table())
-
+    print(df)
     dtable <- DT::datatable(df,
                             rownames = F,
                             selection = 'none',
@@ -929,7 +979,7 @@ server <-  function(input, output, session) {
                             options = list(
                               scrollX = T,
                               fixedColumns = TRUE,
-                              fixedHeader = FALSE,
+                              fixedHeader = TRUE,
                               autoWidth = TRUE,
                               scrollY = "500px")
     )
@@ -938,11 +988,12 @@ server <-  function(input, output, session) {
 
   output$viz_view <- renderUI({
     req(viz_select())
+    print(viz_select())
     height_viz <- 650
     if(!is.null(input$dimension)) height_viz <- input$dimension[2] - 150
 
     if (viz_select() == "table") {
-      DT::dataTableOutput("dt_viz", height = height_viz, width = "100%")
+      DT::dataTableOutput("dt_viz", height = height_viz, width = "500px")
     } else {
       withLoader(
         highchartOutput("viz_hgch", height = height_viz),

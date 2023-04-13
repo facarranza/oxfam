@@ -32,3 +32,5 @@ slug_en: Indicator
 count: Count
 pais_en: Country
 question: Question
+min_date: Min date
+max_date: Max date
