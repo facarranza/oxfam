@@ -77,7 +77,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-        verbatimTextOutput("debug"),
+        #verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -322,7 +322,7 @@ server <-  function(input, output, session) {
 
 
   data_slug <- reactive({
-   # tryCatch({
+   tryCatch({
       req(questions_select())
       req(viz_select())
       slug <- unique(questions_select()$indicador)
@@ -454,10 +454,10 @@ server <-  function(input, output, session) {
 
       d
 
-    # },
-    # error = function(cond) {
-    #   return()
-    # })
+    },
+    error = function(cond) {
+      return()
+    })
   })
 
 
@@ -986,7 +986,7 @@ server <-  function(input, output, session) {
 output$debug <- renderPrint({
   list(
   #data_filter()
-  data_viz()
+  #data_viz()
     #data_questions()$ind_pregunta
     #questions_select()
   #  names( questions_select())
