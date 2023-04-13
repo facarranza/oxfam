@@ -272,7 +272,7 @@ server <-  function(input, output, session) {
   })
 
   actual_but <- reactiveValues(active = NULL)
-  tooltip_info <- reactiveValues(agg = NULL)
+  tooltip_info <- reactiveValues(agg = NULL) #tooltip with collapse
 
   observe({
 
@@ -553,11 +553,7 @@ server <-  function(input, output, session) {
     var_viz <- c(pais, "fecha", "valor")
     type_viz <- "CatDatNum"
     num_viz  <- 3
-    print("##############")
-    print(length(slug))
-    print(length(unique(df$fecha)))
-    print(viz)
-    print(slug)
+
 
     if (length(slug) == 1) {
       if (length(unique(df$fecha)) == 1 |
@@ -610,9 +606,7 @@ server <-  function(input, output, session) {
         #############################################
 
       }
-      # if (length(unique(df$unidad)) > 1) {
-      #   var_viz <- gsub("valor", "unidad", var_viz)
-      # }
+
     }
     else { # SLUG > 1
       if (viz != "scatter") {
@@ -640,7 +634,6 @@ server <-  function(input, output, session) {
         #############################################
       }
       else {#SCATTER
-
         if( ("doses_delivered_vaccine_donations" %in% slug &   "covid_vaccine_agreements"  %in% slug) |
             ("new_deaths_per_million" %in% slug & "new_cases_per_million" %in% slug ) |
             ("stringency_index" %in% slug & "ghs_index" %in% slug ) |
@@ -648,13 +641,8 @@ server <-  function(input, output, session) {
           #NOT DATE
           var_viz <- c(pais,slug_trans())
           num_viz  <- 3
-
-
         }
-
       }
-
-
     }
 
     list(
@@ -772,7 +760,7 @@ server <-  function(input, output, session) {
                   viz %in% viz_select() ) |>
         select(viz, agg) |>
         filter(viz %in%  viz_select() )
-     print(data)
+
       data <- data |> select({{ var }}, everything())
       if(nrow(viz_agg) > 0) { #TEST IF NEEDS AGG  OPERATION
         agg <- viz_agg$agg
@@ -801,7 +789,7 @@ server <-  function(input, output, session) {
                                 name = agg,
                                 group_var = group_var)
 
-        #REQUIRED MIN MAX -  STEP PROGRESS
+        #REQUIRED MIN MAX -  STEP PROGRESS - REQUIRED: UNIT
         unidad <- NULL
         if(!is.null(data$unidad)) unidad <- unique(data$unidad_id)
         data_temp2 <- data |> group_by(across(sym(group_var))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
@@ -810,20 +798,9 @@ server <-  function(input, output, session) {
         data <-  data_temp1 |> left_join( data_temp2)
 
         if(!is.null(unidad)) {
-          print("unnnnnnnnnnn")
-          print(length(unidad))
-          if(length(unidad) == 1) data$unidad <- unidad
+           if(length(unidad) == 1) data$unidad <- unidad
         }
-
-
-
-
-
        }
-      #
-
-
-
     }
     colnames(data)  <- i_(colnames(data), lang())
     print(data)
@@ -861,6 +838,7 @@ server <-  function(input, output, session) {
       )
     )
     if(!is.null(tooltip_info$agg)) opts$collapse_rows = T
+
     if(viz=="line" & "stringency_index" %in% questions_select()$indicador){
       opts$y_max <- 100
     }
@@ -880,8 +858,6 @@ server <-  function(input, output, session) {
       fecha_min_bold <- paste0("<b>",i_("min_date",lang()), ": </b>")
       fecha_min_detail <-  paste0("{","mindate", "}")
       tooltip <- paste0(pais_bold,  pais_detail, "<br>", value_bold ,  value_detail,"<br>")
-      #tooltip <- paste0("{demo}")
-      print(tooltip)
       opts$theme$tooltip_template <- {tooltip}
 
     }
@@ -926,25 +902,19 @@ server <-  function(input, output, session) {
     hgch_viz()
   })
 
-  data_down <- reactive({
-    req(data_filter())
-    df <- data_filter()
-    var_select <- c(c("id", paste0("slug_", lang()),
-                      paste0("pais_", lang())), "fecha", "valor")
-
-    if ("unidad" %in% names(df)) {
-      var_select <- c(var_select, "unidad_id")
-    }
-    df <- df[,var_select]
-    names_tr <- i_(names(df), lang = lang())
-    names(df) <- names_tr
-    df
-  })
 
   # TODO:
   data_down_table <- reactive({
     req(data_filter())
     df <- data_filter()
+    print(questions_select())
+    if( (("doses_delivered_vaccine_donations" %in%  questions_select()$indicador &   "covid_vaccine_agreements"  %in% questions_select()$indicador) |
+         ("new_deaths_per_million" %in% questions_select()$indicador & "new_cases_per_million" %in% questions_select()$indicador) |
+         ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador) |
+         ("people_fully_vaccinated" %in% questions_select()$indicador & "people_vaccinated" %in% questions_select()$indicador))){
+      df[,-1]
+    }
+    else{
     var_select <- c(c("id", paste0("slug_", lang()),
                       paste0("pais_", lang())), "fecha", "valor")
 
@@ -963,6 +933,7 @@ server <-  function(input, output, session) {
 
 
     df[,-1]
+    }
   })
 
 
