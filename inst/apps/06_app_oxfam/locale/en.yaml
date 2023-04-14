@@ -34,3 +34,6 @@ pais_en: Country
 question: Question
 min_date: Min date
 max_date: Max date
+stage_1: Vaccines approved for use
+stage_2: Vaccines in clinical trials
+stage_3: Vaccines in trials that are no longer continuing

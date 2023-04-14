@@ -597,7 +597,7 @@ server <-  function(input, output, session) {
           if( slug  == "vaccination_approvals_trials" ) {
 
             var_viz <- c("valor",pais)
-            type_viz <- "CatCatNum"
+            type_viz <- "CatNum"
             num_viz  <- 2
 
           }
@@ -775,32 +775,43 @@ server <-  function(input, output, session) {
 
         if("vaccination_approvals_trials" %in% questions_select()$indicador){
 
-          group_var <-  unique(names(data[c(1,2)  ]))
+          group_var <- unique(names(data[c(1,2)]))
           data$valor <- as.character(data$valor)
 
+          data_temp1 <- var_aggregation(data = data,
+                                        # dic = dic,
+                                        agg = agg,
+                                        to_agg = var_calc,
+                                        name = agg,
+                                        group_var = group_var)
 
+          data <- data_temp1 |> tidyr::pivot_wider(names_from = valor, values_from = count, names_prefix="stage_",values_fill = 0)
+          data$count <- data$stage_1 + data$stage_2 + data$stage_3
+          data <- data |> select(group_var[2], count, stage_1, stage_2 ,stage_3)
 
         }
+        else {
 
-        data_temp1 <- var_aggregation(data = data,
-                                # dic = dic,
-                                agg = agg,
-                                to_agg = var_calc,
-                                name = agg,
-                                group_var = group_var)
+          data_temp1 <- var_aggregation(data = data,
+                                          # dic = dic,
+                                          agg = agg,
+                                          to_agg = var_calc,
+                                          name = agg,
+                                          group_var = group_var)
 
-        #REQUIRED MIN MAX -  STEP PROGRESS - REQUIRED: UNIT
-        unidad <- NULL
-        if(!is.null(data$unidad)) unidad <- unique(data$unidad_id)
-        data_temp2 <- data |> group_by(across(sym(group_var))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
-        data_temp2$min_date <- as.character(data_temp2$min_date)
-        data_temp2$max_date <- as.character(data_temp2$max_date)
-        data <-  data_temp1 |> left_join( data_temp2)
+            #REQUIRED MIN MAX -  STEP PROGRESS - REQUIRED: UNIT
+            unidad <- NULL
+            if(!is.null(data$unidad)) unidad <- unique(data$unidad_id)
+            data_temp2 <- data |> group_by(across(sym(group_var))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
+            data_temp2$min_date <- as.character(data_temp2$min_date)
+            data_temp2$max_date <- as.character(data_temp2$max_date)
+            data <- data_temp1 |> left_join( data_temp2)
 
-        if(!is.null(unidad)) {
-           if(length(unidad) == 1) data$unidad <- unidad
+            if(!is.null(unidad)) {
+              if(length(unidad) == 1) data$unidad <- unidad
+            }
         }
-       }
+      }
     }
     colnames(data)  <- i_(colnames(data), lang())
     print(data)
@@ -915,24 +926,24 @@ server <-  function(input, output, session) {
       df[,-1]
     }
     else{
-    var_select <- c(c("id", paste0("slug_", lang()),
-                      paste0("pais_", lang())), "fecha", "valor")
+      var_select <- c(c("id", paste0("slug_", lang()),
+                        paste0("pais_", lang())), "fecha", "valor")
 
-    if ("unidad" %in% names(df)) {
-      var_select <- c(var_select, "unidad_id")
-    }
+      if ("unidad" %in% names(df)) {
+        var_select <- c(var_select, "unidad_id")
+      }
 
-    df <- df[,var_select]
+      df <- df[,var_select]
 
-    if ("unidad_id" %in% names(df)) {
-      df <-  df |> rename(unidad = unidad_id)
-    }
+      if ("unidad_id" %in% names(df)) {
+        df <-  df |> rename(unidad = unidad_id)
+      }
 
-    names_tr <- i_(names(df), lang = lang())
-    names(df) <- names_tr
+      names_tr <- i_(names(df), lang = lang())
+      names(df) <- names_tr
 
 
-    df[,-1]
+      df[,-1]
     }
   })
 
