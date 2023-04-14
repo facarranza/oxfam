@@ -557,9 +557,9 @@ server <-  function(input, output, session) {
 
     if (length(slug) == 1) {
       if (length(unique(df$fecha)) == 1 |
-          viz %in% c("map", "bar", "treemap", "sankey")) {
+        viz %in% c("map", "bar", "treemap", "sankey")) {
 
-
+        if(!is.null(df$unidad) & viz %in% c("bar","treemap"))  var_viz <- c(var_viz, "unidad")
         var_viz <- setdiff(var_viz, "fecha")
         if(!is.null(df$unidad))   var_viz <- c(var_viz, "unidad")
         type_viz <- "CatNum"
@@ -606,6 +606,8 @@ server <-  function(input, output, session) {
         #############################################
 
       }
+       else if(!is.null(df$unidad) & viz %in% "line")  var_viz <- c(var_viz, "unidad")
+
 
     }
     else { # SLUG > 1
@@ -761,8 +763,9 @@ server <-  function(input, output, session) {
         select(viz, agg) |>
         filter(viz %in%  viz_select() )
 
-      data <- data |> select({{ var }}, everything())
+
       if(nrow(viz_agg) > 0) { #TEST IF NEEDS AGG  OPERATION
+        data <- data |> select({{ var }}, everything())
         agg <- viz_agg$agg
         tooltip_info$agg <- agg
         var_calc <- unique(names(data[var_viz()$num_viz]))
@@ -810,6 +813,12 @@ server <-  function(input, output, session) {
             if(!is.null(unidad)) {
               if(length(unidad) == 1) data$unidad <- unidad
             }
+        }
+      }
+      else{
+        data <- data |> select({{ var }})
+        if(viz_select() %in% c("line","bar","treemap")) {
+          tooltip_info$agg <- "None"
         }
       }
     }
