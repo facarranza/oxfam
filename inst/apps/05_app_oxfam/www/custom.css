@@ -59,6 +59,13 @@ html, body {
   border-top: 0px;
 }
 
+#fc_click, #tw_click, #bl_click {
+  padding: 4px !important;
+  border: 0px !important;
+  border-radius: 0px !important;
+  background-color: transparent !important;
+}
+
 .modal-wrapper {
  width: 300px !important;
 }

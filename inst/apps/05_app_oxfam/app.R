@@ -174,8 +174,6 @@ server <-  function(input, output, session) {
     if (!is.null(click_viz$id)) id_click <- paste0("id_click=", click_viz$id, "%26")
     if (!is.null(click_viz$cat)) cat_click <- paste0("cat_click=",click_viz$cat, "%26")
 
-    # shared_link$facebook <- stringi::stri_escape_unicode(paste0(dash, viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang()))
-    # shared_link$twitter <- paste0(dash, viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang())
     long_url <- paste0("https://datasketch.shinyapps.io/oxfam_app/?", gsub("%26", "&",
                                                                            paste0(dash, viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang())))
     shared_link$short_url <- shorten_url(long_url, "1ded0052e90265f03473cd1b597f0c45bb83d578")
@@ -186,31 +184,77 @@ server <-  function(input, output, session) {
   # Compartir ---------------------------------------------------------------
 
   output$compartir <- renderUI({
-    #/*<img src="icons/vector.svg" width="8" height="8" id = "indicator">*/
-    HTML(
+
+    HTML(paste0(
       '
       <div class="dropdown-shared">
         <button class="dropbtn-shared">
         <img src="icons/compartir.svg" width="15" height="15">
         </button>
-        <div class="dropdown-shared-content">
-        <a class="needed" id="fc"><img src="icons/facebook.svg" width="15" height="15"></a>
-        <a class="needed" id="tw"><img src="icons/twitter.svg" width="15" height="15"></a>
-        <a class="needed" id="lk"><img src="icons/link.svg" width="15" height="15"></a>
-        </div>
+        <div class="dropdown-shared-content">',
+      actionButton("fc_click", label = HTML('<img src="icons/facebook.svg" width="15" height="15">')),
+      actionButton("tw_click", label = HTML('<img src="icons/twitter.svg" width="15" height="15">')),
+      actionButton("bl_click", label = HTML('<img src="icons/link.svg" width="15" height="15">')),
+        '</div>
         </div>
       '
+     )
     )
 
   })
 
-  shared_red <- reactiveValues(id = NULL)
 
-  observe({
-    if (is.null(input$last_click)) return()
-    shared_red$id <- input$last_click
+
+  observeEvent(input$fc_click,{
+    encoded_short_url <- URLencode(shared_link$short_url)
+    share_url <- paste0("https://www.facebook.com/sharer/sharer.php?u=", encoded_short_url)
+    print(share_url)
+    shinyjs::runjs(sprintf("window.open('%s')", share_url))
   })
 
+  observeEvent(input$tw_click,{
+    if (lang() == "es") {
+      mensaje <-
+        paste0("¿Sabes que hay información en tiempo real sobre el proceso de vacunación en Latinoamérica? 😱👇
+
+Dale clic 👉 ", shared_link$short_url, "
+
+¡Interactúa con estos datos y conviértete en un agente de cambio para &hashtags=VacunasparalaGente!
+
+  &hashtags=DataVacunas
+  &hashtags=PandemiaDesigual
+  @Vacunas_LAC")
+    }
+    if (lang() == "en") {
+      mensaje <-
+        paste0("Do you know what are the impacts of the pandemic that Latin America is currently experiencing? 😱👇
+
+Clic here 👉 ", shared_link$short_url, "
+
+Interact with this data and become an agent of change for &hashtags=Vaccinesforpeople
+
+  &hashtags=DataVaccines
+  &hashtags=PandemicUnequal
+  @Vacunas_LAC")
+    }
+    if (lang() == "pt") {
+      mensaje <-
+        paste0("Você sabe quais são os impactos da pandemia que a América Latina está sofrendo atualmente? 😱👇
+
+Clique aqui 👉 ", shared_link$short_url, "
+
+Interagir com estes dados e tornar-se um agente de mudança para &hashtags=VaccinesforthePeople
+
+  &hashtags=DadosVacinas
+  &hashtags=PandemicUnequal
+  @Vacunas_LAC")
+    }
+
+    tweet_text <- URLencode(mensaje)
+    print(tweet_text)
+    shinyjs::runjs(sprintf("window.open('%s')", paste0("https://twitter.com/intent/tweet?text=", tweet_text)))
+
+  })
 
   output$bitly_title <- renderUI({
     i_("bitly_desc", lang())
@@ -231,14 +275,11 @@ server <-  function(input, output, session) {
     shared_link$short_url
   })
 
-  observeEvent(shared_red$id, {
-    if (shared_red$id %in% c("tw", "fc")) {
-      shinyjs::runjs(sprintf("window.open('%s')", paste0("https://twitter.com/intent/tweet?text=Hola&url=", shared_link$short_url)))
-    }
-    if (shared_red$id %in% "lk") {
-      shinypanels::showModal("shared_bitly")
-    }
+  observeEvent(input$bl_click,{
+    shinypanels::showModal("shared_bitly")
   })
+
+
 
 
 
