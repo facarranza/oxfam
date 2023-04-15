@@ -749,7 +749,7 @@ server <-  function(input, output, session) {
 
         }
         names(data) <- c(agg, var_calc[1],var_calc[2])
-        names(data) <- c(agg, paste(var_calc[1], "  -", i_(agg,lang()),""), paste(var_calc[2], " ", i_(agg,lang()),""))
+        #names(data) <- c(agg, paste(var_calc[1], "  -", i_(agg,lang()),""), paste(var_calc[2], " ", i_(agg,lang()),""))
       }
 
       ###############################################################
@@ -824,7 +824,6 @@ server <-  function(input, output, session) {
       }
     }
     colnames(data)  <- i_(colnames(data), lang())
-    print(data)
     data
 
   })
@@ -928,7 +927,6 @@ server <-  function(input, output, session) {
   data_down_table <- reactive({
     req(data_filter())
     df <- data_filter()
-    print(questions_select())
     if( (("doses_delivered_vaccine_donations" %in%  questions_select()$indicador &   "covid_vaccine_agreements"  %in% questions_select()$indicador) |
          ("new_deaths_per_million" %in% questions_select()$indicador & "new_cases_per_million" %in% questions_select()$indicador) |
          ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador) |
@@ -980,7 +978,6 @@ server <-  function(input, output, session) {
 
   output$viz_view <- renderUI({
     req(viz_select())
-    print(viz_select())
     height_viz <- 650
     if(!is.null(input$dimension)) height_viz <- input$dimension[2] - 150
 
