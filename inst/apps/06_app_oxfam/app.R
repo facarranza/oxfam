@@ -33,7 +33,7 @@ ui <- panelsPage(
     background = "#FFF"
   ),
   langSelectorInput("lang", position = "fixed"),
-  panel(title = ui_("question"),
+  panel(title = ui_("pregunta"),
         id = "controls-style",
         collapse = FALSE,
         can_collapse = FALSE,
@@ -77,7 +77,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-         # verbatimTextOutput("debug"),
+          #verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -160,7 +160,14 @@ server <-  function(input, output, session) {
 
   output$button_questions <- renderUI({
     req(data_questions())
-    df_b <- unique(data_questions()$ind_pregunta)[1]
+    if(!is.null(url_par()$inputs$question)) {
+      if(url_par()$inputs$question %in% data_questions()$ind_pregunta)
+        df_b <- url_par()$inputs$question
+      else   df_b <- unique(data_questions()$ind_pregunta)[1]
+    }
+
+    else df_b <- unique(data_questions()$ind_pregunta)[1]
+
 
     buttons <- dsapptools:::make_buttons(ids = unique(data_questions()$ind_pregunta),
                                          labels = unique(data_questions()[[paste0("pregunta_", lang())]]),
@@ -171,9 +178,17 @@ server <-  function(input, output, session) {
 
 
   ques_sel <- reactive({
-    qs <- input$last_click
-    if (is.null(qs)) qs <- "q_4"
-    qs
+
+    if(!is.null(url_par()$inputs$question)) {
+      if(url_par()$inputs$question %in% data_questions()$ind_pregunta)
+        df_b <- url_par()$inputs$question
+      else   df_b <- unique(data_questions()$ind_pregunta)[1]
+    }
+    else{
+      qs <- input$last_click
+      if (is.null(qs)) qs <- "q_4"
+      qs
+    }
   })
 
   data_subquestions <- reactive({
@@ -184,9 +199,19 @@ server <-  function(input, output, session) {
     df
   })
 
+
   output$button_subquestions <- renderUI({
     req(data_subquestions())
-    df_b <- unique(data_subquestions()$ind_subpregunta)[1]
+
+    if(!is.null(url_par()$inputs$subquestion)) {
+      if(url_par()$inputs$subquestion %in% data_subquestions()$ind_subpregunta ) {
+        df_b <- url_par()$inputs$subquestion
+        subques_sel$id  <- url_par()$inputs$subquestion
+      }
+      else   df_b <- unique(data_subquestions()$ind_subpregunta)[1]
+    }
+    else df_b <- unique(data_subquestions()$ind_subpregunta)[1]
+
     buttons <- dsapptools:::make_buttons(ids = unique(data_subquestions()$ind_subpregunta),
                                          labels = unique(data_subquestions()[[paste0("subpregunta_", lang())]]),
                                          default_active = df_b,
@@ -201,11 +226,24 @@ server <-  function(input, output, session) {
   observe({
     sq <- input$last_click_sub
     subques_sel$id <- sq
-    if (is.null(sq)) subques_sel$id <- "q_4_31"
+
+    if (is.null(sq)){
+      if(!is.null(url_par()$inputs$subquestion)) {
+
+        if(url_par()$inputs$subquestion %in% data_subquestions()$ind_subpregunta ) {
+
+          subques_sel$id  <- url_par()$inputs$subquestion
+        }
+        else   subques_sel$id <-  "q_4_31"
+      }
+      else subques_sel$id <- "q_4_31"
+
+    }
   })
 
   observeEvent(input$last_click, {
     req(data_subquestions())
+
     subques_sel$id <- unique(data_subquestions()$ind_subpregunta)[1]
   })
 
@@ -234,8 +272,10 @@ server <-  function(input, output, session) {
   })
 
   actual_but <- reactiveValues(active = NULL)
+  tooltip_info <- reactiveValues(agg = NULL) #tooltip with collapse
 
   observe({
+
 
     if (!is.null(url_par()$inputs$viz)) {
       actual_but$active <- url_par()$inputs$viz
@@ -294,22 +334,22 @@ server <-  function(input, output, session) {
         #SANKEY SPECIAL SECTION - TODO: optimize in one if
         if( viz_select() %in% ("sankey")){
 
-            if( slug  == "covid_vaccine_agreements" ) {
-              d <- d |>
-                  select(!unidad_id) |>
-                  group_by(id, unidad) |>
-                  mutate(unidadp= paste0(unidad, collapse = "-")) |>
-                  tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna")) |>
-                  distinct()
-            }
-            if( slug  == "doses_delivered_vaccine_donations" ) {
-              d <- d |>
+          if( slug  == "covid_vaccine_agreements" ) {
+            d <- d |>
               select(!unidad_id) |>
-                group_by(id,unidad) |>
-                mutate(unidadp= paste0(unidad, collapse = "-")) |>
-                tidyr::separate(unidadp,sep="-",into=c("donante","vacuna")) |>
-                distinct()
-              }
+              group_by(id, unidad) |>
+              mutate(unidadp= paste0(unidad, collapse = "-")) |>
+              tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna")) |>
+              distinct()
+          }
+          if( slug  == "doses_delivered_vaccine_donations" ) {
+            d <- d |>
+              select(!unidad_id) |>
+              group_by(id,unidad) |>
+              mutate(unidadp= paste0(unidad, collapse = "-")) |>
+              tidyr::separate(unidadp,sep="-",into=c("donante","vacuna")) |>
+              distinct()
+          }
 
         }
         #################################################
@@ -322,25 +362,80 @@ server <-  function(input, output, session) {
           }
         }
         #############################################
-      } else {
+      }
+      else { #(length(slug) > 1,
         ls <- oxfam_6[[lang()]][slug]
         if (viz_select() %in% c("line", "bar")) {
-          id_valor <- grep("valor", names(ls[[1]]))
 
+          id_valor <- grep("valor", names(ls[[1]]))
           names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
-          unique(print(ls$fecha))
           id_valor <- grep("valor", names(ls[[2]]))
           names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
-          unique(print(ls$fecha))
-          d <- ls |> purrr::reduce(inner_join,
-                                   by = c("fecha", "pais_en", "pais_es", "pais_pt"),
+
+          #TYPE OF JOIN
+          if (viz_select() %in% c("bar")) by_types <- c("pais_en", "pais_es", "pais_pt")
+          if (viz_select() %in% c("line")) by_types <- c("fecha","pais_en", "pais_es", "pais_pt")
+
+          #################### SPECIAL CASES  TEMPORAL TRANSLATE TO: VAR, IND1, IND2 WITHOUT UNIT TYPE
+          if((unique(ls[[1]][[paste0("slug")]]) == "doses_delivered_vaccine_donations" &  unique(ls[[2]][[paste0("slug")]]) == "covid_vaccine_agreements") |
+             (unique(ls[[1]][[paste0("slug")]]) == "new_deaths_per_million" &  unique(ls[[2]][[paste0("slug")]]) == "new_cases_per_million") |
+             (unique(ls[[1]][[paste0("slug")]]) == "people_fully_vaccinated" &  unique(ls[[2]][[paste0("slug")]]) == "people_vaccinated")) {
+            #NOT DATE
+            #by_types <-  c("pais_en", "pais_es", "pais_pt")
+            ls[[1]] <- ls[[1]] |>
+              select(!c(unidad_id,unidad)) |>
+              distinct()
+            ls[[2]] <- ls[[2]] |>
+              select(!c(unidad_id,unidad)) |>
+              distinct()
+
+          }
+          ######################################
+
+          d <- ls |> purrr::reduce(full_join,
+                                   by = by_types,
                                    multiple = "any")
-        } else {
+
+        }
+        else { #SCATTER ON PROCESS
+
+
+          if((unique(ls[[1]][[paste0("slug")]]) == "doses_delivered_vaccine_donations" &  unique(ls[[2]][[paste0("slug")]]) == "covid_vaccine_agreements") |
+             (unique(ls[[1]][[paste0("slug")]]) == "new_deaths_per_million" &  unique(ls[[2]][[paste0("slug")]]) == "new_cases_per_million") |
+             (unique(ls[[1]][[paste0("slug")]]) == "people_fully_vaccinated" &  unique(ls[[2]][[paste0("slug")]]) == "people_vaccinated")) {
+            by_types <- c("pais_en", "pais_es", "pais_pt")
+            id_valor <- grep("valor", names(ls[[1]]))
+            names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
+            id_valor <- grep("valor", names(ls[[2]]))
+            names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
+            ls[[1]] <- ls[[1]] |>
+              select(!c(unidad_id,unidad)) |>
+              distinct()
+            ls[[2]] <- ls[[2]] |>
+              select(!c(unidad_id,unidad)) |>
+              distinct()
+            d <- ls |> purrr::reduce(full_join,
+                                     by = by_types,
+                                     multiple = "any")
+
+
+          }
+          if(unique(ls[[1]][[paste0("slug")]]) == "stringency_index" &  unique(ls[[2]][[paste0("slug")]]) == "ghs_index") {
+            by_types <- c("pais_en", "pais_es", "pais_pt")
+            id_valor <- grep("valor", names(ls[[1]]))
+            names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
+            id_valor <- grep("valor", names(ls[[2]]))
+            names(ls[[2]])[id_valor] <- unique(ls[[2]][[paste0("slug_", lang())]])
+            d <- ls |> purrr::reduce(full_join,
+                                     by = by_types,
+                                     multiple = "any")
+
+          }
+
           d <- ls |> bind_rows()
           if ("valor" %in% names(d)) {
             d <- d |> tidyr::drop_na(valor)
           }
-
 
         }
       }
@@ -454,15 +549,19 @@ server <-  function(input, output, session) {
 
     slug <- unique(questions_select()$indicador)
     pais <- paste0("pais_", lang())
-    if (viz == "map") pais <- "pais_en"
+    #if (viz == "map") pais <- "pais_en"
     var_viz <- c(pais, "fecha", "valor")
     type_viz <- "CatDatNum"
     num_viz  <- 3
 
+
     if (length(slug) == 1) {
       if (length(unique(df$fecha)) == 1 |
-          viz %in% c("map", "bar", "treemap", "sankey")) {
+        viz %in% c("map", "bar", "treemap", "sankey")) {
+
+        if(!is.null(df$unidad) & viz %in% c("bar","treemap"))  var_viz <- c(var_viz, "unidad")
         var_viz <- setdiff(var_viz, "fecha")
+        if(!is.null(df$unidad))   var_viz <- c(var_viz, "unidad")
         type_viz <- "CatNum"
         num_viz  <- 2
 
@@ -494,14 +593,24 @@ server <-  function(input, output, session) {
             type_viz <- "CatCatNum"
             num_viz  <- 3
           }
+
+          if( slug  == "vaccination_approvals_trials" ) {
+
+            var_viz <- c("valor",pais)
+            type_viz <- "CatNum"
+            num_viz  <- 2
+
+          }
+
         }
         #############################################
 
       }
-      # if (length(unique(df$unidad)) > 1) {
-      #   var_viz <- gsub("valor", "unidad", var_viz)
-      # }
-    } else {
+       else if(!is.null(df$unidad) & viz %in% "line")  var_viz <- c(var_viz, "unidad")
+
+
+    }
+    else { # SLUG > 1
       if (viz != "scatter") {
         type_viz <- "DatNumNum"
         num_viz  <- 3
@@ -509,9 +618,33 @@ server <-  function(input, output, session) {
           type_viz <- "CatNumNum"
           num_viz  <- 3
         }
-        var_viz <- c("fecha", slug_trans())
-      }
 
+        var_viz <- c("fecha", slug_trans())
+
+        #############################################
+        #BAR SPECIAL CASES
+        if( viz %in% c("bar")) {
+          if( ("doses_delivered_vaccine_donations" %in% slug &   "covid_vaccine_agreements"  %in% slug) |
+              ("new_deaths_per_million" %in% slug & "new_cases_per_million" %in% slug ) |
+              ("people_fully_vaccinated" %in% slug & "people_vaccinated" %in% slug )) {
+            #NOT DATE
+            var_viz <- c(pais,slug_trans())
+            num_viz  <- 3
+
+          }
+        }
+        #############################################
+      }
+      else {#SCATTER
+        if( ("doses_delivered_vaccine_donations" %in% slug &   "covid_vaccine_agreements"  %in% slug) |
+            ("new_deaths_per_million" %in% slug & "new_cases_per_million" %in% slug ) |
+            ("stringency_index" %in% slug & "ghs_index" %in% slug ) |
+            ("people_fully_vaccinated" %in% slug & "people_vaccinated" %in% slug )) {
+          #NOT DATE
+          var_viz <- c(pais,slug_trans())
+          num_viz  <- 3
+        }
+      }
     }
 
     list(
@@ -537,6 +670,18 @@ server <-  function(input, output, session) {
       viz <- "hgch_choropleth_GnmNum"
     } else {
       viz <- paste0("hgch_", viz_select(), "_", var_viz()$type_viz)
+
+      ############SPECIAL CASES
+      if( (("doses_delivered_vaccine_donations" %in% questions_select()$indicador &   "covid_vaccine_agreements"  %in% questions_select()$indicador) |
+           ("new_deaths_per_million" %in% questions_select()$indicador & "new_cases_per_million" %in% questions_select()$indicador ) |
+           ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador ) |
+           ("people_fully_vaccinated" %in% questions_select()$indicador & "people_vaccinated" %in%questions_select()$indicador )) &
+          ("scatter"  %in% viz_select())) {
+        viz <- paste0("hgch_", "scatter")
+
+      }
+      ########################
+
     }
 
     viz
@@ -553,49 +698,132 @@ server <-  function(input, output, session) {
     id_ct <- grep("fecha_ct", names(data))
     data <- data[,-id_ct]
     var <- var_viz()$var_viz
+    tooltip_info$agg <- NULL
+
     if (length(unique(questions_select()$indicador)) == 2) {
+
       data <- data |> select({{ var }})
+
+      ################################################### SPECIAL CASES, group indicators by agg for scatter and bars
+      viz_agg <- agg_dash_6 |>
+        filter( ind_pregunta %in%  questions_select()$ind_pregunta &
+                  ind_subpregunta %in% questions_select()$ind_subpregunta
+                & !is.na(agg) &
+                  viz %in% viz_select() ) |>
+        select(viz, agg) |>
+        filter(viz %in%  viz_select() )
+
+      ###########################################
+      #TODO DELETE THIS CODE AFTER THE AGG SCATTER DATABASE AGG HAS BEEN UPDATED
+
+      agg_temp <- NULL
+
+      if( (("doses_delivered_vaccine_donations" %in%  questions_select()$indicador &   "covid_vaccine_agreements"  %in% questions_select()$indicador) |
+           ("new_deaths_per_million" %in% questions_select()$indicador & "new_cases_per_million" %in% questions_select()$indicador) |
+           ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador) |
+           ("people_fully_vaccinated" %in% questions_select()$indicador & "people_vaccinated" %in% questions_select()$indicador)) &   "scatter" %in% viz_select()){
+        viz_agg <- data.frame("agg"=c("mean"))
+
+
+      }
+      ############################################
+
+      if(nrow(viz_agg) > 0) {  #TEST IF NEEDS AGG  OPERATION
+        agg <- viz_agg$agg
+        tooltip_info$agg <- agg
+        group_var <- (unique(names(data[c(1, var_viz()$num_viz-2)  ])))
+        var_calc <- unique(names(data[c(2,3)])) ### DATA ESTATICA
+
+        ### TODO  UPDATE WITH DSAAPPTOOLS
+        if(agg=="mean"){
+          data <- data |>
+            group_by(!!sym(group_var)) |>
+            summarise(x = mean(!!sym(var_calc[1]), na.rm = T), y = mean(!!sym(var_calc[2]), na.rm = T))
+        }
+        else{
+          if(agg=="sum") {
+            data <- data |>
+              group_by(!!sym(group_var)) |>
+              summarise(x = sum(!!sym(var_calc[1]), na.rm = T), y = sum(!!sym(var_calc[2]), na.rm = T))
+          }
+
+        }
+        names(data) <- c(agg, var_calc[1],var_calc[2])
+        #names(data) <- c(agg, paste(var_calc[1], "  -", i_(agg,lang()),""), paste(var_calc[2], " ", i_(agg,lang()),""))
+      }
+
+      ###############################################################
     }
     else {
 
-      data <- data |> select({{ var }}, everything())
+      viz_agg <- agg_dash_6 |>
+        filter( ind_pregunta %in%  questions_select()$ind_pregunta &
+                  ind_subpregunta %in% questions_select()$ind_subpregunta  &
+                  indicador%in% questions_select()$indicador & !is.na(agg) &
+                  viz %in% viz_select() ) |>
+        select(viz, agg) |>
+        filter(viz %in%  viz_select() )
 
 
-      ###########################################################
-      #AGR  SECTION , only if required
-       viz_agg <- agg_dash_6 |>
-                  filter( ind_pregunta ==  questions_select()$ind_pregunta &
-                          ind_subpregunta == questions_select()$ind_subpregunta  &
-                          indicador == questions_select()$indicador & !is.na(agg) &
-                          viz == viz_select() ) |>
-                   select(viz, agg) |>
-                   filter(viz == viz_select() )
+      if(nrow(viz_agg) > 0) { #TEST IF NEEDS AGG  OPERATION
+        data <- data |> select({{ var }}, everything())
+        agg <- viz_agg$agg
+        tooltip_info$agg <- agg
+        var_calc <- unique(names(data[var_viz()$num_viz]))
+        if(ncol(viz_agg) > 1 ) {
+          group_var <- unique(names(data[c(1, var_viz()$num_viz-1)  ]))
 
-        if(nrow(viz_agg) > 0) {
-          agg <- viz_agg$agg
-          var_calc <- unique(names(data[var_viz()$num_viz]))
-          if(ncol(viz_agg) > 1 ) {
-            group_var <- unique(names(data[c(1, var_viz()$num_viz-1)  ]))
+        }
+        else  group_var <- unique(names(data[1]))
 
-          }
-          else  group_var <- unique(names(data[1]))
 
-          data <- var_aggregation(data = data,
-                                       # dic = dic,
-                                       agg =agg,
-                                       to_agg = var_calc,
-                                       name =agg,
-                                       group_var =group_var)
+        if("vaccination_approvals_trials" %in% questions_select()$indicador){
 
-       }
+          group_var <- unique(names(data[c(1,2)]))
+          data$valor <- as.character(data$valor)
 
-       ###########################################################
+          data_temp1 <- var_aggregation(data = data,
+                                        # dic = dic,
+                                        agg = agg,
+                                        to_agg = var_calc,
+                                        name = agg,
+                                        group_var = group_var)
 
+          data <- data_temp1 |> tidyr::pivot_wider(names_from = valor, values_from = count, names_prefix="stage_",values_fill = 0)
+          data$count <- data$stage_1 + data$stage_2 + data$stage_3
+          data <- data |> select(group_var[2], count, stage_1, stage_2 ,stage_3)
+
+        }
+        else {
+
+          data_temp1 <- var_aggregation(data = data,
+                                          # dic = dic,
+                                          agg = agg,
+                                          to_agg = var_calc,
+                                          name = agg,
+                                          group_var = group_var)
+
+            #REQUIRED MIN MAX -  STEP PROGRESS - REQUIRED: UNIT
+            unidad <- NULL
+            if(!is.null(data$unidad)) unidad <- unique(data$unidad_id)
+            data_temp2 <- data |> group_by(across(sym(group_var))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
+            data_temp2$min_date <- as.character(data_temp2$min_date)
+            data_temp2$max_date <- as.character(data_temp2$max_date)
+            data <- data_temp1 |> left_join( data_temp2)
+
+            if(!is.null(unidad)) {
+              if(length(unidad) == 1) data$unidad <- unidad
+            }
+        }
+      }
+      else{
+        data <- data |> select({{ var }})
+        if(viz_select() %in% c("line","bar","treemap")) {
+          tooltip_info$agg <- "None"
+        }
+      }
     }
-
-
     colnames(data)  <- i_(colnames(data), lang())
-
     data
 
   })
@@ -604,6 +832,7 @@ server <-  function(input, output, session) {
   viz_theme <- reactive({
     req(viz_select())
     req(slug_trans())
+
     viz <- viz_select()
     title <- paste0(slug_trans(), collapse = " vs ")
     opts <- list(
@@ -625,17 +854,34 @@ server <-  function(input, output, session) {
         title_size = 17,
         title_weight = 500,
         palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
+
       )
     )
+    if(!is.null(tooltip_info$agg)) opts$collapse_rows = T
 
     if(viz=="line" & "stringency_index" %in% questions_select()$indicador){
       opts$y_max <- 100
     }
     if (viz == "map") {
-      opts$map_name <- "latamcaribbean_countries"
+      opts$map_name <- "world_countries_latin_america_caribbean"
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
-      opts$theme$tooltip_template <- paste0("<b>{a}<br/> {b} <br/>")
+      pais_bold <- paste0("<b>",i_("pais",lang()), ": </b>")
+      pais_detail <-  paste0("{",i_("pais",lang()), "}")
+      if(!is.null(tooltip_info$agg)) {
+        value_bold  <-   paste0("<b>",i_(tooltip_info$agg,lang()), ": </b>")
+        value_detail <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
+      }
+      else{
+        value_bold  <-   paste0("<b>",i_("valor",lang()), ": </b>")
+        value_detail <-  paste0("{",i_("valor",lang()), "}")
+      }
+      fecha_min_bold <- paste0("<b>",i_("min_date",lang()), ": </b>")
+      fecha_min_detail <-  paste0("{","mindate", "}")
+      tooltip <- paste0(pais_bold,  pais_detail, "<br>", value_bold ,  value_detail,"<br>")
+      opts$theme$tooltip_template <- {tooltip}
+
     }
+
     opts
 
   })
@@ -647,10 +893,28 @@ server <-  function(input, output, session) {
     req(data_viz())
     req(viz_theme())
 
-    do.call(viz_func(), list(
-      data = data_viz(),
-      opts = viz_theme()
-    ))
+    ############################# SPECIAL CASE
+    if( (("doses_delivered_vaccine_donations" %in%  questions_select()$indicador &   "covid_vaccine_agreements"  %in% questions_select()$indicador) |
+         ("new_deaths_per_million" %in% questions_select()$indicador & "new_cases_per_million" %in% questions_select()$indicador) |
+         ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador) |
+         ("people_fully_vaccinated" %in% questions_select()$indicador & "people_vaccinated" %in% questions_select()$indicador)) &   "scatter" %in% viz_select()){
+
+      data <- data_viz()
+      colnames(data)  <- c(i_("pais", lang()),names(data[2]),names(data[3]))
+      do.call(viz_func(), list(
+        data = data,
+        opts = viz_theme(),
+        var_num = c(names(data[2]),names(data[3])),
+        var_cat =  c(i_("pais", lang()))
+      ))
+      #############################
+    }
+    else{
+      do.call(viz_func(), list(
+        data = data_viz(),
+        opts = viz_theme()
+      ))
+    }
   })
 
   output$viz_hgch <- renderHighchart({
@@ -658,27 +922,45 @@ server <-  function(input, output, session) {
     hgch_viz()
   })
 
-  data_down <- reactive({
+
+  # TODO:
+  data_down_table <- reactive({
     req(data_filter())
     df <- data_filter()
-    var_select <- c(c("id", paste0("slug_", lang()),
-                      paste0("pais_", lang())), "fecha", "valor")
-
-    if ("unidad" %in% names(df)) {
-      var_select <- c(var_select, "unidad")
+    if( (("doses_delivered_vaccine_donations" %in%  questions_select()$indicador &   "covid_vaccine_agreements"  %in% questions_select()$indicador) |
+         ("new_deaths_per_million" %in% questions_select()$indicador & "new_cases_per_million" %in% questions_select()$indicador) |
+         ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador) |
+         ("people_fully_vaccinated" %in% questions_select()$indicador & "people_vaccinated" %in% questions_select()$indicador))){
+      df[,-1]
     }
-    df <- df[,var_select]
-    names_tr <- i_(names(df), lang = lang())
-    names(df) <- names_tr
-    df
+    else{
+      var_select <- c(c("id", paste0("slug_", lang()),
+                        paste0("pais_", lang())), "fecha", "valor")
+
+      if ("unidad" %in% names(df)) {
+        var_select <- c(var_select, "unidad_id")
+      }
+
+      df <- df[,var_select]
+
+      if ("unidad_id" %in% names(df)) {
+        df <-  df |> rename(unidad = unidad_id)
+      }
+
+      names_tr <- i_(names(df), lang = lang())
+      names(df) <- names_tr
+
+
+      df[,-1]
+    }
   })
+
 
   output$dt_viz <- DT::renderDataTable({
     req(viz_select())
     if (viz_select() != "table") return()
-    req(data_down())
-    df <- data_down()
-    df <- dplyr::as_tibble(data_down())
+    req(data_down_table())
+    df <- dplyr::as_tibble(data_down_table())
     dtable <- DT::datatable(df,
                             rownames = F,
                             selection = 'none',
@@ -699,7 +981,7 @@ server <-  function(input, output, session) {
     if(!is.null(input$dimension)) height_viz <- input$dimension[2] - 150
 
     if (viz_select() == "table") {
-      DT::dataTableOutput("dt_viz", height = height_viz, width = "100%")
+      DT::dataTableOutput("dt_viz", height = height_viz, width = "500px")
     } else {
       withLoader(
         highchartOutput("viz_hgch", height = height_viz),
@@ -730,7 +1012,7 @@ server <-  function(input, output, session) {
 
   observe({
     dsmodules::downloadTableServer("dropdown_table",
-                                   element = reactive(data_down()),
+                                   element = reactive(data_down_table()),
                                    formats = c("csv", "xlsx", "json"))
     dsmodules::downloadImageServer("download_viz",
                                    element = reactive(hgch_viz()),
@@ -740,15 +1022,15 @@ server <-  function(input, output, session) {
   })
 
 
-output$debug <- renderPrint({
-  list(
-   #data_viz(),
-   #data_slug(),
-    #data_questions()$ind_pregunta
-    #questions_select()
-  #  names( questions_select())
-  )
-})
+  output$debug <- renderPrint({
+    list(
+      #data_filter()
+      #data_viz()
+      #data_questions()$ind_pregunta
+      #questions_select()
+      #  names( questions_select())
+    )
+  })
 
 
 

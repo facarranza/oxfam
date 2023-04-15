@@ -28,7 +28,12 @@ fabricante: Fabricante
 pais_donante: Pais doador
 unidad: Unidades
 valor: Valor
-slug: Indicador
-slug_en: Indicador_en
+slug_en: Indicador
+slug_pt: Indicador
 count: Contar
 pais_pt: País
+min_date: Data mínima
+max_date: Data máxima
+stage_1: Vacinas aprovadas para usar
+stage_2: Vacinas em ensaios clínicos
+stage_3: Vacinas com ensaios que não continuam mais
