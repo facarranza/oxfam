@@ -933,9 +933,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
       var <- c(unique(var_viz()$var_viz, var_viz()$var_viz_date), label_agg)
 
-      if (length(var_num) == 2) {
+      if (length(slug_selected()) == 2) {
         data <- data |> select({{ var }})
-        data$..labels <- " "
       } else {
         data <- data |>
           select({{ var }}, everything()) |>
@@ -1017,7 +1016,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                         fecha, var_viz()$label_agg, ":",
                         valor, unidad_label)
       opts$theme$tooltip_template <- tooltip
-      if(slug_selected() %in% c("stringency_index", "ghs_index")){
+      if(any(slug_selected() %in% c("stringency_index", "ghs_index"))){
         opts$y_max <- 100
         opts$suffix_num <- "/100"
       }
@@ -1026,6 +1025,10 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if ("excess_mortality" %in% slug_selected()) {
       opts$suffix_num <- "%"
     }
+    if (length(slug_selected()) == 2) {
+      opts$theme$tooltip_template <- NULL
+    }
+
 
     opts
 
@@ -1036,7 +1039,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     req(data_viz())
     req(var_viz())
     req(viz_theme())
-    #print(data_viz())
+
     var_num <- var_viz()$label_agg
     var_date <- var_viz()$var_viz_date
     var_cat <- var_viz()$var_viz
@@ -1044,6 +1047,14 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       var_date <- 'fecha'
       var_cat <- NULL
     }
+    if (viz_select() != "map") {
+      var_gnm <- NULL
+    }
+
+    hcoptslang <- getOption("highcharter.lang")
+    hcoptslang$thousandsSep <- ","
+    hcoptslang$decimalPoint <- "."
+    options(highcharter.lang = hcoptslang)
 
     do.call(viz_func(), list(
       data = data_viz(),
@@ -1052,7 +1063,10 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       var_dat = var_date,
       var_num = var_num,
       opts = viz_theme()
-    ))
+    )) |>
+      hc_tooltip(
+        valueDecimals = 2
+      )
   })
 
   output$viz_hgch <- renderHighchart({
@@ -1065,7 +1079,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     req(data_load())
     df <- data_load()
     #print(df)
-    var_select <- c(c("id", paste0("slug_", lang()),
+    var_select <- c(c( paste0("slug_", lang()),
                       paste0("pais_", lang())), "fecha", "valor")
 
     if ("unidad" %in% names(df)) {
@@ -1092,7 +1106,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                               fixedColumns = TRUE,
                               fixedHeader = TRUE,
                               autoWidth = TRUE,
-                              scrollY = "500px")
+                              scrollY = "450px")
     )
     dtable
   })
@@ -1103,7 +1117,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if(!is.null(input$dimension)) height_viz <- input$dimension[2] - 150
 
     if (viz_select() == "table") {
-      DT::dataTableOutput("dt_viz", height = height_viz, width = "100%")
+      DT::dataTableOutput("dt_viz", height = height_viz, width = 650)
     } else {
       withLoader(
         highchartOutput("viz_hgch", height = height_viz),
