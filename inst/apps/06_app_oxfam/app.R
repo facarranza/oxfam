@@ -749,6 +749,7 @@ server <-  function(input, output, session) {
 
         }
         names(data) <- c(agg, var_calc[1],var_calc[2])
+        names(data) <- c(agg, paste(var_calc[1], "  -", i_(agg,lang()),""), paste(var_calc[2], " ", i_(agg,lang()),""))
       }
 
       ###############################################################
