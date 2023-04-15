@@ -961,7 +961,6 @@ server <-  function(input, output, session) {
     if (viz_select() != "table") return()
     req(data_down_table())
     df <- dplyr::as_tibble(data_down_table())
-    print(df)
     dtable <- DT::datatable(df,
                             rownames = F,
                             selection = 'none',
