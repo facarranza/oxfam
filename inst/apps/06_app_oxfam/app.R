@@ -14,15 +14,46 @@ library(dsapptools)
 library(dplyr)
 library(webshot2)
 library(reactable)
+library(shinyjs)
+library(httr)
+library(jsonlite)
 webshot::install_phantomjs()
-#TODO falta hacer zoom a América en el mapa, recibir como parametro URL el rango de fechas, ordenar y ajustar color de boton download
+
+
+shorten_url <- function(long_url, access_token) {
+  api_url <- "https://api-ssl.bitly.com/v4/shorten"
+  headers <- add_headers(
+    "Content-Type" = "application/json",
+    "Authorization" = paste("Bearer", access_token)
+  )
+  body <- toJSON(list(long_url = long_url), auto_unbox = TRUE)
+  response <- POST(api_url, headers, body = body)
+  content(response, "parsed", "application/json")$link
+}
 
 ui <- panelsPage(
   tags$head(
     tags$link(rel="stylesheet", type="text/css", href="custom.css"),
-    tags$script(src="handler.js")
+    tags$script(src="handler.js"),
+    tags$script(src = "clipboard.min.js"),
+    tags$script(HTML("
+      $(document).ready(function() {
+        var clipboard = new ClipboardJS('.btn-clipboard');
+        clipboard.on('success', function(e) {
+          console.info('Accion:', e.action);
+          console.info('Texto:', e.text);
+          console.info('Disparador:', e.trigger);
+          e.clearSelection();
+        });
+        clipboard.on('error', function(e) {
+          console.error('Accion:', e.action);
+          console.error('Disparador:', e.trigger);
+        });
+      });
+    "))
   ),
   useShi18ny(),
+  useShinyjs(),
   busy_start_up(
     loader = tags$img(
       src = "loading_gris.gif",
@@ -33,6 +64,13 @@ ui <- panelsPage(
     background = "#FFF"
   ),
   langSelectorInput("lang", position = "fixed"),
+  shinypanels::modal(id = 'shared_bitly',
+                     title = uiOutput("bitly_title"),
+                     div(class = "modal-link",
+                         uiOutput("bitly_link"),
+                         uiOutput("copy_button")
+                     )
+  ),
   panel(title = ui_("pregunta"),
         id = "controls-style",
         collapse = FALSE,
@@ -94,6 +132,131 @@ ui <- panelsPage(
 
 server <-  function(input, output, session) {
 
+  # url params --------------------------------------------------------------
+  
+  url_params <- list(question = NULL, subquestion = NULL, viz = NULL)
+  
+  url_par <- reactive({
+    shinyinvoer::url_params(url_params, session)
+  })
+  
+  shared_link <- reactiveValues(short_url = NULL)
+  
+  observe({
+    if (is.null(lang())) return()
+    if (is.null(ques_sel())) return()
+    if (is.null(subques_sel$id)) return()
+    question <- NULL
+    subquestion <- NULL
+    viz = NULL
+    
+    if (is.null(url_par()$inputs$question)){
+      question <- paste0("question=", ques_sel(), "%26")
+    } else {
+      question <- paste0("question=", url_par()$inputs$question, "%26") 
+    }
+    if (!is.null(url_par()$inputs$subquestion)) subquestion <- paste0("subquestion=", url_par()$inputs$subquestion, "%26")
+    
+    if (!is.null(actual_but$active)) viz <- paste0("viz=",actual_but$active, "%26")
+    
+    long_url <- paste0("https://datasketch.shinyapps.io/oxfam_questions/?", gsub("%26", "&",
+                                                                           paste0(question, subquestion, "lang=", lang())))
+    print(long_url)
+    shared_link$short_url <- shorten_url(long_url, "1ded0052e90265f03473cd1b597f0c45bb83d578")
+  })
+  
+  # Compartir ---------------------------------------------------------------
+  
+  output$compartir <- renderUI({
+    
+    HTML(paste0(
+      '
+      <div class="dropdown-shared">
+        <button class="dropbtn-shared">
+        <img src="icons/compartir.svg" width="15" height="15">
+        </button>
+        <div class="dropdown-shared-content">',
+      actionButton("fc_click", label = HTML('<img src="icons/facebook.svg" width="15" height="15">')),
+      actionButton("tw_click", label = HTML('<img src="icons/twitter.svg" width="15" height="15">')),
+      actionButton("bl_click", label = HTML('<img src="icons/link.svg" width="15" height="15">')),
+      '</div>
+        </div>
+      '
+    )
+    )
+    
+  })
+  
+  
+  
+  observeEvent(input$fc_click,{
+    encoded_short_url <- URLencode(shared_link$short_url)
+    share_url <- paste0("https://www.facebook.com/sharer/sharer.php?u=", encoded_short_url)
+    print(share_url)
+    shinyjs::runjs(sprintf("window.open('%s')", share_url))
+  })
+  
+  observeEvent(input$tw_click,{
+    if (lang() == "es") {
+      mensaje <-
+        paste0("¿Sabes que hay información en tiempo real sobre el proceso de vacunación en Latinoamérica? 😱👇
+Dale clic 👉 ", shared_link$short_url, "
+¡Interactúa con estos datos y conviértete en un agente de cambio para &hashtags=VacunasparalaGente!
+  &hashtags=DataVacunas
+  &hashtags=PandemiaDesigual
+  @Vacunas_LAC")
+    }
+    if (lang() == "en") {
+      mensaje <-
+        paste0("Do you know what are the impacts of the pandemic that Latin America is currently experiencing? 😱👇
+Clic here 👉 ", shared_link$short_url, "
+Interact with this data and become an agent of change for &hashtags=Vaccinesforpeople
+  &hashtags=DataVaccines
+  &hashtags=PandemicUnequal
+  @Vacunas_LAC")
+    }
+    if (lang() == "pt") {
+      mensaje <-
+        paste0("Você sabe quais são os impactos da pandemia que a América Latina está sofrendo atualmente? 😱👇
+Clique aqui 👉 ", shared_link$short_url, "
+Interagir com estes dados e tornar-se um agente de mudança para &hashtags=VaccinesforthePeople
+  &hashtags=DadosVacinas
+  &hashtags=PandemicUnequal
+  @Vacunas_LAC")
+    }
+    
+    tweet_text <- URLencode(mensaje)
+    print(tweet_text)
+    shinyjs::runjs(sprintf("window.open('%s')", paste0("https://twitter.com/intent/tweet?text=", tweet_text)))
+    
+  })
+  
+  output$bitly_title <- renderUI({
+    i_("bitly_desc", lang())
+  })
+  
+  output$copy_button <- renderUI({
+    tags$button(
+      id = "copy_button",
+      class = "btn btn-default btn-clipboard",
+      icon("copy"),
+      `data-clipboard-action` = "copy",
+      `data-clipboard-target` = "#bitly_link"
+    )
+  })
+  
+  output$bitly_link <- renderUI({
+    req(shared_link$short_url)
+    shared_link$short_url
+  })
+  
+  observeEvent(input$bl_click,{
+    shinypanels::showModal("shared_bitly")
+  })
+  
+  
+  
+  
   # Idiomas -----------------------------------------------------------------
 
   i18n <- list(
@@ -137,13 +300,7 @@ server <-  function(input, output, session) {
   })
 
 
-  # url params --------------------------------------------------------------
-
-  url_params <- list(question = NULL, subquestion = NULL, viz = NULL)
-
-  url_par <- reactive({
-    shinyinvoer::url_params(url_params, session)
-  })
+  
 
 
   # Preguntas y subpreguntas ------------------------------------------------
@@ -180,21 +337,26 @@ server <-  function(input, output, session) {
   ques_sel <- reactive({
 
     if(!is.null(url_par()$inputs$question)) {
-      if(url_par()$inputs$question %in% data_questions()$ind_pregunta)
-        df_b <- url_par()$inputs$question
-      else   df_b <- unique(data_questions()$ind_pregunta)[1]
-    }
-    else{
+      if(url_par()$inputs$question %in% data_questions()$ind_pregunta) {
+        qs <- url_par()$inputs$question
+      } else {
+        qs <- unique(data_questions()$ind_pregunta)[1]
+      } 
+    } else{
       qs <- input$last_click
       if (is.null(qs)) qs <- "q_4"
-      qs
     }
+    print("in que sel")
+    print(qs)
+    qs
   })
 
   data_subquestions <- reactive({
     req(data_questions())
     req(ques_sel())
     df <- data_questions()
+    print("AAAAAAAAAAA")
+    print(ques_sel())
     df <- df |> filter(ind_pregunta %in% ques_sel())
     df
   })
@@ -234,9 +396,9 @@ server <-  function(input, output, session) {
 
           subques_sel$id  <- url_par()$inputs$subquestion
         }
-        else   subques_sel$id <-  "q_4_31"
+        else   subques_sel$id <- unique(data_subquestions()$ind_subpregunta)[1]
       }
-      else subques_sel$id <- "q_4_31"
+      else subques_sel$id <- unique(data_subquestions()$ind_subpregunta)[1]
 
     }
   })
