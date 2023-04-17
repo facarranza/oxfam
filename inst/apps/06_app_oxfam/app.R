@@ -133,15 +133,15 @@ ui <- panelsPage(
 server <-  function(input, output, session) {
 
   # url params --------------------------------------------------------------
-  
+
   url_params <- list(question = NULL, subquestion = NULL, viz = NULL)
-  
+
   url_par <- reactive({
     shinyinvoer::url_params(url_params, session)
   })
-  
+
   shared_link <- reactiveValues(short_url = NULL)
-  
+
   observe({
     if (is.null(lang())) return()
     if (is.null(ques_sel())) return()
@@ -149,26 +149,26 @@ server <-  function(input, output, session) {
     question <- NULL
     subquestion <- NULL
     viz = NULL
-    
+
     if (is.null(url_par()$inputs$question)){
       question <- paste0("question=", ques_sel(), "%26")
     } else {
-      question <- paste0("question=", url_par()$inputs$question, "%26") 
+      question <- paste0("question=", url_par()$inputs$question, "%26")
     }
     if (!is.null(url_par()$inputs$subquestion)) subquestion <- paste0("subquestion=", url_par()$inputs$subquestion, "%26")
-    
+
     if (!is.null(actual_but$active)) viz <- paste0("viz=",actual_but$active, "%26")
-    
+
     long_url <- paste0("https://datasketch.shinyapps.io/oxfam_questions/?", gsub("%26", "&",
-                                                                           paste0(question, subquestion, "lang=", lang())))
+                                                                                 paste0(question, subquestion, "lang=", lang())))
     print(long_url)
     shared_link$short_url <- shorten_url(long_url, "1ded0052e90265f03473cd1b597f0c45bb83d578")
   })
-  
+
   # Compartir ---------------------------------------------------------------
-  
+
   output$compartir <- renderUI({
-    
+
     HTML(paste0(
       '
       <div class="dropdown-shared">
@@ -184,18 +184,18 @@ server <-  function(input, output, session) {
       '
     )
     )
-    
+
   })
-  
-  
-  
+
+
+
   observeEvent(input$fc_click,{
     encoded_short_url <- URLencode(shared_link$short_url)
     share_url <- paste0("https://www.facebook.com/sharer/sharer.php?u=", encoded_short_url)
     print(share_url)
     shinyjs::runjs(sprintf("window.open('%s')", share_url))
   })
-  
+
   observeEvent(input$tw_click,{
     if (lang() == "es") {
       mensaje <-
@@ -224,17 +224,17 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   &hashtags=PandemicUnequal
   @Vacunas_LAC")
     }
-    
+
     tweet_text <- URLencode(mensaje)
     print(tweet_text)
     shinyjs::runjs(sprintf("window.open('%s')", paste0("https://twitter.com/intent/tweet?text=", tweet_text)))
-    
+
   })
-  
+
   output$bitly_title <- renderUI({
     i_("bitly_desc", lang())
   })
-  
+
   output$copy_button <- renderUI({
     tags$button(
       id = "copy_button",
@@ -244,19 +244,19 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       `data-clipboard-target` = "#bitly_link"
     )
   })
-  
+
   output$bitly_link <- renderUI({
     req(shared_link$short_url)
     shared_link$short_url
   })
-  
+
   observeEvent(input$bl_click,{
     shinypanels::showModal("shared_bitly")
   })
-  
-  
-  
-  
+
+
+
+
   # Idiomas -----------------------------------------------------------------
 
   i18n <- list(
@@ -300,7 +300,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   })
 
 
-  
+
 
 
   # Preguntas y subpreguntas ------------------------------------------------
@@ -336,15 +336,20 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
   ques_sel <- reactive({
 
-    if(!is.null(url_par()$inputs$question)) {
-      if(url_par()$inputs$question %in% data_questions()$ind_pregunta) {
-        qs <- url_par()$inputs$question
-      } else {
-        qs <- unique(data_questions()$ind_pregunta)[1]
-      } 
-    } else{
-      qs <- input$last_click
-      if (is.null(qs)) qs <- "q_4"
+   if(!is.null(input$last_click)){
+     qs <- input$last_click
+   }
+    else{
+        if(!is.null(url_par()$inputs$question)) {
+          if(url_par()$inputs$question %in% data_questions()$ind_pregunta) {
+            qs <- url_par()$inputs$question
+          } else {
+            qs <- unique(data_questions()$ind_pregunta)[1]
+          }
+        } else{
+
+         qs <- "q_4"
+        }
     }
     qs
   })
@@ -361,14 +366,21 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   output$button_subquestions <- renderUI({
     req(data_subquestions())
 
-    if(!is.null(url_par()$inputs$subquestion)) {
-      if(url_par()$inputs$subquestion %in% data_subquestions()$ind_subpregunta ) {
-        df_b <- url_par()$inputs$subquestion
-        subques_sel$id  <- url_par()$inputs$subquestion
-      }
-      else   df_b <- unique(data_subquestions()$ind_subpregunta)[1]
+    if(!is.null(input$last_click)){
+      df_b <- unique(data_subquestions()$ind_subpregunta)[1]
     }
-    else df_b <- unique(data_subquestions()$ind_subpregunta)[1]
+    else {
+
+      if(!is.null(url_par()$inputs$subquestion)) {
+        if(url_par()$inputs$subquestion %in% data_subquestions()$ind_subpregunta ) {
+          df_b <- url_par()$inputs$subquestion
+          subques_sel$id  <- url_par()$inputs$subquestion
+        }
+        else   df_b <- unique(data_subquestions()$ind_subpregunta)[1]
+      }
+      else df_b <- unique(data_subquestions()$ind_subpregunta)[1]
+    }
+
 
     buttons <- dsapptools:::make_buttons(ids = unique(data_subquestions()$ind_subpregunta),
                                          labels = unique(data_subquestions()[[paste0("subpregunta_", lang())]]),
@@ -715,7 +727,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     if (length(slug) == 1) {
       if (length(unique(df$fecha)) == 1 |
-        viz %in% c("map", "bar", "treemap", "sankey")) {
+          viz %in% c("map", "bar", "treemap", "sankey")) {
 
         if(!is.null(df$unidad) & viz %in% c("bar","treemap"))  var_viz <- c(var_viz, "unidad")
         var_viz <- setdiff(var_viz, "fecha")
@@ -764,7 +776,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         #############################################
 
       }
-       else if(!is.null(df$unidad) & viz %in% "line")  var_viz <- c(var_viz, "unidad")
+      else if(!is.null(df$unidad) & viz %in% "line")  var_viz <- c(var_viz, "unidad")
 
 
     }
@@ -955,23 +967,23 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         else {
 
           data_temp1 <- var_aggregation(data = data,
-                                          # dic = dic,
-                                          agg = agg,
-                                          to_agg = var_calc,
-                                          name = agg,
-                                          group_var = group_var)
+                                        # dic = dic,
+                                        agg = agg,
+                                        to_agg = var_calc,
+                                        name = agg,
+                                        group_var = group_var)
 
-            #REQUIRED MIN MAX -  STEP PROGRESS - REQUIRED: UNIT
-            unidad <- NULL
-            if(!is.null(data$unidad)) unidad <- unique(data$unidad_id)
-            data_temp2 <- data |> group_by(across(sym(group_var))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
-            data_temp2$min_date <- as.character(data_temp2$min_date)
-            data_temp2$max_date <- as.character(data_temp2$max_date)
-            data <- data_temp1 |> left_join( data_temp2)
+          #REQUIRED MIN MAX -  STEP PROGRESS - REQUIRED: UNIT
+          unidad <- NULL
+          if(!is.null(data$unidad)) unidad <- unique(data$unidad_id)
+          data_temp2 <- data |> group_by(across(sym(group_var))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
+          data_temp2$min_date <- as.character(data_temp2$min_date)
+          data_temp2$max_date <- as.character(data_temp2$max_date)
+          data <- data_temp1 |> left_join( data_temp2)
 
-            if(!is.null(unidad)) {
-              if(length(unidad) == 1) data$unidad <- unidad
-            }
+          if(!is.null(unidad)) {
+            if(length(unidad) == 1) data$unidad <- unidad
+          }
         }
       }
       else{
