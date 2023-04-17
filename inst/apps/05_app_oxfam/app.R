@@ -950,7 +950,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                                            extra_sep_collapse_columns = "<br/>",
                                            extra_sep = "<br/>")
 
-      print(names(data))
+
       var <- unique(c(var_viz()$var_viz, var_viz()$var_viz_date, label_agg))
 
       if (length(slug_selected()) == 2) {

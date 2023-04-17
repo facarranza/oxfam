@@ -25,6 +25,11 @@ usethis::use_data(slug_filters, overwrite = TRUE)
 
 
 slug_viz <- read_sheet(url_book, "matriz_visualizaciones")
+slug_viz$mapa <- as.character(slug_viz$mapa)
+slug_viz$barras <- as.character(slug_viz$barras)
+slug_viz$mapa[slug_viz$mapa == 0] <- NA
+slug_viz$mapa <- coalesce(slug_viz$mapa, slug_viz$barras)
+slug_viz$mapa <- gsub("pais,|valor|count()|\\(|\\)", "", slug_viz$mapa)
 slug_agg <- slug_viz |>
   select(slug, agg = mapa) |>
   filter(agg %in% c("mean", "sum,mean", "sum"))
