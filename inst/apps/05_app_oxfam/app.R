@@ -28,6 +28,10 @@ shorten_url <- function(long_url, access_token) {
   content(response, "parsed", "application/json")$link
 }
 
+paste_fnc <- function (x, collapse = "") {
+  paste0(trimws(unique(x)), collapse = collapse)
+}
+
 ui <- panelsPage(
   tags$head(
     tags$link(rel="stylesheet", type="text/css", href="custom.css"),
@@ -795,9 +799,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     }
 
     if ("valor" %in% names(df)) {
-      paste_fnc <- function (x, collapse = "") {
-        paste0(trimws(unique(x)), collapse = collapse)
-      }
       if (length(unique(df$id)) != nrow(df)) {
         df1 <- df |> group_by(id) |>
           summarise(dplyr::across(dplyr::everything(), list(paste_fnc)))
@@ -930,35 +931,36 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (is.null(var_cat)) var_cat <- var_viz()$var_viz_date
     var_num <- var_viz()$num
 
-
     if (!is.null(var_viz()$agg)) {
       label_agg <- var_viz()$label_agg
       agg <- var_viz()$agg
       agg_extra <- agg
       if (agg == "count") agg_extra <- "sum"
-      print("##########")
-      print(var_cat)
+
       data <- dsdataprep::aggregation_data(data = data,
                                            agg = agg,
                                            agg_name = label_agg,
                                            group_var = var_cat,
                                            to_agg = var_num,
                                            extra_col = TRUE,
-                                           #agg_extra = agg_extra,
-                                           #add_num_extra_groups = TRUE,
+                                           agg_extra = agg_extra,
+                                           extra_group = "unidad",
+                                           collapse_columns = "unidad",
+                                           numeric_collapse_columns = "valor",
+                                           extra_sep_collapse_columns = "<br/>",
                                            extra_sep = "<br/>")
-     print(data)
+
+      print(names(data))
       var <- unique(c(var_viz()$var_viz, var_viz()$var_viz_date, label_agg))
 
       if (length(slug_selected()) == 2) {
         data <- data |> select({{ var }})
       } else {
         data <- data |>
-          select({{ var }}, everything()) |>
-          select(-valor)
+          select({{ var }}, everything())
       }
     }
-     print(data)
+
     data
   })
 
@@ -1030,6 +1032,14 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         opts$theme$axis_line_x_size <- 0
         if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
       }
+      if (any(
+        c("immunization_campaigns",
+          "doses_delivered_vaccine_donations",
+          "covid_vaccine_agreements",
+          "vaccination_approvals_trials") %in%
+        slug_selected())) {
+        unidad_label <- "<br/>{..collapse}"
+      }
       tooltip <- paste0("<b>",pais, "</b>",
                         fecha, var_viz()$label_agg, ":",
                         valor, unidad_label)
@@ -1045,10 +1055,11 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if ("excess_mortality" %in% slug_selected()) {
       opts$suffix_num <- "%"
     }
+
+
     if (length(slug_selected()) == 2) {
       opts$theme$tooltip_template <- NULL
     }
-
 
     opts
 
