@@ -33,9 +33,9 @@ unit_info$unidad_en <- paste0(unit_info$filtro_en, ": ", unit_info$unidad_en, "<
 unit_info$unidad_pt <- paste0(unit_info$filtro_pt, ": ", unit_info$unidade_pt, "<br/>")
 
 unit_translate <- unit_info |>
-  select(slug, unidad,unidad_id_es, unidad_id_en, unidad_id_pt, unidad_es, unidad_en, unidade_pt) |>
+  select(slug, unidad,unidad_id_es, unidad_id_en, unidad_id_pt, unidad_es, unidad_en, unidad_pt) |>
   drop_na(unidad)
-unit_translate$unidade_pt <- coalesce(unit_translate$unidade_pt, unit_translate$unidad)
+unit_translate$unidad_pt <- coalesce(unit_translate$unidad_pt, unit_translate$unidad)
 
 countries_info <- read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "variable_pais")
 countries_translate <- countries_info |>
@@ -89,7 +89,7 @@ slug_portuges <- map(available_slug, function(slug_i) {
   df <- translate_func(indicadores, slug_i)
   df_pt <- df |> select(id, slug, slug_pt, fecha,
                         pais_es = pais, pais_en, pais_pt,
-                        valor, unidad_id = unidad_id_pt, unidad = unidade_pt, fecha_ct)
+                        valor, unidad_id = unidad_id_pt, unidad = unidad_pt, fecha_ct)
   df_pt <- Filter(function(x) !all(is.na(x)), df_pt)
   df_pt
 })
