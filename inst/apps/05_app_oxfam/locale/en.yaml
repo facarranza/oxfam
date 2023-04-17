@@ -24,6 +24,7 @@ anio: Year
 anio_mes: Year - Month
 anio_mes_dia: Year - Month - Day
 slug_unidad: Unit
+school_unidad: State
 download: Download
 fuente: Source
 id: Identifier

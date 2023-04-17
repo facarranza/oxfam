@@ -24,6 +24,7 @@ anio: Año
 anio_mes: Año - Mes
 anio_mes_dia: Año - Mes - Día
 slug_unidad: Unidad
+school_unidad: Estado
 download: Descarga
 fuente: Fuente
 id: Identificador

@@ -286,7 +286,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   # Idiomas -----------------------------------------------------------------
 
   i18n <- list(
-    defaultLang = "en",
+    defaultLang = "es",
     availableLangs = c("es","en", "pt")
   )
   lang <- callModule(langSelector,"lang", i18n = i18n, showSelector=FALSE)
@@ -511,6 +511,15 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (is.null(data_filter_slug())) return()
     Sys.sleep(3)
     remove_start_up(timeout = 200)
+  })
+
+  slug_unidad <- reactive({
+    req(slug_selected())
+    tx <- i_("slug_unidad", lang())
+    if (slug_selected()[1] == "school_closures") {
+      tx <- i_("school_unidad", lang())
+    }
+    tx
   })
 
   slug_unidad_opts <- reactive({
@@ -927,16 +936,19 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       agg <- var_viz()$agg
       agg_extra <- agg
       if (agg == "count") agg_extra <- "sum"
+      print("##########")
+      print(var_cat)
       data <- dsdataprep::aggregation_data(data = data,
                                            agg = agg,
                                            agg_name = label_agg,
                                            group_var = var_cat,
                                            to_agg = var_num,
                                            extra_col = TRUE,
-                                           agg_extra = agg_extra,
+                                           #agg_extra = agg_extra,
+                                           #add_num_extra_groups = TRUE,
                                            extra_sep = "<br/>")
-
-      var <- c(unique(var_viz()$var_viz, var_viz()$var_viz_date), label_agg)
+     print(data)
+      var <- unique(c(var_viz()$var_viz, var_viz()$var_viz_date, label_agg))
 
       if (length(slug_selected()) == 2) {
         data <- data |> select({{ var }})
@@ -946,7 +958,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           select(-valor)
       }
     }
-
+     print(data)
     data
   })
 
