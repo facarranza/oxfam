@@ -346,8 +346,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       qs <- input$last_click
       if (is.null(qs)) qs <- "q_4"
     }
-    print("in que sel")
-    print(qs)
     qs
   })
 
@@ -355,8 +353,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     req(data_questions())
     req(ques_sel())
     df <- data_questions()
-    print("AAAAAAAAAAA")
-    print(ques_sel())
     df <- df |> filter(ind_pregunta %in% ques_sel())
     df
   })
