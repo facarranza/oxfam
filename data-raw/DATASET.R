@@ -23,12 +23,17 @@ indicadores <- dplyr::tbl(con, "indicadores") |> dplyr::collect()
 
 available_slug <- unique(indicadores$slug)
 unit_info <-  read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "filtros_detalle_unidades")
+unit_info <- unit_info |> drop_na(unidad)
+unit_info$unidad_id_es <- unit_info$unidad_es
+unit_info$unidad_id_en <- unit_info$unidad_en
+unit_info$unidad_id_pt <- unit_info$unidade_pt
+
 unit_info$unidad_es <- paste0(unit_info$filtro_es, ": ", unit_info$unidad_es, "<br/>")
 unit_info$unidad_en <- paste0(unit_info$filtro_en, ": ", unit_info$unidad_en, "<br/>")
 unit_info$unidad_pt <- paste0(unit_info$filtro_pt, ": ", unit_info$unidade_pt, "<br/>")
 
 unit_translate <- unit_info |>
-  select(slug, unidad, unidad_es, unidad_en, unidade_pt) |>
+  select(slug, unidad,unidad_id_es, unidad_id_en, unidad_id_pt, unidad_es, unidad_en, unidade_pt) |>
   drop_na(unidad)
 unit_translate$unidade_pt <- coalesce(unit_translate$unidade_pt, unit_translate$unidad)
 
@@ -46,10 +51,12 @@ translate_func <- function(df, slug_i) {
   df <- df |> left_join(unit_translate)
   df <- df |> left_join(countries_translate)
   df <- df |> left_join(slug_translate)
-  df$unidad_es <- coalesce(df$unidad_es, df$unidad)
-  df$unidad_es[df$unidad_es == ""] <- NA
-  df$unidad_en <- coalesce(df$unidad_en, df$unidad)
-  df$unidad_en[df$unidad_en == ""] <- NA
+  #df$unidad_es <- coalesce(df$unidad_es, df$unidad)
+  # df$unidad_es[df$unidad_es == ""] <- NA
+  # df$unidad_en <- coalesce(df$unidad_en, df$unidad)
+  # df$unidad_en[df$unidad_en == ""] <- NA
+  # df$unidad_pt <- coalesce(df$unidad_pt, df$unidad)
+  # df$unidad_pt[df$unidad_pt == ""] <- NA
   df$fecha_ct <- as.numeric(as.POSIXct(df[["fecha"]], format="%Y-%m-%d"))*1000
   df
 }
@@ -59,7 +66,7 @@ slug_spanish <- map(available_slug, function(slug_i) {
   df <- translate_func(indicadores, slug_i)
   df_es <- df |> select(id, slug, slug_es, fecha,
                         pais_es = pais, pais_en, pais_pt,
-                        valor, unidad_id = unidad,  unidad = unidad_es, fecha_ct)
+                        valor, unidad_id = unidad_id_es,  unidad = unidad_es, fecha_ct)
   df_es <- Filter(function(x) !all(is.na(x)), df_es)
   df_es
 })
@@ -70,7 +77,7 @@ slug_english <- map(available_slug, function(slug_i) {
   df <- translate_func(indicadores, slug_i)
   df_en <- df |> select(id, slug, slug_en, fecha,
                         pais_es = pais, pais_en, pais_pt,
-                        valor, unidad_id = unidad, unidad = unidad_en, fecha_ct)
+                        valor, unidad_id = unidad_id_en, unidad = unidad_en, fecha_ct)
   df_en <- Filter(function(x) !all(is.na(x)), df_en)
   df_en
 })
@@ -82,7 +89,7 @@ slug_portuges <- map(available_slug, function(slug_i) {
   df <- translate_func(indicadores, slug_i)
   df_pt <- df |> select(id, slug, slug_pt, fecha,
                         pais_es = pais, pais_en, pais_pt,
-                        valor, unidad_id = unidad, unidad = unidade_pt, fecha_ct)
+                        valor, unidad_id = unidad_id_pt, unidad = unidade_pt, fecha_ct)
   df_pt <- Filter(function(x) !all(is.na(x)), df_pt)
   df_pt
 })

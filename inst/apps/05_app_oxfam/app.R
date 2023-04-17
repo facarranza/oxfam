@@ -195,10 +195,10 @@ server <-  function(input, output, session) {
       actionButton("fc_click", label = HTML('<img src="icons/facebook.svg" width="15" height="15">')),
       actionButton("tw_click", label = HTML('<img src="icons/twitter.svg" width="15" height="15">')),
       actionButton("bl_click", label = HTML('<img src="icons/link.svg" width="15" height="15">')),
-        '</div>
+      '</div>
         </div>
       '
-     )
+    )
     )
 
   })
@@ -728,9 +728,14 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     req(viz_select())
     if (viz_select() != "line") return()
     if (!have_date()) return()
-    setNames(c("anio", "anio_mes", "anio_mes_dia"),
-             i_(c("anio", "anio_mes", "anio_mes_dia"), lang())
-    )
+    if (any(slug_selected() %in% "school_closures")) {
+      setNames(c("anio_mes_dia"),
+               i_(c("anio_mes_dia"), lang()))
+    } else {
+      setNames(c("anio", "anio_mes", "anio_mes_dia"),
+               i_(c("anio", "anio_mes", "anio_mes_dia"), lang())
+      )
+    }
   })
 
   date_format_sel <- reactive({
@@ -988,6 +993,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
       )
     )
+    # JS("function () {var arreglo = ['Sin<br/>informa-<br/>ción','Detenido','Definición','Planificación', 'Ejecución', 'Completado'];return arreglo[this.value];}")
 
     req(data_viz())
     unidad <- FALSE
@@ -1016,9 +1022,11 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                         fecha, var_viz()$label_agg, ":",
                         valor, unidad_label)
       opts$theme$tooltip_template <- tooltip
-      if(any(slug_selected() %in% c("stringency_index", "ghs_index"))){
-        opts$y_max <- 100
-        opts$suffix_num <- "/100"
+      if (length(slug_selected() == 1)) {
+        if(any(slug_selected() %in% c("stringency_index", "ghs_index"))){
+          #opts$y_max <- 100
+          opts$suffix_num <- "/100"
+        }
       }
     }
 
@@ -1080,7 +1088,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     df <- data_load()
     #print(df)
     var_select <- c(c( paste0("slug_", lang()),
-                      paste0("pais_", lang())), "fecha", "valor")
+                       paste0("pais_", lang())), "fecha", "valor")
 
     if ("unidad" %in% names(df)) {
       var_select <- c(var_select, "unidad")
@@ -1300,7 +1308,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       if (viz_select() == "scatter") return()
     }
     viz_line <- TRUE
-
 
     if (!viz_select() %in% c("line", "scatter")) {
       if (length(unique(df$fecha)) == 1) return()
