@@ -937,20 +937,22 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (slug_selected()[1] == "product_pipeline") {
       data$valor <- 1
     }
-    print(data)
+
     print(slug_selected())
-    if (length(var_cat) == 1) {
-      if (length(slug_selected()) == 1) {
-        if (slug_selected() %in% c("immunization_campaigns",
-                                   "doses_delivered_vaccine_donations",
-                                   "covid_vaccine_agreements",
-                                   "product_pipeline",
-                                   "vaccination_approvals_trials",
-                                   "geopolitics_vaccine_donations")) {
-          extra_group <- "unidad"
-          collapse_columns <- "unidad"
-          numeric_collapse_columns <- "valor"
-          extra_sep_collapse_columns <- ": "
+    if (viz_select() != "sankey") {
+      if (length(var_cat) == 1) {
+        if (length(slug_selected()) == 1) {
+          if (slug_selected() %in% c("immunization_campaigns",
+                                     "doses_delivered_vaccine_donations",
+                                     "covid_vaccine_agreements",
+                                     "product_pipeline",
+                                     "vaccination_approvals_trials",
+                                     "geopolitics_vaccine_donations")) {
+            extra_group <- "unidad"
+            collapse_columns <- "unidad"
+            numeric_collapse_columns <- "valor"
+            extra_sep_collapse_columns <- ": "
+          }
         }
       }
     }
