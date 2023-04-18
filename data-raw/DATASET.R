@@ -21,6 +21,22 @@ tables <- dbListTables(con)
 
 indicadores <- dplyr::tbl(con, "indicadores") |> dplyr::collect()
 
+indicadores$fecha <- lubridate::ymd(indicadores$fecha)
+
+last_update <- list(
+  es = paste0("Última actualización: ",
+              max(indicadores$fecha, na.rm = T)),
+  en = paste0("Last update: ",
+              max(indicadores$fecha, na.rm = T)),
+  pt = paste0("Última actualização: ",
+              max(indicadores$fecha, na.rm = T))
+)
+
+
+
+
+
+
 available_slug <- unique(indicadores$slug)
 unit_info <-  read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "filtros_detalle_unidades")
 unit_info <- unit_info |> drop_na(unidad)
@@ -33,9 +49,24 @@ unit_info$unidad_en <- paste0(unit_info$filtro_en, ": ", unit_info$unidad_en, "<
 unit_info$unidad_pt <- paste0(unit_info$filtro_pt, ": ", unit_info$unidade_pt, "<br/>")
 
 unit_translate <- unit_info |>
-  select(slug, unidad,unidad_id_es, unidad_id_en, unidad_id_pt, unidad_es, unidad_en, unidad_pt) |>
-  drop_na(unidad)
+  select(slug, unidad,unidad_id_es, unidad_id_en, unidad_id_pt, unidad_es, unidad_en, unidad_pt)
+
+all_unidad <- indicadores |>
+  select(slug, unidad) |>
+  separate_rows(unidad, sep = "\\|") |>
+  distinct(.keep_all = T)
+all_unidad$unidad[all_unidad$unidad == ""] <- NA
+all_unidad <- all_unidad |> drop_na()
+bs_tr <- all_unidad |> left_join(unit_translate)
+unit_translate <- bs_tr
 unit_translate$unidad_pt <- coalesce(unit_translate$unidad_pt, unit_translate$unidad)
+unit_translate$unidad_en <- coalesce(unit_translate$unidad_en, unit_translate$unidad)
+unit_translate$unidad_es <- coalesce(unit_translate$unidad_es, unit_translate$unidad)
+
+unit_translate$unidad_id_pt <- coalesce(unit_translate$unidad_id_pt, unit_translate$unidad)
+unit_translate$unidad_id_en <- coalesce(unit_translate$unidad_id_en, unit_translate$unidad)
+unit_translate$unidad_id_es <- coalesce(unit_translate$unidad_id_es, unit_translate$unidad)
+
 
 countries_info <- read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "variable_pais")
 countries_translate <- countries_info |>

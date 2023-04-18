@@ -931,6 +931,10 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (is.null(var_cat)) var_cat <- var_viz()$var_viz_date
     var_num <- var_viz()$num
 
+    if (slug_selected() == "product_pipeline") {
+      data$valor <- 1
+    }
+
     if (!is.null(var_viz()$agg)) {
       label_agg <- var_viz()$label_agg
       agg <- var_viz()$agg
@@ -1036,6 +1040,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         c("immunization_campaigns",
           "doses_delivered_vaccine_donations",
           "covid_vaccine_agreements",
+          "product_pipeline",
           "vaccination_approvals_trials") %in%
         slug_selected())) {
         unidad_label <- "<br/>{..collapse}"
