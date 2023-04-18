@@ -923,7 +923,10 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     req(slug_selected())
 
     data <- data_load()
-
+    extra_group <- NULL
+    collapse_columns <- NULL
+    numeric_collapse_columns <- NULL
+    extra_sep_collapse_columns <- NULL
 
     id_ct <- grep("fecha_ct", names(data))
     data <- data[,-id_ct]
@@ -931,8 +934,18 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (is.null(var_cat)) var_cat <- var_viz()$var_viz_date
     var_num <- var_viz()$num
 
-    if (slug_selected() == "product_pipeline") {
+    if (slug_selected()[1] == "product_pipeline") {
       data$valor <- 1
+    }
+    print(data)
+
+    if (length(slug_selected()) == 1) {
+      if (slug_selected() != "school_closures") {
+        extra_group <- "unidad"
+        collapse_columns <- "unidad"
+        numeric_collapse_columns <- "valor"
+        extra_sep_collapse_columns <- "<br/>"
+      }
     }
 
     if (!is.null(var_viz()$agg)) {
@@ -940,6 +953,9 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       agg <- var_viz()$agg
       agg_extra <- agg
       if (agg == "count") agg_extra <- "sum"
+      print(agg)
+      print(var_cat)
+      print(var_num)
 
       data <- dsdataprep::aggregation_data(data = data,
                                            agg = agg,
@@ -948,10 +964,10 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                                            to_agg = var_num,
                                            extra_col = TRUE,
                                            agg_extra = agg_extra,
-                                           extra_group = "unidad",
-                                           collapse_columns = "unidad",
-                                           numeric_collapse_columns = "valor",
-                                           extra_sep_collapse_columns = "<br/>",
+                                           extra_group = extra_group,
+                                           collapse_columns = collapse_columns,
+                                           numeric_collapse_columns = numeric_collapse_columns,
+                                           extra_sep_collapse_columns = extra_sep_collapse_columns,
                                            extra_sep = "<br/>")
 
 
