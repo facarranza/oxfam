@@ -938,9 +938,14 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       data$valor <- 1
     }
     print(data)
-
+    print(slug_selected())
     if (length(slug_selected()) == 1) {
-      if (slug_selected() != "school_closures") {
+      if (slug_selected() %in% c("immunization_campaigns",
+                                 "doses_delivered_vaccine_donations",
+                                 "covid_vaccine_agreements",
+                                 "product_pipeline",
+                                 "vaccination_approvals_trials",
+                                 "geopolitics_vaccine_donations")) {
         extra_group <- "unidad"
         collapse_columns <- "unidad"
         numeric_collapse_columns <- "valor"
@@ -956,7 +961,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       print(agg)
       print(var_cat)
       print(var_num)
-
+      options(scipen = 999)
       data <- dsdataprep::aggregation_data(data = data,
                                            agg = agg,
                                            agg_name = label_agg,
@@ -970,7 +975,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                                            extra_sep_collapse_columns = extra_sep_collapse_columns,
                                            extra_sep = "<br/>")
 
-
+      print("hola")
+      print(names(data))
       var <- unique(c(var_viz()$var_viz, var_viz()$var_viz_date, label_agg))
 
       if (length(slug_selected()) == 2) {
@@ -1057,7 +1063,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           "doses_delivered_vaccine_donations",
           "covid_vaccine_agreements",
           "product_pipeline",
-          "vaccination_approvals_trials") %in%
+          "vaccination_approvals_trials",
+          "geopolitics_vaccine_donations") %in%
         slug_selected())) {
         unidad_label <- "<br/>{..collapse}"
       }
@@ -1158,7 +1165,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                               fixedColumns = TRUE,
                               fixedHeader = TRUE,
                               autoWidth = TRUE,
-                              scrollY = "450px")
+                              scrollY = "100%")
     )
     dtable
   })
@@ -1169,7 +1176,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if(!is.null(input$dimension)) height_viz <- input$dimension[2] - 150
 
     if (viz_select() == "table") {
-      DT::dataTableOutput("dt_viz", height = height_viz, width = 650)
+      DT::dataTableOutput("dt_viz", height = height_viz, width = "100%")
     } else {
       withLoader(
         highchartOutput("viz_hgch", height = height_viz),
