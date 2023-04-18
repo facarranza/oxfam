@@ -934,7 +934,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (is.null(var_cat)) var_cat <- var_viz()$var_viz_date
     var_num <- var_viz()$num
 
-    if (slug_selected()[1] == "product_pipeline") {
+    if (slug_selected()[1] %in% c("product_pipeline", "vaccination_approvals_trials")) {
       data$valor <- 1
     }
 
