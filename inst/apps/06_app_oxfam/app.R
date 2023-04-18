@@ -155,7 +155,13 @@ server <-  function(input, output, session) {
     } else {
       question <- paste0("question=", url_par()$inputs$question, "%26")
     }
-    if (!is.null(url_par()$inputs$subquestion)) subquestion <- paste0("subquestion=", url_par()$inputs$subquestion, "%26")
+
+    if (!is.null(url_par()$inputs$subquestion)){
+      subquestion <- paste0("subquestion=", url_par()$inputs$subquestion, "%26")
+    }
+    else {
+      subquestion <- paste0("subquestion=",subques_sel$id, "%26")
+    }
 
     if (!is.null(actual_but$active)) viz <- paste0("viz=",actual_but$active, "%26")
 
