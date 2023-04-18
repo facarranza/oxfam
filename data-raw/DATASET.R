@@ -33,6 +33,7 @@ last_update <- list(
 )
 
 
+usethis::use_data(last_update, overwrite = TRUE)
 
 
 
