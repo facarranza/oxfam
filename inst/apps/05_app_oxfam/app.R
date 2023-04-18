@@ -939,17 +939,19 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     }
     print(data)
     print(slug_selected())
-    if (length(slug_selected()) == 1) {
-      if (slug_selected() %in% c("immunization_campaigns",
-                                 "doses_delivered_vaccine_donations",
-                                 "covid_vaccine_agreements",
-                                 "product_pipeline",
-                                 "vaccination_approvals_trials",
-                                 "geopolitics_vaccine_donations")) {
-        extra_group <- "unidad"
-        collapse_columns <- "unidad"
-        numeric_collapse_columns <- "valor"
-        extra_sep_collapse_columns <- "<br/>"
+    if (length(var_cat) == 1) {
+      if (length(slug_selected()) == 1) {
+        if (slug_selected() %in% c("immunization_campaigns",
+                                   "doses_delivered_vaccine_donations",
+                                   "covid_vaccine_agreements",
+                                   "product_pipeline",
+                                   "vaccination_approvals_trials",
+                                   "geopolitics_vaccine_donations")) {
+          extra_group <- "unidad"
+          collapse_columns <- "unidad"
+          numeric_collapse_columns <- "valor"
+          extra_sep_collapse_columns <- ": "
+        }
       }
     }
 
@@ -1058,15 +1060,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         opts$theme$axis_line_x_size <- 0
         if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
       }
-      if (any(
-        c("immunization_campaigns",
-          "doses_delivered_vaccine_donations",
-          "covid_vaccine_agreements",
-          "product_pipeline",
-          "vaccination_approvals_trials",
-          "geopolitics_vaccine_donations") %in%
-        slug_selected())) {
-        unidad_label <- "<br/>{..collapse}"
+      if ("..collapse" %in% names(data_viz())) {
+        unidad_label <- "{..collapse}<br/>"
       }
       tooltip <- paste0("<b>",pais, "</b>",
                         fecha, var_viz()$label_agg, ":",
