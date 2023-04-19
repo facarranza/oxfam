@@ -115,7 +115,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-          verbatimTextOutput("debug"),
+         # verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -984,7 +984,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           data <- data_temp1 |> tidyr::pivot_wider(names_from = valor, values_from = count, names_prefix="stage_",values_fill = 0)
           data$count <- data$stage_1 + data$stage_2 + data$stage_3
           data <- data |> select(group_var[2], count, stage_1, stage_2 ,stage_3)
-          print(data)
           tooltip_info$special_col_1 <- "stage1"
           tooltip_info$special_col_2 <- "stage2"
           tooltip_info$special_col_3 <- "stage3"
@@ -1073,7 +1072,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
       )
     )
-    # if(!is.null(tooltip_info$agg)) opts$collapse_rows = T
+    if(!is.null(tooltip_info$agg)) opts$collapse_rows = T
 
     if(viz=="line" & "stringency_index" %in% questions_select()$indicador){
       opts$y_max <- 100
@@ -1132,6 +1131,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           tooltip <- paste0(tooltip, "<br>",unidad_bold,unidad_detail )
         }
 
+        opts$theme$tooltip_template <- tooltip
+
       }
       else {
 
@@ -1163,7 +1164,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
         }
 
-
+        opts$theme$tooltip_template <- tooltip
       }
 
 
@@ -1217,7 +1218,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     }
   }
 
-    print(opts$theme$collapse_rows)
+
     opts
 
   })
@@ -1361,7 +1362,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   output$debug <- renderPrint({
     list(
       #data_filter()
-      data_viz()
+      #data_viz()
       #data_questions()$ind_pregunta
       #questions_select()
       #  names( questions_select())
