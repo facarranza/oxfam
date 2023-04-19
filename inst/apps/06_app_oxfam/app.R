@@ -448,7 +448,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   })
 
   actual_but <- reactiveValues(active = NULL)
-  tooltip_info <- reactiveValues(agg = NULL, unidad =NULL, fecha=NULL, special_col_1 = FALSE, special_col_2 =FALSE) #tooltip with collapse
+  tooltip_info <- reactiveValues(agg = NULL, unidad =NULL, fecha=NULL, special_col_1 = FALSE, special_col_2 =FALSE,special_col_3 =FALSE) #tooltip with collapse
 
   observe({
 
@@ -887,6 +887,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     tooltip_info$fecha <- FALSE
     tooltip_info$special_col_1  <- NULL
     tooltip_info$special_col_2  <- NULL
+    tooltip_info$special_col_3  <- NULL
 
     if (length(unique(questions_select()$indicador)) == 2) {
 
@@ -983,6 +984,11 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           data <- data_temp1 |> tidyr::pivot_wider(names_from = valor, values_from = count, names_prefix="stage_",values_fill = 0)
           data$count <- data$stage_1 + data$stage_2 + data$stage_3
           data <- data |> select(group_var[2], count, stage_1, stage_2 ,stage_3)
+          print(data)
+          tooltip_info$special_col_1 <- "stage1"
+          tooltip_info$special_col_2 <- "stage2"
+          tooltip_info$special_col_3 <- "stage3"
+
 
         }
         else {
@@ -1067,7 +1073,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
       )
     )
-    if(!is.null(tooltip_info$agg)) opts$collapse_rows = T
+    # if(!is.null(tooltip_info$agg)) opts$collapse_rows = T
 
     if(viz=="line" & "stringency_index" %in% questions_select()$indicador){
       opts$y_max <- 100
@@ -1078,17 +1084,19 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
 
     }
-    print("iiiiiiiiinjd")
-    print( questions_select()$indicador)
+
     if (viz %in% c("map","treemap","bar")){
 
       if ( !( ("doses_delivered_vaccine_donations" %in%  questions_select()$indicador &   "covid_vaccine_agreements"  %in%   questions_select()$indicador) |
                                                    ("new_deaths_per_million" %in%  questions_select()$indicador & "new_cases_per_million" %in%  questions_select()$indicador ) |
                                                    ("people_fully_vaccinated" %in%  questions_select()$indicador & "people_vaccinated" %in%  questions_select()$indicador ))) {
 
+
+        opts$theme$collapse_rows = T
+
         pais_bold <- paste0("<b>",i_("pais",lang()), ": </b>")
         pais_detail <-  paste0("{",i_("pais",lang()), "}")
-        opts$theme$collapse_rows = T
+
 
         if(!is.null(tooltip_info$agg)) {
           value_bold  <-   paste0("<b>",i_(tooltip_info$agg,lang()), ": </b>")
@@ -1126,7 +1134,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
       }
       else {
-        print("ahhhhhhhhhhhhhhhhhhHHHH")
+
         opts$theme$collapse_rows = T
         if(!is.null(tooltip_info$agg)) {
         #  pais_bold  <-   paste0("<b>",i_(tooltip_info$agg,lang()), ": </b>")
@@ -1141,7 +1149,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
         tooltip <- paste0(pais_bold,  pais_detail)
 
-        if(!is.null(tooltip_info$special_col_1) &  !is.null(tooltip_info$special_col2)){
+        if(!is.null(tooltip_info$special_col_1) &  !is.null(tooltip_info$special_col_2)){
 
           value_bold_1  <-   paste0("<b>",i_(tooltip_info$special_col_1,lang()), ": </b>")
           value_detail_1 <-  paste0("{",i_(tooltip_info$special_col_1,lang()), "}")
@@ -1160,11 +1168,56 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
 
 
-      print(tooltip)
-      opts$theme$tooltip_template <-  tooltip
+      if("vaccination_approvals_trials" %in%  questions_select()$indicador ){
+        opts$theme$collapse_rows = T
+
+        tooltip <- NULL
+        pais_bold <- paste0("<b>",i_("pais",lang()), ": </b>")
+        pais_detail <-  paste0("{",i_("pais",lang()), "}")
+
+
+        if(!is.null(tooltip_info$agg)) {
+          value_bold  <-   paste0("<b>",i_(tooltip_info$agg,lang()), ": </b>")
+          value_detail <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
+        }
+        else{
+          value_bold  <-   paste0("<b>",i_("valor",lang()), ": </b>")
+          value_detail <-  paste0("{",i_("valor",lang()), "}")
+        }
+
+        tooltip <- paste0(pais_bold,  pais_detail, "<br>", value_bold ,  value_detail)
+        #TODO ADD LIST EXTRA COLS EXTRAS AND LAPPLY
+
+        if(!is.null(tooltip_info$special_col_1) &  !is.null(tooltip_info$special_col_2)  &  !is.null(tooltip_info$special_col_3)){
+
+          value_bold_1  <-   paste0("<b>",i_(tooltip_info$special_col_1,lang()), ": </b>")
+          value_detail_1 <-  paste0("{stage_1_extra}")
+
+
+          value_bold_2  <-   paste0("<b>",i_(tooltip_info$special_col_2,lang()), ": </b>")
+          value_detail_2 <-  paste0("{stage_2_extra}")
+
+
+          value_bold_3  <-   paste0("<b>",i_(tooltip_info$special_col_3,lang()), ": </b>")
+          value_detail_3 <-  paste0("{stage_3_extra}")
+
+
+
+          tooltip <- paste0(tooltip, "<br>", value_bold_1 ,  value_detail_1,
+                            "<br>", value_bold_2 ,  value_detail_2,
+                            "<br>", value_bold_3 ,  value_detail_3)
+
+
+
+        }
+
+        opts$theme$tooltip_template <- tooltip
+
+
+    }
   }
 
-
+    print(opts$theme$collapse_rows)
     opts
 
   })

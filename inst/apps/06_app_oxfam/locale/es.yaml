@@ -34,6 +34,6 @@ count: Conteo
 pais_es: País
 min_date: Fecha mínima
 max_date: Fecha máxima
-stage_1: Vacunas aprobadas para usar
-stage_2: Vacunas en ensayos clínicos
-stage_3: Vacunas con ensayos que ya no continúan
+stage1: Vacunas aprobadas para usar
+stage2: Vacunas en ensayos clínicos
+stage3: Vacunas con ensayos que ya no continúan
