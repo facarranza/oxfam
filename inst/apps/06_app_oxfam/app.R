@@ -1038,6 +1038,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         }
       }
     }
+
     colnames(data)  <- i_(colnames(data), lang())
     data
 
@@ -1218,6 +1219,13 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     }
   }
 
+    if( ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador)) {
+
+      opts$theme$hor_title =   tooltip_info$special_col_1
+
+      opts$theme$ver_title =   tooltip_info$special_col_2
+
+    }
 
     opts
 
