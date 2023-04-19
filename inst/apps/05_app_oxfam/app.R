@@ -597,12 +597,9 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       }
     } else {
       ls <- oxfam_data[[lang()]][slug_selected()]
-      # if (all(slug_selected() %in% c("vaccination_approvals_trials",
-      #                                "school_closures", "stringency_index",
-      #                                "product_pipeline"))) {
-      #   d <- ls |> bind_rows()
-      # } else {
-      if (viz_select() == "line") {
+
+
+      if (viz_select() == "line" | any(slug_selected() %in% c("stringency_index", "ghs_index"))) {
         id_valor <- grep("valor", names(ls[[1]]))
         names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
         id_valor <- grep("valor", names(ls[[2]]))
@@ -895,7 +892,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     }
 
     if (length(slug_selected()) == 2) {
-      if (viz == "line") {
+      if (viz == "line" | any(slug_selected() %in% c("stringency_index", "ghs_index"))) {
         req(data_load())
         data <- data_load()
         var_double <- list(
@@ -903,6 +900,14 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           cat = "fecha",
           num = slug_trans()
         )
+        if (!"fecha" %in% names(data_load())) {
+          ls_e <- list(
+            cat = paste0("pais_", lang())
+          )
+          var_double <- modifyList( var_double, ls_e)
+        }
+        print("aveeer")
+        print(var_double$cat)
         var_double$label_agg <- var_double$num
         var <- modifyList(var, var_double)
       } else {
@@ -1039,6 +1044,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         title_align = "center",
         title_size = 17,
         caption = last_update[[lang()]],
+        #caption_margin = 100,
         title_weight = 500,
         marker_radius = 0,
         text_family = "Barlow",
