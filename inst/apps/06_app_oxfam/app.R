@@ -729,11 +729,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (length(slug) == 1) {
 
 
-      # if( slug  == "school_closures" ) {
-      #   var_viz <- c(pais,"unidad_id")
-      #   type_viz <- "CatCatNum"
-      #   num_viz  <- 3
-      # }
+
       if (length(unique(df$fecha)) == 1 |
           viz %in% c("map", "bar", "treemap", "sankey")) {
 
@@ -795,6 +791,12 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       else{
          if(!is.null(df$unidad) & viz %in% "line") {
              var_viz <- c(var_viz, "unidad")
+             if( slug  == "school_closures" ) {
+               var_viz <- c("fecha","valor","unidad_id")
+               type_viz <- "DatNum"
+               #   type_viz <- "CatCatNum"
+               #   num_viz  <- 3
+             }
              #tooltip_info$unidad <- TRUE
          }
       }
@@ -1040,7 +1042,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
             data <- data |> rename(status=unidad_id)
           }
         }
-      print(data)
+
 
       }
       else{
@@ -1071,7 +1073,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     viz <- viz_select()
     title <- paste0(slug_trans(), collapse = " vs ")
-    print(last_update[[lang()]])
+
     opts <- list(
       theme = list(
         title = title,
@@ -1106,6 +1108,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
 
     }
+
+
 
     if (viz %in% c("map","treemap","bar")){
 
@@ -1257,6 +1261,21 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       opts$theme$ver_title =   tooltip_info$special_col_2
 
     }
+
+    if (viz %in% c("line") & "school_closures" %in% questions_select()$indicador){
+      opts$theme$collapse_rows = T
+
+      fecha_bold <- paste0("<b>",i_("fecha",lang()), ": </b>")
+      fecha_detail <-  paste0("{",i_("fecha",lang()), "}")
+      value_bold1  <-   paste0("<b>",i_("valor",lang()), ": </b>")
+      value_detail1 <-  paste0("{",i_("valor",lang()), "}")
+      value_bold2  <-   paste0("<b>",i_("status",lang()), ": </b>")
+      value_detail2 <-  paste0("{",i_("unidad_id",lang()), "}")
+      tooltip <- paste0(fecha_bold,  fecha_detail, "<br>", value_bold1 ,  value_detail1,  "<br>", value_bold2 ,  value_detail2 )
+      opts$theme$tooltip_template <- tooltip
+
+    }
+
 
 
 
