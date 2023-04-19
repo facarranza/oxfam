@@ -1005,8 +1005,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                                         to_agg = var_calc,
                                         name = agg,
                                         group_var = group_var)
-          print(data_temp1)
-          print(group_var)
+
 
           #REQUIRED MIN MAX -  STEP PROGRESS - REQUIRED: UNIT
           unidad <- NULL
@@ -1074,6 +1073,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     viz <- viz_select()
     title <- paste0(slug_trans(), collapse = " vs ")
+    print(last_update[[lang()]])
     opts <- list(
       theme = list(
         title = title,
@@ -1092,7 +1092,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         axis_line_color = "#CECECE",
         title_size = 17,
         title_weight = 500,
-        palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
+        palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168"),
+        caption = last_update[[lang()]]
 
       )
     )
