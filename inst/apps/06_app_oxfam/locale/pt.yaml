@@ -37,3 +37,4 @@ max_date: Data máxima
 stage1: Vacinas aprovadas para usar
 stage2: Vacinas em ensaios clínicos
 stage3: Vacinas com ensaios que não continuam mais
+status: Estado

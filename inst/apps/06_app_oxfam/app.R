@@ -774,7 +774,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           }
 
           if( slug  == "school_closures" ) {
-            var_viz <- c(pais,"valor")
+            var_viz <- c(pais,"unidad_id")
             type_viz <- "CatCatNum"
             num_viz  <- 3
           }
@@ -1040,8 +1040,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
           if("school_closures" %in% questions_select()$indicador) {
                #STATIC CODE
-            data$valor <- as.character(data$valor)
-
+            data <- data |> rename(status=unidad_id)
           }
         }
       print(data)
@@ -1123,8 +1122,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           pais_detail <-  paste0("{",i_("pais",lang()), "}")
           value_bold1  <-   paste0("<b>",i_(tooltip_info$agg,lang()), ": </b>")
           value_detail1 <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
-          value_bold2  <-   paste0("<b>",i_("valor",lang()), ": </b>")
-          value_detail2 <-  paste0("{",i_("valor",lang()), "}")
+          value_bold2  <-   paste0("<b>",i_("status",lang()), ": </b>")
+          value_detail2 <-  paste0("{",i_("status",lang()), "}")
           tooltip <- paste0(pais_bold,  pais_detail, "<br>", value_bold2 ,  value_detail2,  "<br>", value_bold1 ,  value_detail1 )
 
         } else {
