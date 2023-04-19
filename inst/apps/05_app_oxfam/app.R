@@ -13,12 +13,47 @@ library(dsmodules)
 library(dsapptools)
 library(dplyr)
 library(shinyjs)
-library(urlshorteneR)
+library(httr)
+library(jsonlite)
+
+# funcion para crear bitly link
+shorten_url <- function(long_url, access_token) {
+  api_url <- "https://api-ssl.bitly.com/v4/shorten"
+  headers <- add_headers(
+    "Content-Type" = "application/json",
+    "Authorization" = paste("Bearer", access_token)
+  )
+  body <- toJSON(list(long_url = long_url), auto_unbox = TRUE)
+  response <- POST(api_url, headers, body = body)
+  content(response, "parsed", "application/json")$link
+}
+
+paste_fnc <- function (x, collapse = "") {
+  paste0(trimws(unique(x)), collapse = collapse)
+}
 
 ui <- panelsPage(
   tags$head(
     tags$link(rel="stylesheet", type="text/css", href="custom.css"),
-    tags$script(src="handler.js")
+    tags$script(src="handler.js"),
+    tags$script(src = "clipboard.min.js"),
+    tags$script(HTML("
+      $(document).ready(function() {
+        var clipboard = new ClipboardJS('.btn-clipboard');
+
+        clipboard.on('success', function(e) {
+          console.info('Accion:', e.action);
+          console.info('Texto:', e.text);
+          console.info('Disparador:', e.trigger);
+          e.clearSelection();
+        });
+
+        clipboard.on('error', function(e) {
+          console.error('Accion:', e.action);
+          console.error('Disparador:', e.trigger);
+        });
+      });
+    "))
   ),
   useShi18ny(),
   useShinyjs(),
@@ -32,6 +67,13 @@ ui <- panelsPage(
     background = "#FFF"
   ),
   langSelectorInput("lang", position = "fixed"),
+  shinypanels::modal(id = 'shared_bitly',
+                     title = uiOutput("bitly_title"),
+                     div(class = "modal-link",
+                         uiOutput("bitly_link"),
+                         uiOutput("copy_button")
+                     )
+  ),
   panel(title = ui_("data_filter"),
         id = "controls-style",
         collapse = FALSE,
@@ -106,11 +148,12 @@ server <-  function(input, output, session) {
     ls
   })
 
-  shared_link <- reactiveValues(facebook = NULL, twitter = NULL)
+  shared_link <- reactiveValues(short_url = NULL)
 
   observe({
     if (is.null(lang())) return()
     if (is.null(save_inputs())) return()
+    dash <- NULL
     save_inp <- save_inputs()
     slug = NULL
     slug_comp = NULL
@@ -123,6 +166,7 @@ server <-  function(input, output, session) {
     id_click = NULL
     cat_click = NULL
 
+    if (!is.null(url_par()$inputs$dash)) dash <- paste0("dash=", url_par()$inputs$dash, "%26")
     if (!is.null(save_inp$id_date_format)) fech_form <- paste0("fech_form=", paste0(save_inp$id_date_format, collapse = ","), "%26")
     if (!is.null(save_inp$id_slug_dates)) fech <- paste0("fech=", paste0(save_inp$id_slug_dates, collapse = ","), "%26")
     if (!is.null(save_inp$id_slug_countries)) pais <- paste0("pais=", paste0(save_inp$id_slug_countries, collapse = ","), "%26")
@@ -134,59 +178,111 @@ server <-  function(input, output, session) {
     if (!is.null(click_viz$id)) id_click <- paste0("id_click=", click_viz$id, "%26")
     if (!is.null(click_viz$cat)) cat_click <- paste0("cat_click=",click_viz$cat, "%26")
 
-    shared_link$facebook <- stringi::stri_escape_unicode(paste0(viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang()))
-    shared_link$twitter <- paste0(viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang())
-
+    long_url <- paste0("https://datasketch.shinyapps.io/oxfam_app/?", gsub("%26", "&",
+                                                                           paste0(dash, viz, slug, slug_comp, pais, agg, und, fech, fech_form, id_click, cat_click, "lang=", lang())))
+    shared_link$short_url <- shorten_url(long_url, "1ded0052e90265f03473cd1b597f0c45bb83d578")
   })
 
 
 
-  # output$aver <- renderPrint({
-  #   bitly_auth()
-  #   bitly_create_bitlink(
-  #     long_url = shared_link$twitter,
-  #     domain = "bit.ly"
-  #   )
-  # })
-
   # Compartir ---------------------------------------------------------------
 
   output$compartir <- renderUI({
-    #/*<img src="icons/vector.svg" width="8" height="8" id = "indicator">*/
-    HTML(
+
+    HTML(paste0(
       '
       <div class="dropdown-shared">
         <button class="dropbtn-shared">
         <img src="icons/compartir.svg" width="15" height="15">
         </button>
-        <div class="dropdown-shared-content">
-        <a class="needed" id="fc"><img src="icons/facebook.svg" width="15" height="15"></a>
-        <a class="needed" id="tw"><img src="icons/twitter.svg" width="15" height="15"></a>
-        <a class="needed" id="lk"><img src="icons/link.svg" width="15" height="15"></a>
-        </div>
+        <div class="dropdown-shared-content">',
+      actionButton("fc_click", label = HTML('<img src="icons/facebook.svg" width="15" height="15">')),
+      actionButton("tw_click", label = HTML('<img src="icons/twitter.svg" width="15" height="15">')),
+      actionButton("bl_click", label = HTML('<img src="icons/link.svg" width="15" height="15">')),
+      '</div>
         </div>
       '
+    )
     )
 
   })
 
-  shared_red <- reactiveValues(id = NULL)
 
-  observe({
-    if (is.null(input$last_click)) return()
-    shared_red$id <- input$last_click
+
+  observeEvent(input$fc_click,{
+    encoded_short_url <- URLencode(shared_link$short_url)
+    share_url <- paste0("https://www.facebook.com/sharer/sharer.php?u=", encoded_short_url)
+    print(share_url)
+    shinyjs::runjs(sprintf("window.open('%s')", share_url))
   })
 
+  observeEvent(input$tw_click,{
+    if (lang() == "es") {
+      mensaje <-
+        paste0("¿Sabes que hay información en tiempo real sobre el proceso de vacunación en Latinoamérica? 😱👇
 
+Dale clic 👉 ", shared_link$short_url, "
 
-  observeEvent(shared_red$id, {
-    if (shared_red$id == "tw") {
-      shinyjs::runjs(sprintf("window.open('%s')", paste0("https://twitter.com/intent/tweet?text=Hola&url=https://datasketch.shinyapps.io/oxfam_app/?", shared_link$twitter)))
+¡Interactúa con estos datos y conviértete en un agente de cambio para &hashtags=VacunasparalaGente!
+
+  &hashtags=DataVacunas
+  &hashtags=PandemiaDesigual
+  @Vacunas_LAC")
     }
-    if (shared_red$id == "fc") {
-      shinyjs::runjs(sprintf("window.open('%s')", paste0("http://www.facebook.com/sharer.php?t=Hola&u=https://datasketch.shinyapps.io/oxfam_app/?", shared_link$facebook)))
+    if (lang() == "en") {
+      mensaje <-
+        paste0("Do you know what are the impacts of the pandemic that Latin America is currently experiencing? 😱👇
+
+Clic here 👉 ", shared_link$short_url, "
+
+Interact with this data and become an agent of change for &hashtags=Vaccinesforpeople
+
+  &hashtags=DataVaccines
+  &hashtags=PandemicUnequal
+  @Vacunas_LAC")
     }
+    if (lang() == "pt") {
+      mensaje <-
+        paste0("Você sabe quais são os impactos da pandemia que a América Latina está sofrendo atualmente? 😱👇
+
+Clique aqui 👉 ", shared_link$short_url, "
+
+Interagir com estes dados e tornar-se um agente de mudança para &hashtags=VaccinesforthePeople
+
+  &hashtags=DadosVacinas
+  &hashtags=PandemicUnequal
+  @Vacunas_LAC")
+    }
+
+    tweet_text <- URLencode(mensaje)
+    print(tweet_text)
+    shinyjs::runjs(sprintf("window.open('%s')", paste0("https://twitter.com/intent/tweet?text=", tweet_text)))
+
   })
+
+  output$bitly_title <- renderUI({
+    i_("bitly_desc", lang())
+  })
+
+  output$copy_button <- renderUI({
+    tags$button(
+      id = "copy_button",
+      class = "btn btn-default btn-clipboard",
+      icon("copy"),
+      `data-clipboard-action` = "copy",
+      `data-clipboard-target` = "#bitly_link"
+    )
+  })
+
+  output$bitly_link <- renderUI({
+    req(shared_link$short_url)
+    shared_link$short_url
+  })
+
+  observeEvent(input$bl_click,{
+    shinypanels::showModal("shared_bitly")
+  })
+
 
 
 
@@ -194,7 +290,7 @@ server <-  function(input, output, session) {
   # Idiomas -----------------------------------------------------------------
 
   i18n <- list(
-    defaultLang = "en",
+    defaultLang = "es",
     availableLangs = c("es","en", "pt")
   )
   lang <- callModule(langSelector,"lang", i18n = i18n, showSelector=FALSE)
@@ -210,8 +306,10 @@ server <-  function(input, output, session) {
   output$idiomas <- renderUI({
     req(lang())
 
+    dash <- url_par()$inputs$dash
+    if (!is.null(dash)) dash <- paste0("&", "dash=", dash)
     available_lang <- setdiff(c("en", "es", "pt"), lang())
-    available_lang <- paste0('<a href="?lang=', available_lang,
+    available_lang <- paste0('<a href="?lang=', available_lang, dash,
                              '" target="_self">',
                              stringr::str_to_title(available_lang), "</a>", collapse = "")
 
@@ -317,7 +415,20 @@ server <-  function(input, output, session) {
     actual_but$active
   })
 
-
+  show_comp <- reactive({
+    req(viz_select())
+    show <- FALSE
+    if (viz_select() %in% "scatter") {
+      show <- TRUE
+  }
+  if (viz_select() %in% "line") {
+    show <- TRUE
+    if (input$id_slug %in% c("stringency_index", "ghs_index")) {
+      show <- FALSE
+    }
+  }
+    show
+  })
 
   slug_comparisons_opts <- reactive({
     if (is.null(input$id_slug)) return()
@@ -419,6 +530,15 @@ server <-  function(input, output, session) {
     remove_start_up(timeout = 200)
   })
 
+  slug_unidad <- reactive({
+    req(slug_selected())
+    tx <- i_("slug_unidad", lang())
+    if (slug_selected()[1] == "school_closures") {
+      tx <- i_("school_unidad", lang())
+    }
+    tx
+  })
+
   slug_unidad_opts <- reactive({
     req(data_filter_slug())
     if (!"unidad" %in% names(data_filter_slug())) return()
@@ -490,12 +610,9 @@ server <-  function(input, output, session) {
       }
     } else {
       ls <- oxfam_data[[lang()]][slug_selected()]
-      # if (all(slug_selected() %in% c("vaccination_approvals_trials",
-      #                                "school_closures", "stringency_index",
-      #                                "product_pipeline"))) {
-      #   d <- ls |> bind_rows()
-      # } else {
-      if (viz_select() == "line") {
+
+
+      if (viz_select() == "line" | any(slug_selected() %in% c("stringency_index", "ghs_index"))) {
         id_valor <- grep("valor", names(ls[[1]]))
         names(ls[[1]])[id_valor] <- unique(ls[[1]][[paste0("slug_", lang())]])
         id_valor <- grep("valor", names(ls[[2]]))
@@ -526,7 +643,7 @@ server <-  function(input, output, session) {
     if (!is.null(url_par()$inputs$pais)) {
       sel <- strsplit(url_par()$inputs$pais, ",") |> unlist()
     }
-    print(sel)
+
     sel
   })
 
@@ -539,7 +656,6 @@ server <-  function(input, output, session) {
     } else {
       if (length(input$id_slug_countries) == 1) return()
       if (length(input$id_slug_countries) > 1) {
-        #print(id_p)
         if (id_p == 1) {
           sc <- setdiff(input$id_slug_countries, "all")
           updateSelectizeInput(session,
@@ -634,9 +750,14 @@ server <-  function(input, output, session) {
     req(viz_select())
     if (viz_select() != "line") return()
     if (!have_date()) return()
-    setNames(c("anio", "anio_mes", "anio_mes_dia"),
-             i_(c("anio", "anio_mes", "anio_mes_dia"), lang())
-    )
+    if (any(slug_selected() %in% "school_closures")) {
+      setNames(c("anio_mes_dia"),
+               i_(c("anio_mes_dia"), lang()))
+    } else {
+      setNames(c("anio", "anio_mes", "anio_mes_dia"),
+               i_(c("anio", "anio_mes", "anio_mes_dia"), lang())
+      )
+    }
   })
 
   date_format_sel <- reactive({
@@ -668,7 +789,7 @@ server <-  function(input, output, session) {
     if (have_date()) {
       df$fecha <- lubridate::ymd(df$fecha)
       df <- df |> arrange(fecha)
-      #print(unique(df$fecha))
+
       if (is.null(input$id_slug_dates)) return()
       range <- input$id_slug_dates
       df <- dsapptools:::filter_ranges(df, range, "fecha")
@@ -687,9 +808,6 @@ server <-  function(input, output, session) {
     }
 
     if ("valor" %in% names(df)) {
-      paste_fnc <- function (x, collapse = "") {
-        paste0(trimws(unique(x)), collapse = collapse)
-      }
       if (length(unique(df$id)) != nrow(df)) {
         df1 <- df |> group_by(id) |>
           summarise(dplyr::across(dplyr::everything(), list(paste_fnc)))
@@ -703,9 +821,18 @@ server <-  function(input, output, session) {
   })
 
 
+
+  slug_trans <- reactive({
+    req(slug_selected())
+    slug_id <- slug_selected()
+    slug_df <- slug_translate |> filter(slug %in% slug_id)
+    slug_df[[paste0("slug_", lang())]]
+  })
+
   var_viz <- reactive({
     req(viz_select())
     req(slug_selected())
+    req(slug_trans())
     if (is.null(have_date())) return()
 
     viz <- viz_select()
@@ -747,6 +874,19 @@ server <-  function(input, output, session) {
       }
     }
 
+    if (slug_selected()[1] %in% c("vaccination_approvals_trials")) {
+      if (viz != "map") {
+        var_vacc <- list(
+          cat = c(var_cat, "estado"),
+          var_viz = c("estado", var_cat),
+          num = "valor",
+          agg = "sum",
+          label_agg = "Total"
+        )
+        var <- modifyList(var, var_vacc)
+      }
+    }
+
     if (slug_selected()[1] %in% c("school_closures")) {
       var_other <- list(
         var_viz = c("unidad", var_cat_viz),
@@ -764,15 +904,21 @@ server <-  function(input, output, session) {
     }
 
     if (length(slug_selected()) == 2) {
-      if (viz == "line") {
+      if (viz == "line" | any(slug_selected() %in% c("stringency_index", "ghs_index"))) {
         req(data_load())
         data <- data_load()
         var_double <- list(
           var_viz = NULL,
           cat = "fecha",
-          num = setdiff(c(unique(data[[paste0("slug_", lang(), ".x")]]),
-                          unique(data[[paste0("slug_", lang(), ".y")]])), NA)
+          num = slug_trans()
         )
+        if (length(unique(data_load()$fecha)) == 1) {
+          ls_e <- list(
+            var_viz = paste0("pais_", lang()),
+            cat = paste0("pais_", lang())
+          )
+          var_double <- modifyList( var_double, ls_e)
+        }
         var_double$label_agg <- var_double$num
         var <- modifyList(var, var_double)
       } else {
@@ -796,10 +942,6 @@ server <-  function(input, output, session) {
       var <- modifyList(var, var_sankey)
     }
 
-
-    print("##########")
-    print(var)
-
     var
   })
 
@@ -810,18 +952,50 @@ server <-  function(input, output, session) {
     req(slug_selected())
 
     data <- data_load()
+    extra_group <- NULL
+    collapse_columns <- NULL
+    numeric_collapse_columns <- NULL
+    extra_sep_collapse_columns <- NULL
+
     id_ct <- grep("fecha_ct", names(data))
     data <- data[,-id_ct]
     var_cat <- var_viz()$cat
     if (is.null(var_cat)) var_cat <- var_viz()$var_viz_date
     var_num <- var_viz()$num
 
+    if (slug_selected()[1] %in% c("product_pipeline", "vaccination_approvals_trials")) {
+      data$valor <- 1
+    }
+
+    if (slug_selected()[1] %in% c("vaccination_approvals_trials")) {
+      data <- data |> tidyr::separate(unidad_id, c("estado", "vacuna"), sep = "<br/>")
+    }
+
+    if (viz_select() != "sankey") {
+      if (length(var_cat) == 1) {
+        if (length(slug_selected()) == 1) {
+          if (slug_selected() %in% c("immunization_campaigns",
+                                     "doses_delivered_vaccine_donations",
+                                     "covid_vaccine_agreements",
+                                     "product_pipeline",
+                                     #"vaccination_approvals_trials",
+                                     "geopolitics_vaccine_donations")) {
+            extra_group <- "unidad"
+            collapse_columns <- "unidad"
+            numeric_collapse_columns <- "valor"
+            extra_sep_collapse_columns <- ": "
+          }
+        }
+      }
+    }
 
     if (!is.null(var_viz()$agg)) {
       label_agg <- var_viz()$label_agg
       agg <- var_viz()$agg
       agg_extra <- agg
       if (agg == "count") agg_extra <- "sum"
+
+      options(scipen = 999)
       data <- dsdataprep::aggregation_data(data = data,
                                            agg = agg,
                                            agg_name = label_agg,
@@ -829,19 +1003,22 @@ server <-  function(input, output, session) {
                                            to_agg = var_num,
                                            extra_col = TRUE,
                                            agg_extra = agg_extra,
+                                           extra_group = extra_group,
+                                           collapse_columns = collapse_columns,
+                                           numeric_collapse_columns = numeric_collapse_columns,
+                                           extra_sep_collapse_columns = extra_sep_collapse_columns,
                                            extra_sep = "<br/>")
 
-      var <- c(unique(var_viz()$var_viz, var_viz()$var_viz_date), label_agg)
 
-      if (length(var_num) == 2) {
+      var <- unique(c(var_viz()$var_viz, var_viz()$var_viz_date, label_agg))
+
+      if (length(slug_selected()) == 2) {
         data <- data |> select({{ var }})
-        data$..labels <- " "
       } else {
-        data <- data |> select({{ var }}, everything())
+        data <- data |>
+          select({{ var }}, everything())
       }
     }
-
-
 
     data
   })
@@ -852,7 +1029,7 @@ server <-  function(input, output, session) {
     if (viz_select() == "table") return()
     viz <- NULL
     if (viz_select() == "map") {
-      viz <- "hgch_choropleth_GnmNum"
+      viz <- "hgch_choropleth"
     } else {
       viz <- paste0("hgch_", viz_select())
     }
@@ -864,9 +1041,17 @@ server <-  function(input, output, session) {
 
   viz_theme <- reactive({
     req(viz_select())
+    req(slug_trans())
     viz <- viz_select()
+    title <- paste0(slug_trans(), collapse = " vs ")
     opts <- list(
       theme = list(
+        title = title,
+        title_align = "center",
+        title_size = 17,
+        caption = last_update[[lang()]],
+        #caption_margin = 100,
+        title_weight = 500,
         marker_radius = 0,
         text_family = "Barlow",
         legend_family = "Barlow",
@@ -883,46 +1068,64 @@ server <-  function(input, output, session) {
         palette_colors = c("#47BAA6", "#151E42", "#FF4824", "#FFCF06", "#FBCFA4", "#FF3D95", "#B13168")
       )
     )
+    # JS("function () {var arreglo = ['Sin<br/>informa-<br/>ción','Detenido','Definición','Planificación', 'Ejecución', 'Completado'];return arreglo[this.value];}")
 
     req(data_viz())
     unidad <- FALSE
     if ("unidad" %in% names(data_viz())) unidad <- TRUE
 
+    if ("price_per_dose" %in% slug_selected()) {
+      unidad <- FALSE
+    }
+
     if (viz == "map") {
-      unidad_label <- "{i}"
-      if (!unidad) unidad_label <- NULL#"{e}"
       opts$theme$palette_colors <- rev(c("#151E42", "#253E58", "#35606F", "#478388", "#5DA8A2", "#7BCDBE", "#A5F1DF"))
-      # print("*************")
-      # print(unidad)
-      # if (unidad) {
-      # opts$theme$tooltip_template <- "a {a}<br/>b {b}<br/>c {c}<br/>d {d}<br/> e {e} <br/> f {f}<br/>g {g}" #paste0("<b>{a}<br/> {b} ", unidad_label)
-      # } else {
-      #   opts$theme$tooltip_template <- "a {a}<br/>b {b}<br/>c {c}<br/>d {d}<br/>f {f}<br/>g {g}<br/> h {h}"
-      # }
-      opts$theme$tooltip_template <- paste0("<b>{a}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
-      if (lang() != "en") {
-        if (!unidad) unidad_label <- "{g}"
+      opts$theme$map_name <- "world_countries_latin_america_caribbean"
+    }
+
+    if (viz != "sankey") {
+      pais <- paste0("{pais_", lang(), "}<br/>")
+      valor <- paste0("{",var_viz()$label_agg, "}")
+      unidad_label <- "{unidad}"
+      if (!unidad) unidad_label <- NULL#paste0("{slug_", lang(), "}")
+      fecha <- NULL
+      if (viz %in% c("line", "scatter")) {
+        opts$theme$axis_line_x_size <- 0
+        if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
       }
-      if (lang() == "es")  opts$theme$tooltip_template <- paste0("<b>{c}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
-
-      if (lang() == "pt")  opts$theme$tooltip_template <- paste0("<b>{c}<br/>",var_viz()$label_agg,": {b} <br/>", unidad_label)
-
-    } else {
-      if (viz != "sankey") {
-        pais <- paste0("{pais_", lang(), "}<br/>")
-        valor <- paste0("{",var_viz()$label_agg, "}<br/>")
-        unidad_label <- "{unidad}"
-        if (!unidad) unidad_label <- paste0("{slug_", lang(), "}")
-        fecha <- NULL
-        if (viz %in% c("line", "scatter")) {
-          opts$theme$axis_line_x_size <- 0
-          if ("fecha" %in% names(data_viz())) fecha <- paste0("{fecha}<br/>")
+      if ("..collapse" %in% names(data_viz())) {
+        unidad_label <- "{..collapse}<br/>"
+      }
+      tooltip <- paste0("<b>",pais, "</b>",
+                        fecha, var_viz()$label_agg, ":",
+                        valor, unidad_label)
+      opts$theme$tooltip_template <- tooltip
+      if (length(slug_selected() == 1)) {
+        if(any(slug_selected() %in% c("stringency_index", "ghs_index"))){
+          #opts$y_max <- 100
+          opts$suffix_num <- "/100"
         }
-        tooltip <- paste0("<b>",pais, "</b>",
-                          fecha, var_viz()$label_agg, ":",
-                          valor, unidad_label)
-        opts$theme$tooltip_template <- tooltip
       }
+    }
+
+    if ("excess_mortality" %in% slug_selected()) {
+      opts$suffix_num <- "%"
+    }
+
+    if ("price_per_dose" %in% slug_selected()) {
+      opts$prefix_num <- " USD $"
+    }
+
+
+    if ("vaccination_approvals_trials" %in% slug_selected()[1]) {
+      opts$theme$tooltip_template <- paste0("<b>",pais, "</b>",
+                                            var_viz()$label_agg, ":",
+                                            valor, "{estado} <br/> {vacuna}")
+    }
+
+
+    if (length(slug_selected()) == 2) {
+      opts$theme$tooltip_template <- NULL
     }
 
     opts
@@ -934,23 +1137,38 @@ server <-  function(input, output, session) {
     req(data_viz())
     req(var_viz())
     req(viz_theme())
-    #print(data_viz())
+
     var_num <- var_viz()$label_agg
     var_date <- var_viz()$var_viz_date
     var_cat <- var_viz()$var_viz
     if (length(var_num) == 2) {
       var_date <- 'fecha'
       var_cat <- NULL
+      if (!"fecha" %in% names(data_viz())) {
+        var_date <- NULL
+        var_cat <- paste0("pais_", lang())
+      }
     }
+    if (viz_select() != "map") {
+      var_gnm <- NULL
+    }
+
+    hcoptslang <- getOption("highcharter.lang")
+    hcoptslang$thousandsSep <- ","
+    hcoptslang$decimalPoint <- "."
+    options(highcharter.lang = hcoptslang)
 
     do.call(viz_func(), list(
       data = data_viz(),
+      var_gnm = var_cat,
       var_cat = var_cat,
       var_dat = var_date,
       var_num = var_num,
-      map_name = "latamcaribbean_countries",
       opts = viz_theme()
-    ))
+    )) |>
+      hc_tooltip(
+        valueDecimals = 2
+      )
   })
 
   output$viz_hgch <- renderHighchart({
@@ -959,12 +1177,12 @@ server <-  function(input, output, session) {
   })
 
 
-  data_down <- reactive({
+  data_show <- reactive({
     req(data_load())
     df <- data_load()
     #print(df)
-    var_select <- c(c("id", paste0("slug_", lang()),
-                      paste0("pais_", lang())), "fecha", "valor")
+    var_select <- c(c( paste0("slug_", lang()),
+                       paste0("pais_", lang())), "fecha", "valor")
 
     if ("unidad" %in% names(df)) {
       var_select <- c(var_select, "unidad")
@@ -978,9 +1196,9 @@ server <-  function(input, output, session) {
   output$dt_viz <- DT::renderDataTable({
     req(viz_select())
     if (viz_select() != "table") return()
-    req(data_down())
-    df <- data_down()
-    df <- dplyr::as_tibble(data_down())
+    req(data_show())
+    df <- data_show()
+    df <- dplyr::as_tibble(data_show())
     dtable <- DT::datatable(df,
                             rownames = F,
                             selection = 'none',
@@ -990,7 +1208,7 @@ server <-  function(input, output, session) {
                               fixedColumns = TRUE,
                               fixedHeader = TRUE,
                               autoWidth = TRUE,
-                              scrollY = "500px")
+                              scrollY = "100%")
     )
     dtable
   })
@@ -1185,7 +1403,6 @@ server <-  function(input, output, session) {
     }
     viz_line <- TRUE
 
-
     if (!viz_select() %in% c("line", "scatter")) {
       if (length(unique(df$fecha)) == 1) return()
       df$fecha <- format(lubridate::ymd(df$fecha), "%Y-%m")
@@ -1251,6 +1468,7 @@ server <-  function(input, output, session) {
     if (length(slug_selected()) == 2) {
       theme$theme$tooltip_template <- NULL
     }
+    theme$theme$title <- " "
 
     if (viz_line) {
       viz <- hgch_line(df_dates, var_dat = var_cat, var_num =  var_num, opts = theme)
@@ -1377,7 +1595,21 @@ server <-  function(input, output, session) {
   # #input$hcClicked
   #  # text_click()
   # })
+  data_down <- reactive({
+    req(data_load())
+    df <- data_load()
+    #print(df)
+    var_select <- c(c("id", paste0("slug_", lang()),
+                      paste0("pais_", lang())), "fecha", "valor")
 
+    if ("unidad" %in% names(df)) {
+      var_select <- c(var_select, "unidad_id")
+    }
+    df <- df[,var_select]
+    names_tr <- i_(names(df), lang = lang())
+    names(df) <- names_tr
+    df
+  })
 
   output$downloads <- renderUI({
     if (is.null(actual_but$active)) return()

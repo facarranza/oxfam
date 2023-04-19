@@ -59,6 +59,31 @@ html, body {
   border-top: 0px;
 }
 
+#fc_click, #tw_click, #bl_click {
+  padding: 4px !important;
+  border: 0px !important;
+  border-radius: 0px !important;
+  background-color: transparent !important;
+}
+
+.modal-wrapper {
+ width: 300px !important;
+}
+
+.modal-link {
+  display: flex;
+}
+
+#copy_button {
+  border: 0px !important;
+}
+
+
+#bitly_link {
+ border: 1px solid #ddd;
+ background: #ddd;
+ padding: 5px 20px;
+}
 
 .btn {
  color: #252525;
@@ -76,6 +101,10 @@ html, body {
  text-transform: none;
  border: 1px solid #252525;
  border-radius: 10px;
+}
+
+.btn:hover {
+  background-color: #FF5A32 !important;
 }
 
 .buttons-group {
@@ -102,7 +131,7 @@ html, body {
 
 
 .buttons-group .button-style:hover {
-  background-color:#ffffff !important;
+  background-color: #47BAA6 !important;
 }
 
 

@@ -24,6 +24,7 @@ anio: Ano
 anio_mes: Ano - Mês
 anio_mes_dia: Ano - Mês - Dia
 slug_unidad: Unidade
+school_unidad: Estado
 download: Descarregar
 fuente: Fonte
 id: Identificador
@@ -31,5 +32,8 @@ slug_pt: Indicador
 pais_pt: País
 fecha: Data
 unidad: Unidade
+unidad_id: Unidade
 valor: Valor
+bitly_desc: Partilhar link
+
 
