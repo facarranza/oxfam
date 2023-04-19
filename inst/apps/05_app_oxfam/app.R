@@ -1085,9 +1085,9 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     if (viz != "sankey") {
       pais <- paste0("{pais_", lang(), "}<br/>")
-      valor <- paste0("{",var_viz()$label_agg, "}<br/>")
+      valor <- paste0("{",var_viz()$label_agg, "}")
       unidad_label <- "{unidad}"
-      if (!unidad) unidad_label <- paste0("{slug_", lang(), "}")
+      if (!unidad) unidad_label <- NULL#paste0("{slug_", lang(), "}")
       fecha <- NULL
       if (viz %in% c("line", "scatter")) {
         opts$theme$axis_line_x_size <- 0
