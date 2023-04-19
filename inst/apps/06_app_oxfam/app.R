@@ -729,11 +729,11 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (length(slug) == 1) {
 
 
-      if( slug  == "school_closures" ) {
-        var_viz <- c(pais,"unidad_id")
-        type_viz <- "CatCatNum"
-        num_viz  <- 3
-      }
+      # if( slug  == "school_closures" ) {
+      #   var_viz <- c(pais,"unidad_id")
+      #   type_viz <- "CatCatNum"
+      #   num_viz  <- 3
+      # }
       if (length(unique(df$fecha)) == 1 |
           viz %in% c("map", "bar", "treemap", "sankey")) {
 
