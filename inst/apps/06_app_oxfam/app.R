@@ -115,7 +115,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-         # verbatimTextOutput("debug"),
+         #verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -773,6 +773,11 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
             num_viz  <- 3
           }
 
+          if( slug  == "school_closures" ) {
+            var_viz <- c(pais,"valor")
+            type_viz <- "CatCatNum"
+            num_viz  <- 3
+          }
           if( slug  == "vaccination_approvals_trials" ) {
 
             var_viz <- c("valor",pais)
@@ -961,7 +966,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         data <- data |> select({{ var }}, everything())
         agg <- viz_agg$agg
         tooltip_info$agg <- agg
-        var_calc <- unique(names(data[var_viz()$num_viz]))
+         var_calc <- unique(names(data[var_viz()$num_viz]))
         if(ncol(viz_agg) > 1 ) {
           group_var <- unique(names(data[c(1, var_viz()$num_viz-1)  ]))
 
@@ -992,17 +997,30 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         }
         else {
 
+          if("school_closures" %in% questions_select()$indicador) group_var <- unique(names(data[c(2,1)]))
+
           data_temp1 <- var_aggregation(data = data,
                                         # dic = dic,
                                         agg = agg,
                                         to_agg = var_calc,
                                         name = agg,
                                         group_var = group_var)
+          print(data_temp1)
+          print(group_var)
 
           #REQUIRED MIN MAX -  STEP PROGRESS - REQUIRED: UNIT
           unidad <- NULL
+
+
           if(!is.null(data$unidad)) unidad <- unique(data$unidad_id)
-          data_temp2 <- data |> group_by(across(sym(group_var))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
+
+          if("school_closures" %in% questions_select()$indicador) {
+            data_temp2 <- data |> group_by(across(sym(group_var[1])), across(sym(group_var[2]))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
+
+           } else {
+             data_temp2 <- data |> group_by(across(sym(group_var))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
+          }
+
           data_temp2$mindate <- as.character(data_temp2$min_date)
           data_temp2$maxdate <- as.character(data_temp2$max_date)
           data_temp2$min_date <- as.character(data_temp2$min_date)
@@ -1018,9 +1036,15 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
          if(!is.null(data$min_date)){
               tooltip_info$fecha <- TRUE
-            }
-        }
+         }
 
+          if("school_closures" %in% questions_select()$indicador) {
+               #STATIC CODE
+            data$valor <- as.character(data$valor)
+
+          }
+        }
+      print(data)
 
       }
       else{
@@ -1094,21 +1118,32 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
         opts$theme$collapse_rows = T
 
-        pais_bold <- paste0("<b>",i_("pais",lang()), ": </b>")
-        pais_detail <-  paste0("{",i_("pais",lang()), "}")
+        if("school_closures" %in% questions_select()$indicador) {
+          pais_bold <- paste0("<b>",i_("pais",lang()), ": </b>")
+          pais_detail <-  paste0("{",i_("pais",lang()), "}")
+          value_bold1  <-   paste0("<b>",i_(tooltip_info$agg,lang()), ": </b>")
+          value_detail1 <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
+          value_bold2  <-   paste0("<b>",i_("valor",lang()), ": </b>")
+          value_detail2 <-  paste0("{",i_("valor",lang()), "}")
+          tooltip <- paste0(pais_bold,  pais_detail, "<br>", value_bold2 ,  value_detail2,  "<br>", value_bold1 ,  value_detail1 )
+
+        } else {
+            pais_bold <- paste0("<b>",i_("pais",lang()), ": </b>")
+            pais_detail <-  paste0("{",i_("pais",lang()), "}")
 
 
-        if(!is.null(tooltip_info$agg)) {
-          value_bold  <-   paste0("<b>",i_(tooltip_info$agg,lang()), ": </b>")
-          value_detail <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
+            if(!is.null(tooltip_info$agg)) {
+              value_bold  <-   paste0("<b>",i_(tooltip_info$agg,lang()), ": </b>")
+              value_detail <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
+            }
+            else{
+              value_bold  <-   paste0("<b>",i_("valor",lang()), ": </b>")
+              value_detail <-  paste0("{",i_("valor",lang()), "}")
+            }
+
+
+            tooltip <- paste0(pais_bold,  pais_detail, "<br>", value_bold ,  value_detail)
         }
-        else{
-          value_bold  <-   paste0("<b>",i_("valor",lang()), ": </b>")
-          value_detail <-  paste0("{",i_("valor",lang()), "}")
-        }
-
-        tooltip <- paste0(pais_bold,  pais_detail, "<br>", value_bold ,  value_detail)
-
         if(tooltip_info$fecha == TRUE) {
 
         fecha_min_bold <- paste0("<b>",i_("min_date",lang()), ": </b>")
@@ -1226,6 +1261,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       opts$theme$ver_title =   tooltip_info$special_col_2
 
     }
+
+
 
     opts
 
