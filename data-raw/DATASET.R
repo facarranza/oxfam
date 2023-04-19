@@ -50,7 +50,8 @@ unit_info$unidad_en <- paste0(unit_info$filtro_en, ": ", unit_info$unidad_en)
 unit_info$unidad_pt <- paste0(unit_info$filtro_pt, ": ", unit_info$unidade_pt)
 
 unit_translate <- unit_info |>
-  select(slug, unidad,unidad_id_es, unidad_id_en, unidad_id_pt, unidad_es, unidad_en, unidad_pt)
+  select(slug, unidad,unidad_id_es, unidad_id_en, unidad_id_pt,
+         unidad_es, unidad_en, unidad_pt)
 
 all_unidad <- indicadores |>
   select(slug, unidad) |>
@@ -68,6 +69,16 @@ unit_translate$unidad_id_pt <- coalesce(unit_translate$unidad_id_pt, unit_transl
 unit_translate$unidad_id_en <- coalesce(unit_translate$unidad_id_en, unit_translate$unidad)
 unit_translate$unidad_id_es <- coalesce(unit_translate$unidad_id_es, unit_translate$unidad)
 
+unit_extra <-  read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "diccionario_categorias")
+unit_extra <- unit_extra |> filter(`Indicador/slug` != "school_closures")
+unit_extra <- unit_extra |>
+  mutate(unidad_extra_es = paste0(valor_etiqueta_es, ": ", valor_es),
+         unidad_extra_en = paste0(value_label_en, ": ", value_en),
+         unidad_extra_pt = paste0(valor_rotulo_pt, ": ", valor_pt)) |>
+  select(slug = `Indicador/slug`, valor, unidad_extra_es, unidad_extra_en, unidad_extra_pt)
+
+
+#|> select(slug = `Indicador/slug`, valor, )
 
 countries_info <- read_sheet("https://docs.google.com/spreadsheets/d/1tjMuZuPliEdssJjqZtTKsOC8x5WR3ENwlWoCp-Dhhvk/edit#gid=0", "variable_pais")
 countries_translate <- countries_info |>
@@ -81,6 +92,7 @@ translate_func <- function(df, slug_i) {
     filter(slug %in% slug_i) |>
     separate_rows(unidad, sep = "\\|")
   df <- df |> left_join(unit_translate)
+  df <- df |> left_join(unit_extra)
   df <- df |> left_join(countries_translate)
   df <- df |> left_join(slug_translate)
   #df$unidad_es <- coalesce(df$unidad_es, df$unidad)
@@ -96,9 +108,15 @@ translate_func <- function(df, slug_i) {
 
 slug_spanish <- map(available_slug, function(slug_i) {
   df <- translate_func(indicadores, slug_i)
+
+  if (slug_i == "vaccination_approvals_trials") {
+    df$unidad_es <- paste0(df$unidad_extra_es, "<br/>", df$unidad_es)
+    df$unidad_id_es <- paste0(df$unidad_extra_es, "<br/>", df$unidad_id_es)
+  }
   df_es <- df |> select(id, slug, slug_es, fecha,
                         pais_es = pais, pais_en, pais_pt,
                         valor, unidad_id = unidad_id_es,  unidad = unidad_es, fecha_ct)
+
   df_es <- Filter(function(x) !all(is.na(x)), df_es)
   df_es
 })
@@ -107,6 +125,10 @@ slug_spanish
 
 slug_english <- map(available_slug, function(slug_i) {
   df <- translate_func(indicadores, slug_i)
+  if (slug_i == "vaccination_approvals_trials") {
+    df$unidad_en <- paste0(df$unidad_extra_en, "<br/>", df$unidad_en)
+    df$unidad_id_en <- paste0(df$unidad_extra_en, ", ", df$unidad_id_en)
+  }
   df_en <- df |> select(id, slug, slug_en, fecha,
                         pais_es = pais, pais_en, pais_pt,
                         valor, unidad_id = unidad_id_en, unidad = unidad_en, fecha_ct)
@@ -119,6 +141,10 @@ slug_english
 
 slug_portuges <- map(available_slug, function(slug_i) {
   df <- translate_func(indicadores, slug_i)
+  if (slug_i == "vaccination_approvals_trials") {
+    df$unidad_pt <- paste0(df$unidad_extra_pt, "<br/>", df$unidad_pt)
+    df$unidad_id_pt <- paste0(df$unidad_extra_pt, "<br/>", df$unidad_id_pt)
+  }
   df_pt <- df |> select(id, slug, slug_pt, fecha,
                         pais_es = pais, pais_en, pais_pt,
                         valor, unidad_id = unidad_id_pt, unidad = unidad_pt, fecha_ct)

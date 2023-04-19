@@ -865,6 +865,19 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       }
     }
 
+    if (slug_selected()[1] %in% c("vaccination_approvals_trials")) {
+      if (viz != "map") {
+        var_vacc <- list(
+          cat = c(var_cat, "estado"),
+          var_viz = c("estado", var_cat),
+          num = "valor",
+          agg = "sum",
+          label_agg = "Total"
+        )
+        var <- modifyList(var, var_vacc)
+      }
+    }
+
     if (slug_selected()[1] %in% c("school_closures")) {
       var_other <- list(
         var_viz = c("unidad", var_cat_viz),
@@ -938,6 +951,10 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       data$valor <- 1
     }
 
+    if (slug_selected()[1] %in% c("vaccination_approvals_trials")) {
+      data <- data |> tidyr::separate(unidad_id, c("estado", "vacuna"), sep = "<br/>")
+    }
+
     print(slug_selected())
     if (viz_select() != "sankey") {
       if (length(var_cat) == 1) {
@@ -946,7 +963,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                                      "doses_delivered_vaccine_donations",
                                      "covid_vaccine_agreements",
                                      "product_pipeline",
-                                     "vaccination_approvals_trials",
+                                     #"vaccination_approvals_trials",
                                      "geopolitics_vaccine_donations")) {
             extra_group <- "unidad"
             collapse_columns <- "unidad"
@@ -981,6 +998,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
       print("hola")
       print(names(data))
+
       var <- unique(c(var_viz()$var_viz, var_viz()$var_viz_date, label_agg))
 
       if (length(slug_selected()) == 2) {
@@ -990,7 +1008,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           select({{ var }}, everything())
       }
     }
-
+    print(data)
     data
   })
 
@@ -1020,6 +1038,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         title = title,
         title_align = "center",
         title_size = 17,
+        caption = last_update[[lang()]],
         title_weight = 500,
         marker_radius = 0,
         text_family = "Barlow",
@@ -1079,6 +1098,17 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     if ("excess_mortality" %in% slug_selected()) {
       opts$suffix_num <- "%"
+    }
+
+    if ("price_per_dose" %in% slug_selected()) {
+      opts$suffix_num <- "USD $"
+    }
+
+
+    if ("vaccination_approvals_trials" %in% slug_selected()[1]) {
+      opts$theme$tooltip_template <- paste0("<b>",pais, "</b>",
+                                            var_viz()$label_agg, ":",
+                                            valor, "{estado} <br/> {vacuna}")
     }
 
 
