@@ -158,8 +158,7 @@ server <-  function(input, output, session) {
 
     if (!is.null(url_par()$inputs$subquestion)){
       subquestion <- paste0("subquestion=", url_par()$inputs$subquestion, "%26")
-    }
-    else {
+    }   else {
       subquestion <- paste0("subquestion=",subques_sel$id, "%26")
     }
 
@@ -374,8 +373,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     if(!is.null(input$last_click)){
       df_b <- unique(data_subquestions()$ind_subpregunta)[1]
-    }
-    else {
+    } else {
 
       if(!is.null(url_par()$inputs$subquestion)) {
         if(url_par()$inputs$subquestion %in% data_subquestions()$ind_subpregunta ) {
@@ -538,8 +536,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           }
         }
         #############################################
-      }
-      else { #(length(slug) > 1,
+      } else { #(length(slug) > 1,
         ls <- oxfam_6[[lang()]][slug]
         if (viz_select() %in% c("line", "bar")) {
 
@@ -572,9 +569,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                                    by = by_types,
                                    multiple = "any")
 
-        }
-        else { #SCATTER ON PROCESS
-
+        } else { #SCATTER ON PROCESS
 
           if((unique(ls[[1]][[paste0("slug")]]) == "doses_delivered_vaccine_donations" &  unique(ls[[2]][[paste0("slug")]]) == "covid_vaccine_agreements") |
              (unique(ls[[1]][[paste0("slug")]]) == "new_deaths_per_million" &  unique(ls[[2]][[paste0("slug")]]) == "new_cases_per_million") |
@@ -732,6 +727,13 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
 
     if (length(slug) == 1) {
+
+
+      if( slug  == "school_closures" ) {
+        var_viz <- c(pais,"unidad_id")
+        type_viz <- "CatCatNum"
+        num_viz  <- 3
+      }
       if (length(unique(df$fecha)) == 1 |
           viz %in% c("map", "bar", "treemap", "sankey")) {
 
@@ -798,8 +800,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       }
 
 
-    }
-    else { # SLUG > 1
+    } else { # SLUG > 1
       if (viz != "scatter") {
         type_viz <- "DatNumNum"
         num_viz  <- 3
@@ -823,8 +824,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           }
         }
         #############################################
-      }
-      else {#SCATTER
+      } else {#SCATTER
         if( ("doses_delivered_vaccine_donations" %in% slug &   "covid_vaccine_agreements"  %in% slug) |
             ("new_deaths_per_million" %in% slug & "new_cases_per_million" %in% slug ) |
             ("stringency_index" %in% slug & "ghs_index" %in% slug ) |
@@ -950,8 +950,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       }
 
       ###############################################################
-    }
-    else {
+    } else {
 
       viz_agg <- agg_dash_6 |>
         filter( ind_pregunta %in%  questions_select()$ind_pregunta &
@@ -994,8 +993,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           tooltip_info$special_col_3 <- "stage3"
 
 
-        }
-        else {
+        } else {
 
           if("school_closures" %in% questions_select()$indicador) group_var <- unique(names(data[c(2,1)]))
 
@@ -1169,8 +1167,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
         opts$theme$tooltip_template <- tooltip
 
-      }
-      else {
+      } else {
 
         opts$theme$collapse_rows = T
         if(!is.null(tooltip_info$agg)) {
@@ -1178,8 +1175,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           pais_bold <- paste0("<b>",i_("mean",lang()), "  (", i_("mean",lang()),"): </b>")
 
           pais_detail <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
-        }
-        else {
+        } else {
             pais_bold <- paste0("<b>",i_("mean",lang()), "  (", i_("mean",lang()),"): </b>")
             pais_detail <-  paste0("{",i_("mean",lang()), "}")
         }
