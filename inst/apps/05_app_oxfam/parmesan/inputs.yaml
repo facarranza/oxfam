@@ -9,8 +9,8 @@ id_slug:
 id_slug_comparisons:
   show: true
   show_if:
-    viz_select():
-      is_any_of: [line, scatter]
+    show_comp():
+      equals: true
   input_type: selectizeInput
   input_params:
     label: slug_comparisons

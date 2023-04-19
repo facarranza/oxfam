@@ -415,7 +415,20 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     actual_but$active
   })
 
-
+  show_comp <- reactive({
+    req(viz_select())
+    show <- FALSE
+    if (viz_select() %in% "scatter") {
+      show <- TRUE
+  }
+  if (viz_select() %in% "line") {
+    show <- TRUE
+    if (input$id_slug %in% c("stringency_index", "ghs_index")) {
+      show <- FALSE
+    }
+  }
+    show
+  })
 
   slug_comparisons_opts <- reactive({
     if (is.null(input$id_slug)) return()
@@ -630,7 +643,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (!is.null(url_par()$inputs$pais)) {
       sel <- strsplit(url_par()$inputs$pais, ",") |> unlist()
     }
-    print(sel)
+
     sel
   })
 
@@ -643,7 +656,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     } else {
       if (length(input$id_slug_countries) == 1) return()
       if (length(input$id_slug_countries) > 1) {
-        #print(id_p)
         if (id_p == 1) {
           sc <- setdiff(input$id_slug_countries, "all")
           updateSelectizeInput(session,
@@ -777,7 +789,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (have_date()) {
       df$fecha <- lubridate::ymd(df$fecha)
       df <- df |> arrange(fecha)
-      #print(unique(df$fecha))
+
       if (is.null(input$id_slug_dates)) return()
       range <- input$id_slug_dates
       df <- dsapptools:::filter_ranges(df, range, "fecha")
@@ -900,14 +912,13 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           cat = "fecha",
           num = slug_trans()
         )
-        if (!"fecha" %in% names(data_load())) {
+        if (length(unique(data_load()$fecha)) == 1) {
           ls_e <- list(
+            var_viz = paste0("pais_", lang()),
             cat = paste0("pais_", lang())
           )
           var_double <- modifyList( var_double, ls_e)
         }
-        print("aveeer")
-        print(var_double$cat)
         var_double$label_agg <- var_double$num
         var <- modifyList(var, var_double)
       } else {
@@ -960,7 +971,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       data <- data |> tidyr::separate(unidad_id, c("estado", "vacuna"), sep = "<br/>")
     }
 
-    print(slug_selected())
     if (viz_select() != "sankey") {
       if (length(var_cat) == 1) {
         if (length(slug_selected()) == 1) {
@@ -984,9 +994,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       agg <- var_viz()$agg
       agg_extra <- agg
       if (agg == "count") agg_extra <- "sum"
-      print(agg)
-      print(var_cat)
-      print(var_num)
+
       options(scipen = 999)
       data <- dsdataprep::aggregation_data(data = data,
                                            agg = agg,
@@ -1001,8 +1009,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                                            extra_sep_collapse_columns = extra_sep_collapse_columns,
                                            extra_sep = "<br/>")
 
-      print("hola")
-      print(names(data))
 
       var <- unique(c(var_viz()$var_viz, var_viz()$var_viz_date, label_agg))
 
@@ -1013,7 +1019,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           select({{ var }}, everything())
       }
     }
-    print(data)
+
     data
   })
 
@@ -1107,7 +1113,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     }
 
     if ("price_per_dose" %in% slug_selected()) {
-      opts$suffix_num <- "USD $"
+      opts$prefix_num <- " USD $"
     }
 
 
@@ -1138,6 +1144,10 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (length(var_num) == 2) {
       var_date <- 'fecha'
       var_cat <- NULL
+      if (!"fecha" %in% names(data_viz())) {
+        var_date <- NULL
+        var_cat <- paste0("pais_", lang())
+      }
     }
     if (viz_select() != "map") {
       var_gnm <- NULL
