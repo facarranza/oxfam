@@ -36,7 +36,7 @@ jobs:
           Rscript -e "install.packages('chromote', dependencies=TRUE)"
           Rscript -e "install.packages('websocket', dependencies=TRUE)"
           Rscript -e "install.packages('reactR', dependencies=TRUE)"
-          Rscript -e "install.packages('rsconnect')
+          Rscript -e "install.packages('rsconnect')"
           Rscript -e  "devtools::install_github('dreamRs/d3.format',  dependencies =TRUE)"
           Rscript -e  "devtools::install_github('datasketch/makeup',  dependencies =TRUE)"
           Rscript -e  "devtools::install_github('datasketch/homodatum', dependencies =TRUE)"

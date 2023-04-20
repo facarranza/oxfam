@@ -1276,7 +1276,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     }
 
-    if(viz %in% c("sankey") )  opts$theme$plot_margin_right = 50
+    if(viz %in% c("sankey") )  opts$theme$plot_margin_right = 125
 
 
     opts
