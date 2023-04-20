@@ -39,6 +39,15 @@ jobs:
           Rscript -e  "devtools::install_github('datasketch/shinyinvoer', ref = 'c0fc3d121ababa454ca55786fe855d1bc5f5a7e7')"
           Rscript -e  "devtools::install_github('datasketch/shinypanels', ref = 'e5ea3b4690bd009f3285a76fdb1eb7945c74d253')"
           Rscript -e  "devtools::install_github('datasketch/shi18ny', ref = '37f276f1081f1f0a4c99f42f4f8038dbe999ba9a')"
+
+          Rscript -e  "devtools::install_github('datasketch/paletero', ref = '2e25920b6c71651f153684e669913196e9a8a79a')"
+          Rscript -e  "devtools::install_github('datasketch/makeup', ref = 'c94b29d21665ef8778fba4489cbc4b9634421308')"
+          Rscript -e  "devtools::install_github('datasketch/dstools', ref = '6bd2143a13185cc0acf9552b4858db1526ebe831')"
+          Rscript -e  "devtools::install_github('datasketch/dsdataprep')"
+          Rscript -e  "devtools::install_github('datasketch/dsapptools')"
+          Rscript -e  "devtools::install_github('datasketch/dsvizopts')"
+          Rscript -e  "devtools::install_github('datasketch/dsmodules')"
+          Rscript -e  "devtools::install_github('datasketch/parmesan')"
           Rscript -e  "devtools::install_github('datasketch/oxfam', ref = '007a0db77452c29b5cb7c1500162972deb92ff12', auth_token = NULL)"
 
       - name: Execute Directory
