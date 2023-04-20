@@ -33,6 +33,7 @@ jobs:
           Rscript -e "install.packages('shinycustomloader', dependencies=TRUE)"
           Rscript -e "install.packages('shinycustomloader', dependencies=TRUE)"
           Rscript -e "install.packages('rsconnect')"
+          Rscript -e  "devtools::install_github('datasketch/homodatum', dependencies =TRUE)"
           Rscript -e  "devtools::install_github('datasketch/paletero', dependencies =TRUE)"
           Rscript -e  "devtools::install_github('datasketch/makeup',  dependencies =TRUE)"
           Rscript -e  "devtools::install_github('datasketch/dstools', dependencies =TRUE)"
