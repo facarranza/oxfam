@@ -2,7 +2,6 @@ name: update_shiny_cron_v1_git_v0
 on:
   schedule:
   - cron: 0 2 * * *
-  push:
     branches:
       - dev-dash-six
 jobs:
