@@ -1,0 +1,70 @@
+name: update_shiny_cron_v1_git_v0
+on:
+  schedule:
+  - cron: 0 2 * * *
+    branches:
+      - dev-dash-six
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: fregante/setup-git-user@v1
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+          r-version: '4.2.2'
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 2
+          extra-packages: |
+            any::rcmdcheck, any::devtools
+      - name: Execute Script
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sudo apt install -y libcurl4-openssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libssl-dev libmagick++-dev libv8-dev  libnode-dev libudunits2-dev libgdal-dev libprotobuf-dev libjq-dev protobuf-compiler libprotobuf-dev libprotoc-dev libpoppler-cpp-dev libarchive-dev libglpk-dev
+          Rscript -e "install.packages('usethis', dependencies=TRUE)"
+          Rscript -e "install.packages('urlshorteneR', dependencies=TRUE)"
+          Rscript -e "install.packages('shinyjs', dependencies=TRUE)"
+          Rscript -e "install.packages('dplyr', dependencies=TRUE)"
+          Rscript -e "install.packages('shiny', dependencies=TRUE)"
+          Rscript -e "install.packages('DT', dependencies=TRUE)"
+          Rscript -e "install.packages('shinybusy', dependencies=TRUE)"
+          Rscript -e "install.packages('shinycustomloader', dependencies=TRUE)"
+          Rscript -e "install.packages('shinycustomloader', dependencies=TRUE)"
+          Rscript -e "install.packages('rsconnect')"
+
+          Rscript -e  "devtools::install_github('datasketch/paletero', ref = '2e25920b6c71651f153684e669913196e9a8a79a')"
+          Rscript -e  "devtools::install_github('datasketch/makeup', ref = 'c94b29d21665ef8778fba4489cbc4b9634421308')"
+          Rscript -e  "devtools::install_github('datasketch/dstools', ref = '6bd2143a13185cc0acf9552b4858db1526ebe831')"
+          Rscript -e  "devtools::install_github('datasketch/geodato', ref = '6bd2143a13185cc0acf9552b4858db1526ebe831')"
+          Rscript -e  "devtools::install_github('datasketch/dsdataprep')"
+          Rscript -e  "devtools::install_github('datasketch/dsapptools')"
+          Rscript -e  "devtools::install_github('datasketch/dsvizopts')"
+          Rscript -e  "devtools::install_github('datasketch/dsmodules')"
+          Rscript -e  "devtools::install_github('datasketch/parmesan')"
+          Rscript -e  "devtools::install_github('datasketch/hgchmaps@develop')"
+          Rscript -e  "remotes::install_github('datasketch/hgchmagic', ref = '7f6f0eb1dea0f29ddf4c1af7c6d9ec7307a7f7ac')"
+          Rscript -e  "devtools::install_github('datasketch/shinyinvoer', ref = 'c0fc3d121ababa454ca55786fe855d1bc5f5a7e7')"
+          Rscript -e  "devtools::install_github('datasketch/shinypanels', ref = 'e5ea3b4690bd009f3285a76fdb1eb7945c74d253')"
+          Rscript -e  "devtools::install_github('datasketch/shi18ny', ref = '37f276f1081f1f0a4c99f42f4f8038dbe999ba9a')"
+
+          Rscript -e  "devtools::install_github('datasketch/oxfam', ref = '007a0db77452c29b5cb7c1500162972deb92ff12', auth_token = NULL)"
+
+      - name: Execute Directory
+        run: |
+          pwd
+          cd inst
+          cd apps
+          cd 06_app_oxfam
+          pwd
+
+      - name: Deploy to shinyapps.io
+        # Continuous deployment only for pushes to the main / master branch
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        env:
+          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
+          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
+        run: Rscript deploy.R
