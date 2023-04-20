@@ -1109,8 +1109,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     }
 
-
-
     if (viz %in% c("map","treemap","bar")){
 
       if ( !( ("doses_delivered_vaccine_donations" %in%  questions_select()$indicador &   "covid_vaccine_agreements"  %in%   questions_select()$indicador) |
@@ -1251,7 +1249,9 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         opts$theme$tooltip_template <- tooltip
 
 
-    }
+      }
+
+
   }
 
     if( ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador)) {
@@ -1276,7 +1276,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     }
 
-
+    if(viz %in% c("sankey") )  opts$theme$plot_margin_right = 50
 
 
     opts
