@@ -508,30 +508,28 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         #SANKEY SPECIAL SECTION - TODO: optimize in one if
         if( viz_select() %in% ("sankey")){
 
-          if( slug  == "covid_vaccine_agreements" ) {
+          if( slug  == "covid_vaccine_agreements" |  slug  == "doses_delivered_vaccine_donations") {
             d <- d |>
+              select(!unidad_id) |>
+              group_by(id) |>
+              mutate(unidadp= paste0(unidad, collapse = "<br>")) |>
               select(!unidad) |>
-              group_by(id) |>
-              mutate(unidadp= paste0(unidad_id, collapse = "-")) |>
-              tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna")) |>
-              select(!unidad_id) |>
-              select(fabrica,vacuna,valor) |>
               ungroup() |>
               select(!id) |>
               distinct()
           }
-          if( slug  == "doses_delivered_vaccine_donations" ) {
-            d <- d |>
-             select(!unidad) |>
-              group_by(id) |>
-              mutate(unidadp= paste0(unidad_id, collapse = "-")) |>
-              tidyr::separate(unidadp,sep="-",into=c("donante","vacuna")) |>
-              select(!unidad_id) |>
-              select(donante,vacuna,valor) |>
-              ungroup() |>
-              select(!id) |>
-              distinct()
-          }
+          # if( slug  == "doses_delivered_vaccine_donations" ) {
+          #   d <- d |>
+          #    select(!unidad) |>
+          #     group_by(id) |>
+          #     mutate(unidadp= paste0(unidad_id, collapse = "-")) |>
+          #     tidyr::separate(unidadp,sep="-",into=c("donante","vacuna")) |>
+          #     select(!unidad_id) |>
+          #     select(donante,vacuna,valor) |>
+          #     ungroup() |>
+          #     select(!id) |>
+          #     distinct()
+          # }
 
         }
         #################################################
@@ -754,12 +752,12 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         #SANKEY SPECIAL CASES
         if( viz %in% c("sankey")) {
           if( slug  == "covid_vaccine_agreements" ) {
-            var_viz <- c("fabrica", "vacuna","valor")
+            var_viz <- c("unidadp", pais ,"valor")
             type_viz <- "CatCatNum"
             num_viz  <- 3
           }
           if( slug  == "doses_delivered_vaccine_donations" ) {
-            var_viz <- c("donante", "vacuna","valor")
+            var_viz <-  c("unidadp", pais ,"valor")
             type_viz <- "CatCatNum"
             num_viz  <- 3
           }
