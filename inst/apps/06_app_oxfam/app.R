@@ -515,7 +515,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
               mutate(unidadp= paste0(unidad_id, collapse = "-")) |>
               tidyr::separate(unidadp,sep="-",into=c("fabrica","vacuna")) |>
               select(!unidad_id) |>
-              select(donante,vacuna,valor) |>
+              select(fabrica,vacuna,valor) |>
               ungroup() |>
               select(!id) |>
               distinct()
