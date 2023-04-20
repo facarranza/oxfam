@@ -44,7 +44,7 @@ jobs:
           Rscript -e  "devtools::install_github('datasketch/dsvizopts')"
           Rscript -e  "devtools::install_github('datasketch/dsmodules')"
           Rscript -e  "devtools::install_github('datasketch/parmesan')"
-           Rscript -e  "devtools::install_github('datasketch/hgchmaps@develop')"
+          Rscript -e  "devtools::install_github('datasketch/hgchmaps@develop')"
           Rscript -e  "remotes::install_github('datasketch/hgchmagic', ref = '7f6f0eb1dea0f29ddf4c1af7c6d9ec7307a7f7ac')"
           Rscript -e  "devtools::install_github('datasketch/shinyinvoer', ref = 'c0fc3d121ababa454ca55786fe855d1bc5f5a7e7')"
           Rscript -e  "devtools::install_github('datasketch/shinypanels', ref = 'e5ea3b4690bd009f3285a76fdb1eb7945c74d253')"
