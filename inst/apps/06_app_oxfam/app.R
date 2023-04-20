@@ -115,7 +115,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-         #verbatimTextOutput("debug"),
+         verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -518,19 +518,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
               select(!id) |>
               distinct()
           }
-          # if( slug  == "doses_delivered_vaccine_donations" ) {
-          #   d <- d |>
-          #    select(!unidad) |>
-          #     group_by(id) |>
-          #     mutate(unidadp= paste0(unidad_id, collapse = "-")) |>
-          #     tidyr::separate(unidadp,sep="-",into=c("donante","vacuna")) |>
-          #     select(!unidad_id) |>
-          #     select(donante,vacuna,valor) |>
-          #     ungroup() |>
-          #     select(!id) |>
-          #     distinct()
-          # }
-
         }
         #################################################
 
@@ -751,16 +738,12 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         #############################################
         #SANKEY SPECIAL CASES
         if( viz %in% c("sankey")) {
-          if( slug  == "covid_vaccine_agreements" ) {
+          if( slug  == "covid_vaccine_agreements"  | slug  == "doses_delivered_vaccine_donations" ) {
             var_viz <- c("unidadp", pais ,"valor")
             type_viz <- "CatCatNum"
             num_viz  <- 3
           }
-          if( slug  == "doses_delivered_vaccine_donations" ) {
-            var_viz <-  c("unidadp", pais ,"valor")
-            type_viz <- "CatCatNum"
-            num_viz  <- 3
-          }
+
           if( slug  == "geopolitics_vaccine_donations" ) {
             var_viz <- c("unidad", pais,"valor")
             type_viz <- "CatCatNum"
@@ -1127,7 +1110,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                                                    ("people_fully_vaccinated" %in%  questions_select()$indicador & "people_vaccinated" %in%  questions_select()$indicador )))
         {
 
-
         opts$theme$collapse_rows = T
 
         if("school_closures" %in% questions_select()$indicador) {
@@ -1169,10 +1151,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
         }
 
-
-       # tooltip <- paste0(pais_bold,  pais_detail, "<br>", value_bold ,  value_detail,"<br>",fecha_min_bold, fecha_min_detail, "<br>",
-        #                  fecha_max_bold, fecha_max_detail)
-
         if(tooltip_info$unidad == TRUE) {
           unidad_bold <- paste0("<b>",i_("unidad",lang()), ": </b>")
           unidad_detail <-   paste0("{",i_("unidad",lang()), "}")
@@ -1181,39 +1159,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
         opts$theme$tooltip_template <- tooltip
 
-      } else {
-#
-#         opts$theme$collapse_rows = T
-#         if(!is.null(tooltip_info$agg)) {
-#         #  pais_bold  <-   paste0("<b>",i_(tooltip_info$agg,lang()), ": </b>")
-#           pais_bold <- paste0("<b>",i_("mean",lang()), "  (", i_("mean",lang()),"): </b>")
-#           pais_detail <-  paste0("{",i_(tooltip_info$agg,lang()), "}")
-#         } else {
-#             pais_bold <- paste0("<b>",i_("mean",lang()), "  (", i_("mean",lang()),"): </b>")
-#             pais_detail <-  paste0("{",i_("mean",lang()), "}")
-#         }
-#
-#         tooltip <- paste0(pais_bold,  pais_detail)
-#
-#         if(!is.null(tooltip_info$special_col_1) &  !is.null(tooltip_info$special_col_2)){
-#
-#           value_bold_1  <-   paste0("<b>",i_(tooltip_info$special_col_1,lang()), ": </b>")
-#           value_detail_1 <-  paste0("{",i_(tooltip_info$special_col_1,lang()), "}")
-#
-#
-#           value_bold_2  <-   paste0("<b>",i_(tooltip_info$special_col_2,lang()), ": </b>")
-#           value_detail_2 <-  paste0("{",i_(tooltip_info$special_col_2,lang()), "}")
-#
-#           tooltip <- paste0(tooltip, "<br>", value_bold_1 ,  value_detail_1,
-#                             "<br>", value_bold_2 ,  value_detail_2)
-
-        #}
-
-        opts$theme$tooltip_template <- tooltip
       }
-
-
-
       if("vaccination_approvals_trials" %in%  questions_select()$indicador ){
         opts$theme$collapse_rows = T
 
@@ -1251,29 +1197,33 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
                             "<br>", value_bold_2 ,  value_detail_2,
                             "<br>", value_bold_3 ,  value_detail_3)
 
-
-
         }
 
         opts$theme$tooltip_template <- tooltip
 
-
       }
-
-
   }
 
     if( ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador)) {
 
-      opts$theme$hor_title =   tooltip_info$special_col_1
+      opts$theme$hor_title =   paste(tooltip_info$special_col_1, "  (",i_("mean",lang()),")")
+      opts$theme$ver_title =    tooltip_info$special_col_2
+      #############################
+      opts$theme$collapse_rows = T
+      agg_bold <- paste0("<b>",i_("pais",lang()), " : </b>")
+      agg_detail <-  paste0("{cat}")
+      value_bold1  <-   paste0("<b>", opts$theme$hor_title, " : </b>")
+      value_detail1 <-  paste0("{num1}")
+      value_bold2  <-   paste0("<b>",tooltip_info$special_col_2, " : </b>")
+      value_detail2 <-  paste0("{num2}")
+      tooltip <- paste0( agg_bold, agg_detail, "<br>",  value_bold1, value_detail1,  "<br>",  value_bold2, value_detail2 )
+      opts$theme$tooltip_template <- tooltip
 
-      opts$theme$ver_title =   tooltip_info$special_col_2
-
+      #############################
     }
 
     if (viz %in% c("line") & "school_closures" %in% questions_select()$indicador){
       opts$theme$collapse_rows = T
-
       fecha_bold <- paste0("<b>",i_("fecha",lang()), ": </b>")
       fecha_detail <-  paste0("{",i_("fecha",lang()), "}")
       value_bold1  <-   paste0("<b>",i_("valor",lang()), ": </b>")
@@ -1286,7 +1236,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     }
 
     if(viz %in% c("sankey") )  opts$theme$plot_margin_right = 125
-
     print(questions_select()$indicador)
     opts
 
@@ -1305,13 +1254,24 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
          ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador) |
          ("people_fully_vaccinated" %in% questions_select()$indicador & "people_vaccinated" %in% questions_select()$indicador)) &   "scatter" %in% viz_select()){
 
+      #STATIC CODE ISSUE WHITE SPACES BLANK NAMES
+       if("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador)
+          names(data) <- c("cat","num1","num2") #neccesary by tooltip section
+
       data <- data_viz()
-      colnames(data)  <- c(i_("pais", lang()),names(data[2]),names(data[3]))
-      do.call(viz_func(), list(
+      if("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador) {
+        colnames(data) <- c("cat","num1","num2") #neccesary by tooltip section
+        cat_var <- c(i_("cat", lang()))
+      } else {
+        colnames(data)  <- c(i_("pais", lang()),names(data[2]),names(data[3]))
+        cat_var <- c(i_("pais", lang()))
+      }
+
+       do.call(viz_func(), list(
         data = data,
         opts = viz_theme(),
         var_num = c(names(data[2]),names(data[3])),
-        var_cat =  c(i_("pais", lang()))
+        var_cat =  cat_var
       ))
       #############################
     }
@@ -1431,7 +1391,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   output$debug <- renderPrint({
     list(
       #data_filter()
-      #data_viz()
+      data_viz()
       #data_questions()$ind_pregunta
       #questions_select()
       #  names( questions_select())
