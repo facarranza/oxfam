@@ -1204,10 +1204,17 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       }
   }
 
-    if( ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador)) {
+    if( "stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador) {
 
+      if (viz %in% c("scatter")){
       opts$theme$hor_title =   paste(tooltip_info$special_col_1, "  (",i_("mean",lang()),")")
       opts$theme$ver_title =    tooltip_info$special_col_2
+      }
+      else {
+
+
+      }
+
       #############################
       opts$theme$collapse_rows = T
       agg_bold <- paste0("<b>",i_("pais",lang()), " : </b>")
@@ -1218,6 +1225,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       value_detail2 <-  paste0("{num2}")
       tooltip <- paste0( agg_bold, agg_detail, "<br>",  value_bold1, value_detail1,  "<br>",  value_bold2, value_detail2 )
       opts$theme$tooltip_template <- tooltip
+      print("ttttttol")
+      print(tooltip)
 
       #############################
     }
@@ -1242,21 +1251,23 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   })
 
 
-
   hgch_viz <- reactive({
     req(viz_func())
     req(data_viz())
     req(viz_theme())
-
+    print("ouuuuuuuuuut")
+    print( questions_select()$indicador)
     ############################# SPECIAL CASE
     if( (("doses_delivered_vaccine_donations" %in%  questions_select()$indicador &   "covid_vaccine_agreements"  %in% questions_select()$indicador) |
          ("new_deaths_per_million" %in% questions_select()$indicador & "new_cases_per_million" %in% questions_select()$indicador) |
          ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador) |
-         ("people_fully_vaccinated" %in% questions_select()$indicador & "people_vaccinated" %in% questions_select()$indicador)) &   "scatter" %in% viz_select()){
+         ("people_fully_vaccinated" %in% questions_select()$indicador & "people_vaccinated" %in% questions_select()$indicador)) &
+          "scatter" %in% viz_select()) {
 
       #STATIC CODE ISSUE WHITE SPACES BLANK NAMES
-       if("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador)
-          names(data) <- c("cat","num1","num2") #neccesary by tooltip section
+       # if( ("new_deaths_per_million" %in% questions_select()$indicador & "new_cases_per_million" %in% questions_select()$indicador) |
+       #     ("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador))
+       #    names(data) <- c("cat","num1","num2") #neccesary by tooltip section
 
       data <- data_viz()
       if("stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador) {
@@ -1266,13 +1277,18 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         colnames(data)  <- c(i_("pais", lang()),names(data[2]),names(data[3]))
         cat_var <- c(i_("pais", lang()))
       }
-
+      if( "scatter" %in% viz_select()) {
        do.call(viz_func(), list(
         data = data,
         opts = viz_theme(),
         var_num = c(names(data[2]),names(data[3])),
         var_cat =  cat_var
-      ))
+      )) }
+      else {
+        do.call(viz_func(), list(
+          data = data,
+          opts = viz_theme()))
+      }
       #############################
     }
     else{
