@@ -38,3 +38,5 @@ stage1: Vacunas aprobadas para usar
 stage2: Vacunas en ensayos clínicos
 stage3: Vacunas con ensayos que ya no continúan
 status: Estado
+currency: Moneda
+vacuna: Vacunas

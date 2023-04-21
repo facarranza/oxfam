@@ -32,7 +32,11 @@ jobs:
           Rscript -e "install.packages('DT', dependencies=TRUE)"
           Rscript -e "install.packages('shinybusy', dependencies=TRUE)"
           Rscript -e "install.packages('shinycustomloader', dependencies=TRUE)"
-          Rscript -e "install.packages('shinycustomloader', dependencies=TRUE)"
+          Rscript -e "install.packages('reactable', dependencies=TRUE)"
+          Rscript -e "install.packages('webshot2', dependencies=TRUE)"
+          Rscript -e "install.packages('chromote', dependencies=TRUE)"
+          Rscript -e "install.packages('websocket', dependencies=TRUE)"
+          Rscript -e "install.packages('reactR', dependencies=TRUE)"
           Rscript -e "install.packages('rsconnect')"
 
           Rscript -e  "devtools::install_github('datasketch/paletero', ref = '2e25920b6c71651f153684e669913196e9a8a79a')"
