@@ -1129,11 +1129,11 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     if(viz=="line" & "stringency_index" %in% questions_select()$indicador){
       opts$y_max <- 100
-      opts$theme$suffix_num <- "*/100"
+      opts$theme$suffix_num <- "/100"
     }
 
     if ("ghs_index" %in% questions_select()$indicador){
-       opts$theme$suffix_num <- "*/100"
+       opts$theme$suffix_num <- "/100"
     }
     if("interagency_response_plan_numinneed"  %in% questions_select()$indicador ) {
         opts$theme$collapse_rows = T
