@@ -164,7 +164,7 @@ server <-  function(input, output, session) {
 
     if (!is.null(actual_but$active)) viz <- paste0("viz=",actual_but$active, "%26")
 
-    long_url <- paste0("https://datasketch.shinyapps.io/oxfam_questions/?", gsub("%26", "&",
+    long_url <- paste0("https://vacunasparalagente.org/preguntas-frecuentes/?", gsub("%26", "&",
                                                                                  paste0(question, subquestion, "lang=", lang())))
     print(long_url)
     shared_link$short_url <- shorten_url(long_url, "1ded0052e90265f03473cd1b597f0c45bb83d578")
