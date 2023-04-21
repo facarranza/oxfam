@@ -1093,8 +1093,10 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     )
     if(!is.null(tooltip_info$agg)) opts$collapse_rows = T
 
+
     if(viz=="line" & "stringency_index" %in% questions_select()$indicador){
       opts$y_max <- 100
+      opts$theme$suffix_num <- "*/100"
     }
     if (viz == "map") {
       opts$theme$collapse_rows = T
@@ -1210,10 +1212,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       opts$theme$hor_title =   paste(tooltip_info$special_col_1, "  (",i_("mean",lang()),")")
       opts$theme$ver_title =    tooltip_info$special_col_2
       }
-      else {
-
-
-      }
 
       #############################
       opts$theme$collapse_rows = T
@@ -1243,6 +1241,25 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       opts$theme$tooltip_template <- tooltip
 
     }
+
+
+    if ( "excess_mortality" %in% questions_select()$indicador){
+      print("sufiix")
+      opts$theme$suffix_num <- "%"
+      # opts$theme$collapse_rows = T
+      # if(viz %in% c("line","scatter")){
+      # pais_bold <- paste0("<b>",i_("pais",lang()), ": </b>")
+      # pais_detail <-  paste0("{",i_("pais",lang()), "}")
+      # fecha_bold <- paste0("<b>",i_("fecha",lang()), ": </b>")
+      # fecha_detail <-  paste0("{",i_("fecha",lang()), "}")
+      # value_bold1  <-   paste0("<b>",i_("valor",lang()), ": </b>")
+      # value_detail1 <-  paste0("{",i_("valor",lang()), "} %")
+      #
+      # tooltip <- paste0(fecha_bold,  fecha_detail, "<br>", value_bold1 ,  value_detail1,  "<br>", value_bold2 ,  value_detail2 )
+      }
+      opts$theme$tooltip_template <- tooltip
+
+
 
     if(viz %in% c("sankey") )  opts$theme$plot_margin_right = 125
     print(questions_select()$indicador)
