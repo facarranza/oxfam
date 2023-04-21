@@ -115,7 +115,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-        verbatimTextOutput("debug"),
+        #verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -1496,7 +1496,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   output$debug <- renderPrint({
     list(
       #data_filter()
-     data_viz()
+     #data_viz()
       #data_questions()$ind_pregunta
       #questions_select()
       #  names( questions_select())
