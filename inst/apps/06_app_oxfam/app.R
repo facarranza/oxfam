@@ -115,7 +115,7 @@ ui <- panelsPage(
         can_collapse = FALSE,
         body = div(
 
-        # verbatimTextOutput("debug"),
+        verbatimTextOutput("debug"),
 
           #  shinycustomloader::withLoader(
           uiOutput("country"),
@@ -1028,13 +1028,29 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
            } else {
              data_temp2 <- data |> group_by(across(sym(group_var))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
-          }
+           }
 
           data_temp2$mindate <- as.character(data_temp2$min_date)
           data_temp2$maxdate <- as.character(data_temp2$max_date)
           data_temp2$min_date <- as.character(data_temp2$min_date)
           data_temp2$max_date <- as.character(data_temp2$max_date)
+
+          if("price_per_dose" %in% questions_select()$indicador){
+           data_temp3 <- data |> select(!unidad_id) |>
+              select(pais_es, pais_en, pais_pt, valor) |>
+              distinct() |>
+              arrange(valor) |>
+              group_by( pais_es, pais_en, pais_pt) |>
+              mutate(valor_ct= paste0("USD $",valor, collapse = ",")) |>
+              ungroup() |>
+              select(!valor) |>
+              distinct()
+          }
+
+
           data <- data_temp1 |> left_join( data_temp2)
+
+          if("price_per_dose" %in% questions_select()$indicador) data <- data |> left_join(data_temp3)
 
           if(!is.null(unidad)) {
             if(length(unidad) == 1){
@@ -1156,7 +1172,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
         opts$theme$collapse_rows = T
 
-        if("school_closures" %in% questions_select()$indicador) {
+      if("school_closures" %in% questions_select()$indicador) {
           pais_bold <- paste0("<b>",i_("pais",lang()), ": </b>")
           pais_detail <-  paste0("{",i_("pais",lang()), "}")
           value_bold1  <-   paste0("<b>",i_(tooltip_info$agg,lang()), ": </b>")
@@ -1165,7 +1181,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           value_detail2 <-  paste0("{",i_("status",lang()), "}")
           tooltip <- paste0(pais_bold,  pais_detail, "<br>", value_bold2 ,  value_detail2,  "<br>", value_bold1 ,  value_detail1 )
 
-        } else {
+        }
+        else {
 
 
             pais_bold <- paste0("<b>",i_("pais",lang()), ": </b>")
@@ -1198,7 +1215,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
         }
 
-        if(tooltip_info$unidad == TRUE) {
+       if(tooltip_info$unidad == TRUE) {
 
           if("worldbank_gavi_vaccine_financing"  %in% questions_select()$indicador) {
             unidad_bold <- paste0("<b>",i_("currency",lang()), ": </b>")
@@ -1208,6 +1225,12 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           }
           unidad_detail <-   paste0("{",i_("unidad",lang()), "}")
           tooltip <- paste0(tooltip, "<br>",unidad_bold,unidad_detail )
+       }
+
+        if("price_per_dose" %in%  questions_select()$indicador){
+          valor2_bold <- paste0("<b>",i_("valor",lang()), ": </b>")
+          valor2_detail <-   paste0("{",i_("valor_ct",lang()), "}")
+          tooltip <- paste0(tooltip, "<br>",valor2_bold,valor2_detail )
         }
 
         opts$theme$tooltip_template <- tooltip
@@ -1255,6 +1278,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         opts$theme$tooltip_template <- tooltip
 
       }
+
   }
 
     if( "stringency_index" %in% questions_select()$indicador & "ghs_index" %in% questions_select()$indicador) {
@@ -1303,8 +1327,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       tooltip <- paste0(fecha_bold,  fecha_detail, "<br>", value_bold1 ,  value_detail1,  "<br>", value_bold2 ,  value_detail2 )
       opts$theme$tooltip_template <- tooltip
     }
-
-
     if ( "excess_mortality" %in% questions_select()$indicador) {
            opts$theme$suffix_num <- "%"
     }
@@ -1474,7 +1496,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   output$debug <- renderPrint({
     list(
       #data_filter()
-     # data_viz()
+     data_viz()
       #data_questions()$ind_pregunta
       #questions_select()
       #  names( questions_select())
