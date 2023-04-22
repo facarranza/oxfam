@@ -164,6 +164,8 @@ server <-  function(input, output, session) {
 
     if (!is.null(actual_but$active)) viz <- paste0("viz=",actual_but$active, "%26")
 
+
+
     long_url <- paste0("https://vacunasparalagente.org/preguntas-frecuentes/?", gsub("%26", "&",
                                                                                  paste0(question, subquestion, "lang=", lang())))
     print(long_url)
