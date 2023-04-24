@@ -795,6 +795,16 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           }
 
         }
+
+        if(viz %in% c("treemap")){
+        if( slug  == "vaccination_approvals_trials" ) {
+
+            var_viz <- c("valor",pais)
+            type_viz <- "CatNum"
+            num_viz  <- 2
+
+          }
+        }
         #############################################
 
       }
@@ -1005,7 +1015,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         else  group_var <- unique(names(data[1]))
 
 
-        if("vaccination_approvals_trials" %in% questions_select()$indicador & "bar" %in% viz_select()){
+        if("vaccination_approvals_trials" %in% questions_select()$indicador & ("bar" %in% viz_select() | "treemap" %in% viz_select()) ){
 
           group_var <- unique(names(data[c(1,2)]))
           data$valor <- as.character(data$valor)
