@@ -75,7 +75,7 @@ ui <- panelsPage(
         id = "controls-style",
         collapse = FALSE,
         can_collapse = FALSE,
-        width = 300,
+        width = 280,
         body = div(
           #div(id = "myDiv", style = "font-family: 'IBM Plex Sans'; font-weight: 500; font-size: 14px; line-height: 18.2px;,  background-color:#252525;" ),
           uiOutput("button_questions")
@@ -91,7 +91,7 @@ ui <- panelsPage(
         id = "controls-style2",
 
         can_collapse = FALSE,
-        width = 300,
+        width = 280,
         body = div(
 
           #shinycustomloader::withLoader(
@@ -267,7 +267,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   # Idiomas -----------------------------------------------------------------
 
   i18n <- list(
-    defaultLang = "en",
+    defaultLang = "es",
 
     availableLangs = c("es","en", "pt")
   )
@@ -970,7 +970,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
             }
 
         }
-        #names(data) <- c(agg, paste(var_calc[1], "  -", i_(agg,lang()),""), paste(var_calc[2], " ", i_(agg,lang()),""))
+
       }
 
       ###############################################################
