@@ -41,3 +41,6 @@ status: Estado
 currency: Moeda
 vacuna: Vacinas
 people: Pesooas
+new_deaths_per_million_tooltip: Média de novas mortes por milhão
+new_cases_per_million_tooltip: Média de novos casos por milhão
+

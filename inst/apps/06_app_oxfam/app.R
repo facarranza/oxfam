@@ -958,9 +958,16 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           }
 
         }
-        names(data) <- c(agg, var_calc[1],var_calc[2])
-        tooltip_info$special_col_1 =var_calc[1]
-        tooltip_info$special_col_2 =var_calc[2]
+        if("new_deaths_per_million" %in% questions_select()$indicador & "new_cases_per_million" %in% questions_select()$indicador){
+          names(data) <- c(agg, i_("new_deaths_per_million_tooltip",lang()), i_("new_cases_per_million_tooltip",lang()))
+          # tooltip_info$special_col_1 =var_calc[1]
+          # tooltip_info$special_col_2 =var_calc[2]
+        }else {
+          names(data) <- c(agg, var_calc[1],var_calc[2])
+          tooltip_info$special_col_1 =var_calc[1]
+          tooltip_info$special_col_2 =var_calc[2]
+        }
+
 
         #names(data) <- c(agg, paste(var_calc[1], "  -", i_(agg,lang()),""), paste(var_calc[2], " ", i_(agg,lang()),""))
       }
