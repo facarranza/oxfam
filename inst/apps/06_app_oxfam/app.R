@@ -734,7 +734,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     slug <- unique(questions_select()$indicador)
     pais <- paste0("pais_", lang())
-    #if (viz == "map") pais <- "pais_en"
     var_viz <- c(pais, "fecha", "valor")
     type_viz <- "CatDatNum"
     num_viz  <- 3
@@ -747,7 +746,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       if (length(unique(df$fecha)) == 1 |
           viz %in% c("map", "bar", "treemap", "sankey")) {
 
-        #if(!is.null(df$unidad) & viz %in% c("bar","treemap"))  var_viz <- c(var_viz, "unidad")
+
         var_viz <- setdiff(var_viz, "fecha")
         if(!is.null(df$unidad)){
           var_viz <- c(var_viz, "unidad")
@@ -814,9 +813,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
              if( slug  == "school_closures" ) {
                var_viz <- c("fecha","valor","unidad_id")
                type_viz <- "DatNum"
-               #   type_viz <- "CatCatNum"
-               #   num_viz  <- 3
-             }
+              }
 
              #tooltip_info$unidad <- TRUE
          }
@@ -1007,7 +1004,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         data <- data |> select({{ var }}, everything())
         agg <- viz_agg$agg
         tooltip_info$agg <- agg
-         var_calc <- unique(names(data[var_viz()$num_viz]))
+        var_calc <- unique(names(data[var_viz()$num_viz]))
         if(ncol(viz_agg) > 1 ) {
           group_var <- unique(names(data[c(1, var_viz()$num_viz-1)  ]))
 
@@ -1532,7 +1529,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       # print(url_par())
 
       #data_filter()
-     #data_viz()
+      #data_viz()
       #data_questions()$ind_pregunta
       #questions_select()
       #  names( questions_select())
