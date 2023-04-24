@@ -165,9 +165,9 @@ server <-  function(input, output, session) {
     if (!is.null(actual_but$active)) viz <- paste0("viz=",actual_but$active, "%26")
 
 
-
-    long_url <- paste0("https://vacunasparalagente.org/preguntas-frecuentes/?", gsub("%26", "&",
-                                                                                 paste0(question, subquestion, "lang=", lang())))
+   #https://vacunasparalagente.org/preguntas-frecuentes/
+    long_url <- paste0("https://vacunasparalagente.org/preguntas-frecuentes?", gsub("%26", "&",
+                                                                                 paste0(question, subquestion, viz,"lang=", lang())))
     print(long_url)
     shared_link$short_url <- shorten_url(long_url, "1ded0052e90265f03473cd1b597f0c45bb83d578")
   })
@@ -463,7 +463,9 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if (input$viz_selection %in% viz_rec) {
       actual_but$active <- input$viz_selection
     } else {
-      actual_but$active <- viz_rec[1]
+      if (!is.null(url_par()$inputs$viz)) {
+        actual_but$active <- url_par()$inputs$viz
+      } else actual_but$active <- viz_rec[1]
     }
 
   })
@@ -1024,6 +1026,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
 
           if(!is.null(data$unidad)) unidad <- unique(data$unidad_id)
+          if("immunization_campaigns" %in% questions_select()$indicador)   unidad <- i_("people",lang())
 
           if("school_closures" %in% questions_select()$indicador) {
             data_temp2 <- data |> group_by(across(sym(group_var[1])), across(sym(group_var[2]))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
@@ -1497,6 +1500,11 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
   output$debug <- renderPrint({
     list(
+      # print(url_par()$inputs$viz),
+      # print(url_par()$inputs$subquestion),
+      # print(url_par()$inputs$subquestion),
+      # print(url_par())
+
       #data_filter()
      #data_viz()
       #data_questions()$ind_pregunta
