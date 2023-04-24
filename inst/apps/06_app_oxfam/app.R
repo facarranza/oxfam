@@ -165,8 +165,8 @@ server <-  function(input, output, session) {
     if (!is.null(actual_but$active)) viz <- paste0("viz=",actual_but$active, "%26")
 
 
-   #https://vacunasparalagente.org/preguntas-frecuentes/
-    long_url <- paste0("https://vacunasparalagente.org/preguntas-frecuentes?", gsub("%26", "&",
+
+    long_url <- paste0("https://vacunasparalagente.org/preguntas-frecuentes/?", gsub("%26", "&",
                                                                                  paste0(question, subquestion, viz,"lang=", lang())))
     print(long_url)
     shared_link$short_url <- shorten_url(long_url, "1ded0052e90265f03473cd1b597f0c45bb83d578")
@@ -452,20 +452,28 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
   observe({
 
-
-    if (!is.null(url_par()$inputs$viz)) {
-      actual_but$active <- url_par()$inputs$viz
+    if(is.null(actual_but$active)) {
+      if (!is.null(url_par()$inputs$viz)) {
+        actual_but$active <- url_par()$inputs$viz
+      }
     }
+
+
 
     req(possible_viz())
     if (is.null(input$viz_selection)) return()
+
+
+
+
     viz_rec <- possible_viz()
     if (input$viz_selection %in% viz_rec) {
       actual_but$active <- input$viz_selection
     } else {
-      if (!is.null(url_par()$inputs$viz)) {
-        actual_but$active <- url_par()$inputs$viz
-      } else actual_but$active <- viz_rec[1]
+
+      # if (!is.null(url_par()$inputs$viz)) {
+      #   actual_but$active <- url_par()$inputs$viz
+       actual_but$active <- viz_rec[1]
     }
 
   })
@@ -997,7 +1005,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         else  group_var <- unique(names(data[1]))
 
 
-        if("vaccination_approvals_trials" %in% questions_select()$indicador){
+        if("vaccination_approvals_trials" %in% questions_select()$indicador & "bar" %in% viz_select()){
 
           group_var <- unique(names(data[c(1,2)]))
           data$valor <- as.character(data$valor)
