@@ -43,3 +43,6 @@ vacuna: Vaccines
 people: People
 new_deaths_per_million_tooltip: Average new deaths per million
 new_cases_per_million_tooltip: Average new cases per million
+people_fully_vaccinated_tooltip: Average number of people fully vaccinated
+people_vaccinated_tooltip: Average number of people vaccinated
+
