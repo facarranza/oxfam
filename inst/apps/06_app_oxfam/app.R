@@ -75,7 +75,7 @@ ui <- panelsPage(
         id = "controls-style",
         collapse = FALSE,
         can_collapse = FALSE,
-        width = 300,
+        width = 280,
         body = div(
           #div(id = "myDiv", style = "font-family: 'IBM Plex Sans'; font-weight: 500; font-size: 14px; line-height: 18.2px;,  background-color:#252525;" ),
           uiOutput("button_questions")
@@ -91,7 +91,7 @@ ui <- panelsPage(
         id = "controls-style2",
 
         can_collapse = FALSE,
-        width = 300,
+        width = 280,
         body = div(
 
           #shinycustomloader::withLoader(
@@ -150,24 +150,26 @@ server <-  function(input, output, session) {
     subquestion <- NULL
     viz = NULL
 
-    if (is.null(url_par()$inputs$question)){
-      question <- paste0("question=", ques_sel(), "%26")
-    } else {
-      question <- paste0("question=", url_par()$inputs$question, "%26")
-    }
-
-    if (!is.null(url_par()$inputs$subquestion)){
-      subquestion <- paste0("subquestion=", url_par()$inputs$subquestion, "%26")
-    }   else {
-      subquestion <- paste0("subquestion=",subques_sel$id, "%26")
-    }
+    question <-   paste0("question=", ques_sel(), "%26")
+    subquestion <- paste0("subquestion=",subques_sel$id, "%26")
+    # if (is.null(url_par()$inputs$question)){
+    #   question <- paste0("question=", ques_sel(), "%26")
+    # } else {
+    #   question <- paste0("question=", url_par()$inputs$question, "%26")
+    # }
+    #
+    # if (!is.null(url_par()$inputs$subquestion)){
+    #   subquestion <- paste0("subquestion=", url_par()$inputs$subquestion, "%26")
+    # }   else {
+    #   subquestion <- paste0("subquestion=",subques_sel$id, "%26")
+    # }
 
     if (!is.null(actual_but$active)) viz <- paste0("viz=",actual_but$active, "%26")
 
 
 
     long_url <- paste0("https://vacunasparalagente.org/preguntas-frecuentes/?", gsub("%26", "&",
-                                                                                 paste0(question, subquestion, "lang=", lang())))
+                                                                                 paste0(question, subquestion, viz,"lang=", lang())))
     print(long_url)
     shared_link$short_url <- shorten_url(long_url, "1ded0052e90265f03473cd1b597f0c45bb83d578")
   })
@@ -267,7 +269,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
   # Idiomas -----------------------------------------------------------------
 
   i18n <- list(
-    defaultLang = "en",
+    defaultLang = "es",
 
     availableLangs = c("es","en", "pt")
   )
@@ -452,18 +454,28 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
   observe({
 
-
-    if (!is.null(url_par()$inputs$viz)) {
-      actual_but$active <- url_par()$inputs$viz
+    if(is.null(actual_but$active)) {
+      if (!is.null(url_par()$inputs$viz)) {
+        actual_but$active <- url_par()$inputs$viz
+      }
     }
+
+
 
     req(possible_viz())
     if (is.null(input$viz_selection)) return()
+
+
+
+
     viz_rec <- possible_viz()
     if (input$viz_selection %in% viz_rec) {
       actual_but$active <- input$viz_selection
     } else {
-      actual_but$active <- viz_rec[1]
+
+      # if (!is.null(url_par()$inputs$viz)) {
+      #   actual_but$active <- url_par()$inputs$viz
+       actual_but$active <- viz_rec[1]
     }
 
   })
@@ -724,7 +736,6 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
     slug <- unique(questions_select()$indicador)
     pais <- paste0("pais_", lang())
-    #if (viz == "map") pais <- "pais_en"
     var_viz <- c(pais, "fecha", "valor")
     type_viz <- "CatDatNum"
     num_viz  <- 3
@@ -737,7 +748,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
       if (length(unique(df$fecha)) == 1 |
           viz %in% c("map", "bar", "treemap", "sankey")) {
 
-        #if(!is.null(df$unidad) & viz %in% c("bar","treemap"))  var_viz <- c(var_viz, "unidad")
+
         var_viz <- setdiff(var_viz, "fecha")
         if(!is.null(df$unidad)){
           var_viz <- c(var_viz, "unidad")
@@ -785,6 +796,16 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
           }
 
         }
+
+        if(viz %in% c("treemap")){
+        if( slug  == "vaccination_approvals_trials" ) {
+
+            var_viz <- c("valor",pais)
+            type_viz <- "CatNum"
+            num_viz  <- 2
+
+          }
+        }
         #############################################
 
       }
@@ -794,9 +815,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
              if( slug  == "school_closures" ) {
                var_viz <- c("fecha","valor","unidad_id")
                type_viz <- "DatNum"
-               #   type_viz <- "CatCatNum"
-               #   num_viz  <- 3
-             }
+              }
 
              #tooltip_info$unidad <- TRUE
          }
@@ -955,12 +974,20 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
               summarise(x = sum(!!sym(var_calc[1]), na.rm = T), y = sum(!!sym(var_calc[2]), na.rm = T))
           }
 
-        }
-        names(data) <- c(agg, var_calc[1],var_calc[2])
-        tooltip_info$special_col_1 =var_calc[1]
-        tooltip_info$special_col_2 =var_calc[2]
+        } #SPECIAL TOOLTIPS CASES
+        if("new_deaths_per_million" %in% questions_select()$indicador & "new_cases_per_million" %in% questions_select()$indicador){
+          names(data) <- c(agg, i_("new_deaths_per_million_tooltip",lang()), i_("new_cases_per_million_tooltip",lang()))
+        } else {
+          if("people_fully_vaccinated" %in% questions_select()$indicador & "people_vaccinated" %in% questions_select()$indicador){
+            names(data) <- c(agg, i_("people_fully_vaccinated_tooltip",lang()), i_("people_vaccinated_tooltip",lang()))
+            }else {
+              names(data) <- c(agg, var_calc[1],var_calc[2])
+              tooltip_info$special_col_1 =var_calc[1]
+              tooltip_info$special_col_2 =var_calc[2]
+            }
 
-        #names(data) <- c(agg, paste(var_calc[1], "  -", i_(agg,lang()),""), paste(var_calc[2], " ", i_(agg,lang()),""))
+        }
+
       }
 
       ###############################################################
@@ -979,7 +1006,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         data <- data |> select({{ var }}, everything())
         agg <- viz_agg$agg
         tooltip_info$agg <- agg
-         var_calc <- unique(names(data[var_viz()$num_viz]))
+        var_calc <- unique(names(data[var_viz()$num_viz]))
         if(ncol(viz_agg) > 1 ) {
           group_var <- unique(names(data[c(1, var_viz()$num_viz-1)  ]))
 
@@ -987,7 +1014,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
         else  group_var <- unique(names(data[1]))
 
 
-        if("vaccination_approvals_trials" %in% questions_select()$indicador){
+        if("vaccination_approvals_trials" %in% questions_select()$indicador & ("bar" %in% viz_select() | "treemap" %in% viz_select()) ){
 
           group_var <- unique(names(data[c(1,2)]))
           data$valor <- as.character(data$valor)
@@ -1024,6 +1051,7 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
 
           if(!is.null(data$unidad)) unidad <- unique(data$unidad_id)
+          if("immunization_campaigns" %in% questions_select()$indicador)   unidad <- i_("people",lang())
 
           if("school_closures" %in% questions_select()$indicador) {
             data_temp2 <- data |> group_by(across(sym(group_var[1])), across(sym(group_var[2]))) |> summarise(min_date = min(!!sym("fecha")), max_date = max(!!sym("fecha")))
@@ -1497,8 +1525,13 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
 
   output$debug <- renderPrint({
     list(
+      # print(url_par()$inputs$viz),
+      # print(url_par()$inputs$subquestion),
+      # print(url_par()$inputs$subquestion),
+      # print(url_par())
+
       #data_filter()
-     #data_viz()
+      #data_viz()
       #data_questions()$ind_pregunta
       #questions_select()
       #  names( questions_select())
