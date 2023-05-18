@@ -1344,8 +1344,8 @@ Interagir com estes dados e tornar-se um agente de mudança para &hashtags=Vacci
     if(("new_deaths_per_million" %in% questions_select()$indicador & "new_cases_per_million" %in% questions_select()$indicador) |
         "scatter" %in% viz_select()) {
 
-      opts$theme$hor_title =  i_("new_cases_per_million_tooltip",lang())
-      opts$theme$ver_title =  i_("new_deaths_per_million_tooltip",lang())
+      opts$theme$hor_title =  i_("new_deaths_per_million_tooltip",lang())
+      opts$theme$ver_title =  i_("new_cases_per_million_tooltip",lang())
 
     }
 
